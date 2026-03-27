@@ -56,6 +56,9 @@ els.settingsForm.addEventListener("submit", (event) => {
       Number.parseFloat(els.vacationDoseThreshold.value) || defaultState.settings.vacationDoseThreshold,
     vacationFrequencyDays:
       Number.parseInt(els.vacationFrequencyDays.value, 10) || defaultState.settings.vacationFrequencyDays,
+    openAiRelayUrl: els.openAiRelayUrl.value.trim(),
+    openAiModel: (els.openAiModel.value || defaultState.settings.openAiModel).trim(),
+    ouraClientId: els.ouraClientId.value.trim(),
   };
   persistState(state);
   hydrate();
