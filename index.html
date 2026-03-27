@@ -40,40 +40,37 @@
         </div>
       </section>
 
-      <section class="status-grid">
-        <article class="card recommendation-card">
-          <div class="section-header">
-            <p class="eyebrow">Current Pattern</p>
-            <span id="recommendationBadge" class="status-badge neutral">Loading</span>
+      <section class="card today-card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Today</p>
+            <h2>Current total</h2>
           </div>
-          <h2 id="recommendationTitle">Reviewing entries</h2>
-          <p id="recommendationReason" class="muted">
-            Add your first entry to generate a pattern summary.
-          </p>
-          <p class="microcopy">
-            Heuristic only. This is not medical advice and should not replace a clinician's guidance.
-          </p>
-        </article>
-
-        <article class="card metrics-card">
-          <div class="section-header">
-            <p class="eyebrow">Recent Averages</p>
-          </div>
-          <div class="metric-list">
-            <div class="metric">
-              <span class="metric-label">Last 3 days</span>
-              <strong id="avg3">0</strong>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Last 7 days</span>
-              <strong id="avg7">0</strong>
-            </div>
-            <div class="metric">
-              <span class="metric-label">This month</span>
-              <strong id="monthTotal">0</strong>
+          <span id="recommendationBadge" class="status-badge neutral">Loading</span>
+        </div>
+        <div class="today-visual-row">
+          <div class="today-visual">
+            <div class="today-ring">
+              <div class="today-ring-inner">
+                <strong id="todayTotal">0</strong>
+                <span id="todayUnit">mg</span>
+              </div>
             </div>
           </div>
-        </article>
+          <div class="today-summary">
+            <div class="metric">
+              <span class="metric-label">Doses today</span>
+              <strong id="todayEntries">0</strong>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Last dose</span>
+              <strong id="todayLastDose">None</strong>
+            </div>
+            <p id="recommendationReason" class="muted">
+              Add your first entry to generate a pattern summary.
+            </p>
+          </div>
+        </div>
       </section>
 
       <section class="card form-card">

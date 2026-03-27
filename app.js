@@ -23,6 +23,10 @@ const els = {
   doseNote: document.querySelector("#doseNote"),
   nowButton: document.querySelector("#nowButton"),
   doseUnitLabel: document.querySelector("#doseUnitLabel"),
+  todayTotal: document.querySelector("#todayTotal"),
+  todayUnit: document.querySelector("#todayUnit"),
+  todayEntries: document.querySelector("#todayEntries"),
+  todayLastDose: document.querySelector("#todayLastDose"),
   avg3: document.querySelector("#avg3"),
   avg7: document.querySelector("#avg7"),
   monthTotal: document.querySelector("#monthTotal"),
@@ -167,6 +171,11 @@ function getCurrentMonthEntries() {
   return state.entries.filter((entry) => isSameMonth(new Date(entry.timestamp), now));
 }
 
+function getTodayEntries() {
+  const todayKey = dateKey(new Date());
+  return state.entries.filter((entry) => dateKey(entry.timestamp) === todayKey);
+}
+
 function getConsecutiveUseDays() {
   const usedDays = new Set(state.entries.map((entry) => dateKey(entry.timestamp)));
   let consecutive = 0;
@@ -266,11 +275,20 @@ function getRecommendation() {
 }
 
 function renderMetrics() {
+  const todayEntries = getTodayEntries();
+  const todayTotal = todayEntries.reduce((sum, entry) => sum + Number(entry.amount), 0);
+  const lastDose = todayEntries[0] ? new Date(todayEntries[0].timestamp) : null;
   const monthEntries = getCurrentMonthEntries();
   const monthTotal = monthEntries.reduce((sum, entry) => sum + Number(entry.amount), 0);
   const monthUsedDays = new Set(monthEntries.map((entry) => dateKey(entry.timestamp))).size;
   const recommendation = getRecommendation();
 
+  els.todayTotal.textContent = formatNumber(todayTotal);
+  els.todayUnit.textContent = unitLabel();
+  els.todayEntries.textContent = `${todayEntries.length}`;
+  els.todayLastDose.textContent = lastDose
+    ? lastDose.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+    : "None";
   els.avg3.textContent = `${formatNumber(sumForDays(3))} ${unitLabel()}/day`;
   els.avg7.textContent = `${formatNumber(sumForDays(7))} ${unitLabel()}/day`;
   els.monthTotal.textContent = `${formatNumber(monthTotal)} ${unitLabel()}`;
