@@ -1,6 +1,9 @@
 "use strict";
 
 let state = loadState();
+if (consumeOuraRedirect(state)) {
+  state = loadState();
+}
 
 const els = {
   installButton: document.querySelector("#installButton"),

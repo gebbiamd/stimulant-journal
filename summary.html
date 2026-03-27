@@ -89,6 +89,31 @@
         </div>
       </section>
 
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Oura</p>
+            <h2>Sleep correlation</h2>
+          </div>
+          <button id="syncOuraButton" class="secondary-button" type="button">Sync Oura</button>
+        </div>
+        <div id="ouraSleepEmpty" class="empty-state">Connect Oura in Settings to import recent sleep data.</div>
+        <div id="ouraSleepList" class="history-list"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">AI</p>
+            <h2>Journal summary</h2>
+          </div>
+          <button id="generateSummaryButton" class="secondary-button" type="button">Generate Summary</button>
+        </div>
+        <div id="aiSummaryBox" class="empty-state">
+          Add an OpenAI relay URL in Settings, then generate a summary from recent doses, notes, and imported Oura sleep.
+        </div>
+      </section>
+
       <section class="footer-nav">
         <a class="nav-button" href="./index.html">Home</a>
         <a class="nav-button" href="./settings.html">Settings</a>

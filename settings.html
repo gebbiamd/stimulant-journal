@@ -76,8 +76,56 @@
             Vacation review cadence in days
             <input id="vacationFrequencyDays" name="vacationFrequencyDays" type="number" min="1" step="1" />
           </label>
+          <label>
+            OpenAI relay URL
+            <input id="openAiRelayUrl" name="openAiRelayUrl" type="url" placeholder="https://your-worker.example.com/summary" />
+          </label>
+          <label>
+            OpenAI model
+            <input id="openAiModel" name="openAiModel" type="text" placeholder="gpt-5.4" />
+          </label>
+          <label>
+            Oura client ID
+            <input id="ouraClientId" name="ouraClientId" type="text" placeholder="From your Oura developer app" />
+          </label>
           <button class="primary-button" type="submit">Save Settings</button>
         </form>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Integrations</p>
+            <h2>Oura and AI</h2>
+          </div>
+        </div>
+        <div class="stack-form">
+          <div class="stat-chip">
+            <span>Oura status</span>
+            <strong id="ouraStatus">Not connected</strong>
+          </div>
+          <div class="data-actions">
+            <button id="ouraConnectButton" class="secondary-button" type="button">Connect Oura</button>
+            <button id="ouraDisconnectButton" class="ghost-button" type="button">Disconnect Oura</button>
+          </div>
+          <p class="muted">
+            Oura can work from this static site using Oura’s client-side OAuth flow. The token stays in this browser.
+          </p>
+          <div class="stat-chip">
+            <span>Apple Health</span>
+            <strong>Needs native iPhone bridge</strong>
+          </div>
+          <p class="muted">
+            Apple Health uses HealthKit, which is designed for native iPhone apps rather than a GitHub Pages website. The clean path is either a small iPhone wrapper app or a Shortcuts/export bridge later.
+          </p>
+          <div class="stat-chip">
+            <span>OpenAI summaries</span>
+            <strong id="openAiStatus">Relay not configured</strong>
+          </div>
+          <p class="muted">
+            OpenAI API keys should not live in browser code. This app expects a secure relay URL you control.
+          </p>
+        </div>
       </section>
 
       <section class="card">

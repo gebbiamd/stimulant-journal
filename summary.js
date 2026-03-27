@@ -1,6 +1,9 @@
 "use strict";
 
 let state = loadState();
+if (consumeOuraRedirect(state)) {
+  state = loadState();
+}
 
 const els = {
   avg3: document.querySelector("#avg3"),
@@ -12,6 +15,11 @@ const els = {
   plannedTablets: document.querySelector("#plannedTablets"),
   estimatedUsed: document.querySelector("#estimatedUsed"),
   estimatedRemaining: document.querySelector("#estimatedRemaining"),
+  syncOuraButton: document.querySelector("#syncOuraButton"),
+  ouraSleepEmpty: document.querySelector("#ouraSleepEmpty"),
+  ouraSleepList: document.querySelector("#ouraSleepList"),
+  generateSummaryButton: document.querySelector("#generateSummaryButton"),
+  aiSummaryBox: document.querySelector("#aiSummaryBox"),
 };
 
 function renderHeaderMetrics() {
@@ -77,8 +85,56 @@ function renderInventory() {
   els.estimatedRemaining.textContent = formatNumber(usage.remaining);
 }
 
+function renderOuraSleep() {
+  const sleep = getRecentOuraSleep(state).slice(0, 10);
+  els.ouraSleepList.innerHTML = "";
+  els.ouraSleepEmpty.classList.toggle("hidden", sleep.length > 0);
+  for (const item of sleep) {
+    const entry = document.createElement("article");
+    entry.className = "history-item";
+    const bedtime = item.bedtime_start ? new Date(item.bedtime_start) : null;
+    const durationHours = item.total_sleep_duration ? item.total_sleep_duration / 3600 : null;
+    entry.innerHTML = `
+      <div class="history-main">
+        <div>
+          <strong class="history-dose">${item.score ?? "?"} sleep score</strong>
+          <p class="history-time">${bedtime ? bedtime.toLocaleDateString() : "Recent sleep"}</p>
+          <p class="history-note muted">${durationHours ? `${formatNumber(durationHours)} hours asleep` : "Sleep duration unavailable"}</p>
+        </div>
+      </div>
+    `;
+    els.ouraSleepList.appendChild(entry);
+  }
+}
+
+els.syncOuraButton.addEventListener("click", async () => {
+  els.syncOuraButton.disabled = true;
+  try {
+    await syncOuraSleep(state);
+    renderOuraSleep();
+  } catch (error) {
+    window.alert(error.message);
+  } finally {
+    els.syncOuraButton.disabled = false;
+  }
+});
+
+els.generateSummaryButton.addEventListener("click", async () => {
+  els.generateSummaryButton.disabled = true;
+  els.aiSummaryBox.textContent = "Generating...";
+  try {
+    const result = await generateAiSummary(state);
+    els.aiSummaryBox.textContent = result.summary || JSON.stringify(result, null, 2);
+  } catch (error) {
+    els.aiSummaryBox.textContent = error.message;
+  } finally {
+    els.generateSummaryButton.disabled = false;
+  }
+});
+
 renderHeaderMetrics();
 renderSummaryTrend();
 renderCalendar();
 renderInventory();
+renderOuraSleep();
 registerServiceWorker();

@@ -17,6 +17,18 @@ const defaultState = {
     vacationThreshold: 10,
     vacationDoseThreshold: 10,
     vacationFrequencyDays: 30,
+    openAiRelayUrl: "",
+    openAiModel: "gpt-5.4",
+    ouraClientId: "",
+  },
+  integrations: {
+    oura: {
+      accessToken: "",
+      expiresAt: "",
+      scope: "",
+      lastSyncAt: "",
+      sleep: [],
+    },
   },
 };
 
@@ -24,6 +36,7 @@ function cloneDefaultState() {
   return {
     entries: [],
     settings: { ...defaultState.settings },
+    integrations: JSON.parse(JSON.stringify(defaultState.integrations)),
   };
 }
 
@@ -56,6 +69,12 @@ function loadState() {
     return {
       entries: entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
       settings: { ...defaultState.settings, ...(parsed.settings || {}) },
+      integrations: {
+        oura: {
+          ...defaultState.integrations.oura,
+          ...((parsed.integrations && parsed.integrations.oura) || {}),
+        },
+      },
     };
   } catch {
     return cloneDefaultState();
@@ -243,6 +262,107 @@ function setDateTimeInputNow(input) {
   const now = new Date();
   const offsetMs = now.getTimezoneOffset() * 60 * 1000;
   input.value = new Date(now.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function buildOuraRedirectUri() {
+  return `${window.location.origin}${window.location.pathname}`;
+}
+
+function consumeOuraRedirect(state) {
+  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
+  if (!hash.includes("access_token=")) return false;
+  const params = new URLSearchParams(hash);
+  const accessToken = params.get("access_token");
+  const expiresIn = Number.parseInt(params.get("expires_in") || "0", 10);
+  if (!accessToken) return false;
+
+  state.integrations.oura = {
+    ...state.integrations.oura,
+    accessToken,
+    scope: params.get("scope") || "",
+    expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : "",
+  };
+  persistState(state);
+  window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+  return true;
+}
+
+function startOuraAuth(state) {
+  const clientId = (state.settings.ouraClientId || "").trim();
+  if (!clientId) {
+    window.alert("Add your Oura Client ID in Settings first.");
+    return;
+  }
+  const stateToken = crypto.randomUUID();
+  const redirectUri = buildOuraRedirectUri();
+  const scope = "daily";
+  const authUrl = new URL("https://cloud.ouraring.com/oauth/authorize");
+  authUrl.searchParams.set("response_type", "token");
+  authUrl.searchParams.set("client_id", clientId);
+  authUrl.searchParams.set("redirect_uri", redirectUri);
+  authUrl.searchParams.set("scope", scope);
+  authUrl.searchParams.set("state", stateToken);
+  window.location.href = authUrl.toString();
+}
+
+function disconnectOura(state) {
+  state.integrations.oura = { ...defaultState.integrations.oura };
+  persistState(state);
+}
+
+async function syncOuraSleep(state) {
+  const token = state.integrations.oura.accessToken;
+  if (!token) throw new Error("Connect Oura first.");
+  const endDate = new Date();
+  const startDate = new Date(endDate.getTime() - 29 * DAY_MS);
+  const query = new URLSearchParams({
+    start_date: dateKey(startDate),
+    end_date: dateKey(endDate),
+  });
+  const response = await fetch(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Oura sync failed: ${response.status} ${detail}`);
+  }
+  const payload = await response.json();
+  state.integrations.oura.sleep = Array.isArray(payload.data) ? payload.data : [];
+  state.integrations.oura.lastSyncAt = new Date().toISOString();
+  persistState(state);
+  return state.integrations.oura.sleep;
+}
+
+function getRecentOuraSleep(state) {
+  return Array.isArray(state.integrations?.oura?.sleep) ? state.integrations.oura.sleep : [];
+}
+
+async function generateAiSummary(state) {
+  const relayUrl = (state.settings.openAiRelayUrl || "").trim();
+  if (!relayUrl) throw new Error("Add your OpenAI relay URL in Settings first.");
+
+  const recentEntries = state.entries.slice(0, 60);
+  const payload = {
+    model: state.settings.openAiModel || "gpt-5.4",
+    journal: {
+      settings: state.settings,
+      entries: recentEntries,
+      ouraSleep: getRecentOuraSleep(state).slice(0, 14),
+    },
+  };
+
+  const response = await fetch(relayUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`AI summary failed: ${response.status} ${detail}`);
+  }
+  return response.json();
 }
 
 function renderInstallPrompt(button) {
