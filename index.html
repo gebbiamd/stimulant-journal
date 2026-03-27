@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A private stimulant-use journal with local history, rolling averages, and simple usage pattern flags."
+    />
+    <meta name="theme-color" content="#efe1c7" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Stimulant Journal</title>
+  </head>
+  <body>
+    <div class="background">
+      <div class="orb orb-one"></div>
+      <div class="orb orb-two"></div>
+      <div class="grid"></div>
+    </div>
+
+    <main class="app-shell">
+      <section class="hero card">
+        <p class="eyebrow">Private Local Journal</p>
+        <div class="hero-row">
+          <div>
+            <h1>Stimulant Journal</h1>
+            <p class="hero-copy">
+              Track dose timing, review recent patterns, and keep a simple log on your
+              phone. Data stays in this browser unless you export it.
+            </p>
+          </div>
+          <button id="installButton" class="ghost-button hidden" type="button">
+            Install App
+          </button>
+        </div>
+      </section>
+
+      <section class="status-grid">
+        <article class="card recommendation-card">
+          <div class="section-header">
+            <p class="eyebrow">Current Pattern</p>
+            <span id="recommendationBadge" class="status-badge neutral">Loading</span>
+          </div>
+          <h2 id="recommendationTitle">Reviewing entries</h2>
+          <p id="recommendationReason" class="muted">
+            Add your first entry to generate a pattern summary.
+          </p>
+          <p class="microcopy">
+            Heuristic only. This is not medical advice and should not replace a clinician's guidance.
+          </p>
+        </article>
+
+        <article class="card metrics-card">
+          <div class="section-header">
+            <p class="eyebrow">Recent Averages</p>
+          </div>
+          <div class="metric-list">
+            <div class="metric">
+              <span class="metric-label">Last 3 days</span>
+              <strong id="avg3">0</strong>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Last 7 days</span>
+              <strong id="avg7">0</strong>
+            </div>
+            <div class="metric">
+              <span class="metric-label">This month</span>
+              <strong id="monthTotal">0</strong>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="card form-card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Log Dose</p>
+            <h2>Add an entry</h2>
+          </div>
+          <button id="nowButton" class="ghost-button" type="button">Use Current Time</button>
+        </div>
+        <form id="doseForm" class="dose-form">
+          <label>
+            Dose amount
+            <div class="input-with-unit">
+              <input
+                id="doseAmount"
+                name="doseAmount"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="0.5"
+                placeholder="10"
+                required
+              />
+              <span id="doseUnitLabel" class="unit-label">mg</span>
+            </div>
+          </label>
+
+          <label>
+            Manual date/time override
+            <input id="doseTime" name="doseTime" type="datetime-local" />
+          </label>
+
+          <label>
+            Notes
+            <textarea
+              id="doseNote"
+              name="doseNote"
+              rows="3"
+              maxlength="240"
+              placeholder="Optional note"
+            ></textarea>
+          </label>
+
+          <button class="primary-button" type="submit">Save Entry</button>
+        </form>
+      </section>
+
+      <section class="card monthly-card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Month Snapshot</p>
+            <h2 id="monthLabel">Current month</h2>
+          </div>
+        </div>
+        <div class="metric-list compact">
+          <div class="metric">
+            <span class="metric-label">Entries</span>
+            <strong id="monthEntries">0</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Used days</span>
+            <strong id="monthUsedDays">0</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Longest break</span>
+            <strong id="monthLongestBreak">0 days</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card settings-card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Settings</p>
+            <h2>Personalize thresholds</h2>
+          </div>
+        </div>
+        <form id="settingsForm" class="settings-form">
+          <label>
+            Medication / label
+            <input id="medicationName" name="medicationName" type="text" maxlength="40" placeholder="Adderall XR" />
+          </label>
+          <label>
+            Dose unit
+            <input id="doseUnit" name="doseUnit" type="text" maxlength="12" placeholder="mg" />
+          </label>
+          <label>
+            Monthly comfort target
+            <input id="monthlyTarget" name="monthlyTarget" type="number" min="0" step="1" />
+          </label>
+          <label>
+            Consecutive-use days before vacation flag
+            <input id="vacationThreshold" name="vacationThreshold" type="number" min="2" step="1" />
+          </label>
+          <button class="secondary-button" type="submit">Save Settings</button>
+        </form>
+      </section>
+
+      <section class="card data-card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Backup</p>
+            <h2>Export or import data</h2>
+          </div>
+        </div>
+        <div class="data-actions">
+          <button id="exportButton" class="secondary-button" type="button">Export JSON</button>
+          <label class="upload-button">
+            Import JSON
+            <input id="importInput" type="file" accept="application/json" />
+          </label>
+        </div>
+      </section>
+
+      <section class="card history-card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">History</p>
+            <h2>Recent doses</h2>
+          </div>
+        </div>
+        <div id="historyEmpty" class="empty-state">
+          No entries yet. Your saved doses will appear here.
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+    </main>
+
+    <template id="historyItemTemplate">
+      <article class="history-item">
+        <div class="history-main">
+          <div>
+            <strong class="history-dose"></strong>
+            <p class="history-time"></p>
+            <p class="history-note muted"></p>
+          </div>
+          <button class="delete-button" type="button">Delete</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "Stimulant Journal",
+  "short_name": "Journal",
+  "description": "Private local stimulant-use journal with simple usage pattern flags.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3ecdf",
+  "theme_color": "#efe1c7",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
