@@ -70,28 +70,50 @@ function renderGauge() {
 function renderMiniTrend() {
   const levels = getDoseDecaySeries(state, 24, 49);
   const width = 360;
-  const height = 160;
+  const chartTop = 24;
+  const chartBottom = 168;
   const maxLevel = Math.max(...levels.map((item) => item.level), 1);
   const points = levels
     .map((item, index) => {
       const x = 20 + index * ((width - 40) / (levels.length - 1));
-      const y = 120 - (item.level / maxLevel) * 90;
+      const y = chartBottom - (item.level / maxLevel) * (chartBottom - chartTop);
       return `${x},${y}`;
     })
     .join(" ");
-  const area = `20,120 ${points} 340,120`;
-
-  const ticks = [0, 12, 24]
-    .map((hourMark) => {
-      const x = 20 + (hourMark / 24) * (width - 40);
-      return `<text x="${x}" y="148" text-anchor="middle" font-size="9" fill="#6f6157">${hourMark === 24 ? "Now" : `${24 - hourMark}h ago`}</text>`;
+  const area = `20,${chartBottom} ${points} 340,${chartBottom}`;
+  const tickIndexes = [0, 12, 24, 36, 48];
+  const ticks = tickIndexes
+    .map((index) => {
+      const item = levels[index];
+      const x = 20 + index * ((width - 40) / (levels.length - 1));
+      const label = new Date(item.timestamp).toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+      return `<line x1="${x}" y1="${chartBottom}" x2="${x}" y2="${chartBottom + 8}" stroke="rgba(88,112,143,0.18)" stroke-width="1" />
+      <text x="${x}" y="196" text-anchor="middle" font-size="10" fill="#58708f">${label}</text>`;
+    })
+    .join("");
+  const doseMarkers = getDoseEntries(state)
+    .filter((entry) => Date.now() - new Date(entry.timestamp).getTime() <= 24 * 60 * 60 * 1000)
+    .map((entry) => {
+      const ratio = (new Date(entry.timestamp).getTime() - (Date.now() - 24 * 60 * 60 * 1000)) / (24 * 60 * 60 * 1000);
+      const x = 20 + ratio * (width - 40);
+      return `<line x1="${x}" y1="${chartTop}" x2="${x}" y2="${chartBottom}" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-dasharray="3 4" />`;
     })
     .join("");
 
   els.miniTrendChart.innerHTML = `
-    <line x1="20" y1="120" x2="340" y2="120" stroke="rgba(95,72,53,0.18)" stroke-width="1.4" />
-    <polygon points="${area}" fill="rgba(201,121,86,0.16)"></polygon>
-    <polyline points="${points}" fill="none" stroke="#2f4a42" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+    <defs>
+      <linearGradient id="decayArea" x1="0%" x2="0%" y1="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(39,130,255,0.30)" />
+        <stop offset="100%" stop-color="rgba(39,130,255,0.04)" />
+      </linearGradient>
+    </defs>
+    <line x1="20" y1="${chartBottom}" x2="340" y2="${chartBottom}" stroke="rgba(88,112,143,0.18)" stroke-width="1.4" />
+    ${doseMarkers}
+    <polygon points="${area}" fill="url(#decayArea)"></polygon>
+    <polyline points="${points}" fill="none" stroke="#2782ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
     ${ticks}
   `;
 
