@@ -59,7 +59,7 @@ function renderGauge() {
   els.monthTabletUsage.textContent = `${formatNumber(tabletUsage.used)} / ${formatNumber(tabletUsage.planned)}`;
   els.thermoFill.style.height = `${Math.min(gauge.ratio * 100, 100)}%`;
   els.thermoFill.className = `thermo-fill ${gauge.tone}`;
-  els.targetMarker.style.bottom = `${Math.min(100, Math.max(0, 100))}%`;
+  els.targetMarker.style.bottom = "75%";
   els.scaleTop.textContent = `${formatNumber(dailyTarget)} ${unitLabel(state)}`;
   els.scaleMid.textContent = `${formatNumber(dailyTarget / 2)} ${unitLabel(state)}`;
   els.scaleBase.textContent = `0 ${unitLabel(state)}`;

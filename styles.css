@@ -168,7 +168,11 @@ h2 {
 
 .header-card {
   padding: 1.5rem;
-  background: linear-gradient(180deg, rgba(255, 249, 241, 0.92), rgba(245, 235, 222, 0.86));
+  background:
+    radial-gradient(circle at top right, rgba(201, 121, 86, 0.16), transparent 26%),
+    radial-gradient(circle at bottom left, rgba(88, 114, 73, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(255, 249, 241, 0.96), rgba(245, 235, 222, 0.88));
+  overflow: hidden;
 }
 
 .thermo-panel {
@@ -236,14 +240,17 @@ h2 {
 
 .thermo-fill.good {
   background: linear-gradient(180deg, #87b06a, #587249);
+  box-shadow: 0 0 18px rgba(88, 114, 73, 0.35);
 }
 
 .thermo-fill.warn {
   background: linear-gradient(180deg, #d39c47, #a0671a);
+  box-shadow: 0 0 18px rgba(160, 103, 26, 0.28);
 }
 
 .thermo-fill.danger {
   background: linear-gradient(180deg, #d36a58, #9d3a2d);
+  box-shadow: 0 0 18px rgba(157, 58, 45, 0.28);
 }
 
 .thermo-bulb {
@@ -289,6 +296,7 @@ h2 {
   background: rgba(255, 255, 255, 0.44);
   border-radius: 18px;
   padding: 1rem;
+  border: 1px solid rgba(95, 72, 53, 0.08);
 }
 
 .stat-chip span,
@@ -386,6 +394,7 @@ textarea {
   font-weight: 600;
   letter-spacing: 0.01em;
   box-shadow: 0 14px 28px rgba(47, 74, 66, 0.16);
+  background: linear-gradient(135deg, #2f4a42, #41685d);
 }
 
 .ghost-button,
