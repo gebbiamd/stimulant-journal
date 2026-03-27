@@ -14,6 +14,7 @@ const els = {
   doseDaysTarget: document.querySelector("#doseDaysTarget"),
   monthlyTablets: document.querySelector("#monthlyTablets"),
   mgPerTablet: document.querySelector("#mgPerTablet"),
+  decayHalfLifeHours: document.querySelector("#decayHalfLifeHours"),
   vacationThreshold: document.querySelector("#vacationThreshold"),
   vacationDoseThreshold: document.querySelector("#vacationDoseThreshold"),
   vacationFrequencyDays: document.querySelector("#vacationFrequencyDays"),
@@ -48,6 +49,8 @@ els.settingsForm.addEventListener("submit", (event) => {
     doseDaysTarget: Number.parseInt(els.doseDaysTarget.value, 10) || defaultState.settings.doseDaysTarget,
     monthlyTablets: Number.parseFloat(els.monthlyTablets.value) || defaultState.settings.monthlyTablets,
     mgPerTablet: Number.parseFloat(els.mgPerTablet.value) || defaultState.settings.mgPerTablet,
+    decayHalfLifeHours:
+      Number.parseFloat(els.decayHalfLifeHours.value) || defaultState.settings.decayHalfLifeHours,
     vacationThreshold: Number.parseInt(els.vacationThreshold.value, 10) || defaultState.settings.vacationThreshold,
     vacationDoseThreshold:
       Number.parseFloat(els.vacationDoseThreshold.value) || defaultState.settings.vacationDoseThreshold,

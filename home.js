@@ -68,34 +68,36 @@ function renderGauge() {
 }
 
 function renderMiniTrend() {
-  const totals = getTotalsByDay(state, 7);
+  const levels = getDoseDecaySeries(state, 24, 49);
   const width = 360;
   const height = 160;
-  const maxTotal = Math.max(...totals.map((item) => item.total), 1);
-  const points = totals
+  const maxLevel = Math.max(...levels.map((item) => item.level), 1);
+  const points = levels
     .map((item, index) => {
-      const x = 20 + index * ((width - 40) / (totals.length - 1));
-      const y = 120 - (item.total / maxTotal) * 90;
+      const x = 20 + index * ((width - 40) / (levels.length - 1));
+      const y = 120 - (item.level / maxLevel) * 90;
       return `${x},${y}`;
     })
     .join(" ");
+  const area = `20,120 ${points} 340,120`;
 
-  const dots = totals
-    .map((item, index) => {
-      const x = 20 + index * ((width - 40) / (totals.length - 1));
-      const y = 120 - (item.total / maxTotal) * 90;
-      return `<circle cx="${x}" cy="${y}" r="4" fill="#9c4f2f" />
-      <text x="${x}" y="148" text-anchor="middle" font-size="9" fill="#6f6157">${item.label}</text>`;
+  const ticks = [0, 12, 24]
+    .map((hourMark) => {
+      const x = 20 + (hourMark / 24) * (width - 40);
+      return `<text x="${x}" y="148" text-anchor="middle" font-size="9" fill="#6f6157">${hourMark === 24 ? "Now" : `${24 - hourMark}h ago`}</text>`;
     })
     .join("");
 
   els.miniTrendChart.innerHTML = `
     <line x1="20" y1="120" x2="340" y2="120" stroke="rgba(95,72,53,0.18)" stroke-width="1.4" />
+    <polygon points="${area}" fill="rgba(201,121,86,0.16)"></polygon>
     <polyline points="${points}" fill="none" stroke="#2f4a42" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-    ${dots}
+    ${ticks}
   `;
 
-  els.miniTrendLegend.textContent = `7-day total: ${formatNumber(totals.reduce((sum, item) => sum + item.total, 0))} ${unitLabel(state)}`;
+  const currentLevel = levels[levels.length - 1]?.level || 0;
+  const peakLevel = Math.max(...levels.map((item) => item.level), 0);
+  els.miniTrendLegend.textContent = `Estimated active level now: ${formatNumber(currentLevel)} ${unitLabel(state)} • peak over last 24h: ${formatNumber(peakLevel)} ${unitLabel(state)} • half-life: ${formatNumber(state.settings.decayHalfLifeHours || defaultState.settings.decayHalfLifeHours)}h`;
 }
 
 function renderRecent() {

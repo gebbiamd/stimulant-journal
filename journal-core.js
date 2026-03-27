@@ -14,6 +14,7 @@ const defaultState = {
     doseDaysTarget: 16,
     monthlyTablets: 30,
     mgPerTablet: 10,
+    decayHalfLifeHours: 10,
     vacationThreshold: 10,
     vacationDoseThreshold: 10,
     vacationFrequencyDays: 30,
@@ -164,6 +165,33 @@ function getTotalsByDay(state, days) {
   }
 
   return totals;
+}
+
+function getDoseDecaySeries(state, hours = 24, points = 49) {
+  const halfLifeHours = Number(state.settings.decayHalfLifeHours) || defaultState.settings.decayHalfLifeHours;
+  const decayConstant = Math.log(2) / Math.max(halfLifeHours, 0.1);
+  const now = Date.now();
+  const start = now - hours * 60 * 60 * 1000;
+  const doseEntries = getDoseEntries(state).filter((entry) => new Date(entry.timestamp).getTime() >= start - 6 * halfLifeHours * 60 * 60 * 1000);
+  const series = [];
+
+  for (let index = 0; index < points; index += 1) {
+    const timestamp = start + (index / (points - 1)) * (hours * 60 * 60 * 1000);
+    let level = 0;
+    for (const entry of doseEntries) {
+      const doseTime = new Date(entry.timestamp).getTime();
+      if (doseTime > timestamp) continue;
+      const elapsedHours = (timestamp - doseTime) / (60 * 60 * 1000);
+      level += Number(entry.amount) * Math.exp(-decayConstant * elapsedHours);
+    }
+    series.push({
+      timestamp,
+      level,
+      label: new Date(timestamp).toLocaleTimeString(undefined, { hour: "numeric" }),
+    });
+  }
+
+  return series;
 }
 
 function getRollingAverage(state, days) {
