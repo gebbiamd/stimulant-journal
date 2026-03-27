@@ -88,14 +88,8 @@ function renderMiniTrend() {
   const tickIndexes = [0, 12, 24, 36, 48];
   const ticks = tickIndexes
     .map((index) => {
-      const item = levels[index];
       const x = 20 + index * ((width - 40) / (levels.length - 1));
-      const label = new Date(item.timestamp).toLocaleTimeString([], {
-        hour: "numeric",
-        minute: "2-digit",
-      });
-      return `<line x1="${x}" y1="${chartBottom}" x2="${x}" y2="${chartBottom + 8}" stroke="rgba(88,112,143,0.18)" stroke-width="1" />
-      <text x="${x}" y="196" text-anchor="middle" font-size="10" fill="#58708f">${label}</text>`;
+      return `<line x1="${x}" y1="${chartBottom}" x2="${x}" y2="${chartBottom + 6}" stroke="rgba(88,112,143,0.18)" stroke-width="1" />`;
     })
     .join("");
   els.miniTrendAxis.innerHTML = tickIndexes
