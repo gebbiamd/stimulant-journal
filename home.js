@@ -72,11 +72,14 @@ function renderMiniTrend() {
   const width = 360;
   const chartTop = 24;
   const chartBottom = 168;
+  const chartHeight = chartBottom - chartTop;
   const maxLevel = Math.max(...levels.map((item) => item.level), 1);
+  const now = Date.now();
+  const dayStart = now - 24 * 60 * 60 * 1000;
   const points = levels
     .map((item, index) => {
       const x = 20 + index * ((width - 40) / (levels.length - 1));
-      const y = chartBottom - (item.level / maxLevel) * (chartBottom - chartTop);
+      const y = chartBottom - (item.level / maxLevel) * chartHeight;
       return `${x},${y}`;
     })
     .join(" ");
@@ -95,13 +98,28 @@ function renderMiniTrend() {
     })
     .join("");
   const doseMarkers = getDoseEntries(state)
-    .filter((entry) => Date.now() - new Date(entry.timestamp).getTime() <= 24 * 60 * 60 * 1000)
+    .filter((entry) => now - new Date(entry.timestamp).getTime() <= 24 * 60 * 60 * 1000)
     .map((entry) => {
-      const ratio = (new Date(entry.timestamp).getTime() - (Date.now() - 24 * 60 * 60 * 1000)) / (24 * 60 * 60 * 1000);
+      const ratio = (new Date(entry.timestamp).getTime() - dayStart) / (24 * 60 * 60 * 1000);
       const x = 20 + ratio * (width - 40);
       return `<line x1="${x}" y1="${chartTop}" x2="${x}" y2="${chartBottom}" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-dasharray="3 4" />`;
     })
     .join("");
+  const nightOverlay = (() => {
+    const segments = [];
+    const startDate = new Date(dayStart);
+    for (let dayOffset = 0; dayOffset <= 1; dayOffset += 1) {
+      const nightStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + dayOffset, 22, 0, 0, 0).getTime();
+      const nightEnd = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + dayOffset + 1, 7, 0, 0, 0).getTime();
+      const visibleStart = Math.max(nightStart, dayStart);
+      const visibleEnd = Math.min(nightEnd, now);
+      if (visibleEnd <= visibleStart) continue;
+      const x = 20 + ((visibleStart - dayStart) / (24 * 60 * 60 * 1000)) * (width - 40);
+      const w = ((visibleEnd - visibleStart) / (24 * 60 * 60 * 1000)) * (width - 40);
+      segments.push(`<rect x="${x}" y="${chartTop}" width="${w}" height="${chartHeight}" fill="rgba(23,32,51,0.08)" rx="10" />`);
+    }
+    return segments.join("");
+  })();
 
   els.miniTrendChart.innerHTML = `
     <defs>
@@ -111,6 +129,7 @@ function renderMiniTrend() {
       </linearGradient>
     </defs>
     <line x1="20" y1="${chartBottom}" x2="340" y2="${chartBottom}" stroke="rgba(88,112,143,0.18)" stroke-width="1.4" />
+    ${nightOverlay}
     ${doseMarkers}
     <polygon points="${area}" fill="url(#decayArea)"></polygon>
     <polyline points="${points}" fill="none" stroke="#2782ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
@@ -119,7 +138,7 @@ function renderMiniTrend() {
 
   const currentLevel = levels[levels.length - 1]?.level || 0;
   const peakLevel = Math.max(...levels.map((item) => item.level), 0);
-  els.miniTrendLegend.textContent = `Estimated active level now: ${formatNumber(currentLevel)} ${unitLabel(state)} • peak over last 24h: ${formatNumber(peakLevel)} ${unitLabel(state)} • half-life: ${formatNumber(state.settings.decayHalfLifeHours || defaultState.settings.decayHalfLifeHours)}h`;
+  els.miniTrendLegend.textContent = `Estimated active level now: ${formatNumber(currentLevel)} ${unitLabel(state)} • peak over last 24h: ${formatNumber(peakLevel)} ${unitLabel(state)} • shaded bands show night hours • half-life: ${formatNumber(state.settings.decayHalfLifeHours || defaultState.settings.decayHalfLifeHours)}h`;
 }
 
 function renderRecent() {
