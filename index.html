@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="A private stimulant-use journal with local history, rolling averages, and simple usage pattern flags."
+      content="Private stimulant journal with daily tracking, notes, and trend review."
     />
     <meta name="theme-color" content="#efe1c7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="./styles.css" />
     <title>Stimulant Journal</title>
   </head>
-  <body>
+  <body data-page="home">
     <div class="background">
       <div class="orb orb-one"></div>
       <div class="orb orb-two"></div>
@@ -25,63 +25,69 @@
 
     <main class="app-shell">
       <section class="hero card">
-        <p class="eyebrow">Private Local Journal</p>
         <div class="hero-row">
           <div>
-            <h1>Stimulant Journal</h1>
+            <p class="eyebrow">Private Local Journal</p>
+            <h1>Today</h1>
             <p class="hero-copy">
-              Track dose timing, review recent patterns, and keep a simple log on your
-              phone. Data stays in this browser unless you export it.
+              Quick dose entry, quick notes, and a simple read on today’s pattern.
             </p>
           </div>
-          <button id="installButton" class="ghost-button hidden" type="button">
-            Install App
-          </button>
+          <button id="installButton" class="ghost-button hidden" type="button">Install App</button>
         </div>
       </section>
 
-      <section class="card today-card">
+      <section class="card header-card">
         <div class="section-header">
           <div>
-            <p class="eyebrow">Today</p>
-            <h2>Current total</h2>
+            <p class="eyebrow">Dose Gauge</p>
+            <h2 id="todayHeaderTitle">Today’s dose</h2>
           </div>
-          <span id="recommendationBadge" class="status-badge neutral">Loading</span>
+          <span id="todayGaugeBadge" class="status-badge neutral">Steady</span>
         </div>
-        <div class="today-visual-row">
-          <div class="today-visual">
-            <div class="today-ring">
-              <div class="today-ring-inner">
-                <strong id="todayTotal">0</strong>
-                <span id="todayUnit">mg</span>
+        <div class="header-layout">
+          <div class="thermo-panel">
+            <div class="thermo-shell">
+              <div class="thermo-track">
+                <div id="thermoFill" class="thermo-fill"></div>
               </div>
+              <div class="thermo-bulb"></div>
+            </div>
+            <div class="thermo-readout">
+              <strong id="todayTotal">0</strong>
+              <span id="todayUnit">mg</span>
+              <p id="todayGaugeLabel" class="muted">0% of your daily target</p>
             </div>
           </div>
-          <div class="today-summary">
-            <div class="metric">
-              <span class="metric-label">Doses today</span>
+          <div class="header-side">
+            <div class="stat-chip">
+              <span>Doses today</span>
               <strong id="todayEntries">0</strong>
             </div>
-            <div class="metric">
-              <span class="metric-label">Last dose</span>
+            <div class="stat-chip">
+              <span>Last dose</span>
               <strong id="todayLastDose">None</strong>
             </div>
-            <p id="recommendationReason" class="muted">
-              Add your first entry to generate a pattern summary.
+            <div class="stat-chip">
+              <span>Tablets used this month</span>
+              <strong id="monthTabletUsage">0 / 0</strong>
+            </div>
+            <p id="gaugeReason" class="muted">
+              Set your daily target and tablet count in Settings to personalize this view.
             </p>
           </div>
         </div>
       </section>
 
-      <section class="card form-card">
+      <section class="card entry-card">
         <div class="section-header">
           <div>
             <p class="eyebrow">Log Dose</p>
-            <h2>Add an entry</h2>
+            <h2>Add a dose now</h2>
           </div>
           <button id="nowButton" class="ghost-button" type="button">Use Current Time</button>
         </div>
-        <form id="doseForm" class="dose-form">
+        <form id="doseForm" class="stack-form">
           <label>
             Dose amount
             <div class="input-with-unit">
@@ -98,126 +104,80 @@
               <span id="doseUnitLabel" class="unit-label">mg</span>
             </div>
           </label>
-
           <label>
             Manual date/time override
             <input id="doseTime" name="doseTime" type="datetime-local" />
           </label>
-
           <label>
-            Notes
+            Dose note
             <textarea
               id="doseNote"
               name="doseNote"
               rows="3"
               maxlength="240"
-              placeholder="Optional note"
+              placeholder="Optional note about this dose"
             ></textarea>
           </label>
-
-          <button class="primary-button" type="submit">Save Entry</button>
+          <button class="primary-button" type="submit">Save Dose</button>
         </form>
       </section>
 
-      <section class="card monthly-card">
+      <section class="card entry-card">
         <div class="section-header">
           <div>
-            <p class="eyebrow">Month Snapshot</p>
-            <h2 id="monthLabel">Current month</h2>
+            <p class="eyebrow">Journal</p>
+            <h2>Add a note without a dose</h2>
           </div>
         </div>
-        <div class="metric-list compact">
-          <div class="metric">
-            <span class="metric-label">Entries</span>
-            <strong id="monthEntries">0</strong>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Used days</span>
-            <strong id="monthUsedDays">0</strong>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Longest break</span>
-            <strong id="monthLongestBreak">0 days</strong>
-          </div>
-        </div>
-      </section>
-
-      <section class="card trend-card">
-        <div class="section-header">
-          <div>
-            <p class="eyebrow">Visual Trend</p>
-            <h2>Last 14 days</h2>
-          </div>
-        </div>
-        <div class="trend-wrap">
-          <svg id="trendChart" class="trend-chart" viewBox="0 0 360 180" preserveAspectRatio="none" aria-label="Dose trend chart"></svg>
-          <div id="trendLegend" class="trend-legend"></div>
-        </div>
-      </section>
-
-      <section class="card settings-card">
-        <div class="section-header">
-          <div>
-            <p class="eyebrow">Settings</p>
-            <h2>Personalize thresholds</h2>
-          </div>
-        </div>
-        <form id="settingsForm" class="settings-form">
+        <form id="noteForm" class="stack-form">
           <label>
-            Medication / label
-            <input id="medicationName" name="medicationName" type="text" maxlength="40" placeholder="Adderall XR" />
+            Note timestamp
+            <input id="noteTime" name="noteTime" type="datetime-local" />
           </label>
           <label>
-            Dose unit
-            <input id="doseUnit" name="doseUnit" type="text" maxlength="12" placeholder="mg" />
+            Journal note
+            <textarea
+              id="journalNote"
+              name="journalNote"
+              rows="4"
+              maxlength="500"
+              placeholder="How did today’s dose feel? focus, anxiety, appetite, sleep expectations..."
+              required
+            ></textarea>
           </label>
-          <label>
-            Monthly total target
-            <input id="monthlyTarget" name="monthlyTarget" type="number" min="0" step="1" />
-          </label>
-          <label>
-            Target use-days per month
-            <input id="doseDaysTarget" name="doseDaysTarget" type="number" min="0" step="1" />
-          </label>
-          <label>
-            Consecutive-use days before vacation flag
-            <input id="vacationThreshold" name="vacationThreshold" type="number" min="2" step="1" />
-          </label>
-          <button class="secondary-button" type="submit">Save Settings</button>
+          <button class="secondary-button" type="submit">Save Note</button>
         </form>
       </section>
 
-      <section class="card data-card">
+      <section class="card quick-trend-card">
         <div class="section-header">
           <div>
-            <p class="eyebrow">Backup</p>
-            <h2>Export or import data</h2>
+            <p class="eyebrow">Quick Trend</p>
+            <h2>Last 7 days</h2>
           </div>
         </div>
-        <div class="data-actions">
-          <button id="exportButton" class="secondary-button" type="button">Export JSON</button>
-          <label class="upload-button">
-            Import JSON
-            <input id="importInput" type="file" accept="application/json" />
-          </label>
-        </div>
+        <svg id="miniTrendChart" class="mini-trend-chart" viewBox="0 0 360 160" preserveAspectRatio="none" aria-label="Seven day trend"></svg>
+        <div id="miniTrendLegend" class="trend-legend"></div>
       </section>
 
-      <section class="card history-card">
+      <section class="card recent-card">
         <div class="section-header">
           <div>
-            <p class="eyebrow">History</p>
-            <h2>Recent doses</h2>
+            <p class="eyebrow">Recent Activity</p>
+            <h2>Today and yesterday</h2>
           </div>
         </div>
-        <div id="historyEmpty" class="empty-state">
-          No entries yet. Your saved doses will appear here.
-        </div>
-        <div id="historyList" class="history-list"></div>
+        <div id="recentEmpty" class="empty-state">No recent items yet.</div>
+        <div id="recentList" class="history-list"></div>
+      </section>
+
+      <section class="footer-nav">
+        <a class="nav-button" href="./summary.html">More Details</a>
+        <a class="nav-button" href="./settings.html">Settings</a>
       </section>
     </main>
 
-    <template id="historyItemTemplate">
+    <template id="activityItemTemplate">
       <article class="history-item">
         <div class="history-main">
           <div>
@@ -230,6 +190,7 @@
       </article>
     </template>
 
-    <script src="./app.js"></script>
+    <script src="./journal-core.js"></script>
+    <script src="./home.js"></script>
   </body>
 </html>

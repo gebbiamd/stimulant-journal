@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#efe1c7" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Settings | Stimulant Journal</title>
+  </head>
+  <body data-page="settings">
+    <div class="background">
+      <div class="orb orb-one"></div>
+      <div class="orb orb-two"></div>
+      <div class="grid"></div>
+    </div>
+
+    <main class="app-shell">
+      <section class="hero card compact-hero">
+        <div class="hero-row">
+          <div>
+            <p class="eyebrow">Settings</p>
+            <h1>Targets</h1>
+          </div>
+          <a class="ghost-button link-button" href="./index.html">Back Home</a>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Personalize</p>
+            <h2>Thresholds and inventory</h2>
+          </div>
+        </div>
+        <form id="settingsForm" class="stack-form">
+          <label>
+            Medication name
+            <input id="medicationName" name="medicationName" type="text" maxlength="40" />
+          </label>
+          <label>
+            Dose unit
+            <input id="doseUnit" name="doseUnit" type="text" maxlength="12" placeholder="mg" />
+          </label>
+          <label>
+            Daily target
+            <input id="dailyTarget" name="dailyTarget" type="number" min="0" step="1" />
+          </label>
+          <label>
+            Monthly total target
+            <input id="monthlyTarget" name="monthlyTarget" type="number" min="0" step="1" />
+          </label>
+          <label>
+            Target use-days per month
+            <input id="doseDaysTarget" name="doseDaysTarget" type="number" min="0" step="1" />
+          </label>
+          <label>
+            Planned tablets this month
+            <input id="monthlyTablets" name="monthlyTablets" type="number" min="0" step="1" />
+          </label>
+          <label>
+            Milligrams per tablet
+            <input id="mgPerTablet" name="mgPerTablet" type="number" min="0" step="0.5" />
+          </label>
+          <label>
+            Vacation review threshold: consecutive days
+            <input id="vacationThreshold" name="vacationThreshold" type="number" min="1" step="1" />
+          </label>
+          <label>
+            Vacation review threshold: max low-dose day
+            <input id="vacationDoseThreshold" name="vacationDoseThreshold" type="number" min="0" step="0.5" />
+          </label>
+          <label>
+            Vacation review cadence in days
+            <input id="vacationFrequencyDays" name="vacationFrequencyDays" type="number" min="1" step="1" />
+          </label>
+          <button class="primary-button" type="submit">Save Settings</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Backup</p>
+            <h2>Export or import data</h2>
+          </div>
+        </div>
+        <div class="data-actions">
+          <button id="exportButton" class="secondary-button" type="button">Export JSON</button>
+          <label class="upload-button">
+            Import JSON
+            <input id="importInput" type="file" accept="application/json" />
+          </label>
+        </div>
+      </section>
+
+      <section class="footer-nav">
+        <a class="nav-button" href="./index.html">Home</a>
+        <a class="nav-button" href="./summary.html">Summary</a>
+      </section>
+    </main>
+
+    <script src="./journal-core.js"></script>
+    <script src="./settings.js"></script>
+  </body>
+</html>

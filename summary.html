@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#efe1c7" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Summary | Stimulant Journal</title>
+  </head>
+  <body data-page="summary">
+    <div class="background">
+      <div class="orb orb-one"></div>
+      <div class="orb orb-two"></div>
+      <div class="grid"></div>
+    </div>
+
+    <main class="app-shell">
+      <section class="hero card compact-hero">
+        <div class="hero-row">
+          <div>
+            <p class="eyebrow">Summary</p>
+            <h1>Trends</h1>
+          </div>
+          <a class="ghost-button link-button" href="./index.html">Back Home</a>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="metric-list">
+          <div class="metric">
+            <span class="metric-label">Avg last 3 days</span>
+            <strong id="avg3">0</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Avg last 7 days</span>
+            <strong id="avg7">0</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Month total</span>
+            <strong id="monthTotal">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Usage Curve</p>
+            <h2>Last 30 days</h2>
+          </div>
+        </div>
+        <svg id="summaryTrendChart" class="trend-chart tall-chart" viewBox="0 0 360 220" preserveAspectRatio="none"></svg>
+        <div id="summaryTrendLegend" class="trend-legend"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Calendar</p>
+            <h2>This month</h2>
+          </div>
+        </div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Inventory</p>
+            <h2>Tablet tracking</h2>
+          </div>
+        </div>
+        <div class="metric-list compact">
+          <div class="metric">
+            <span class="metric-label">Tablets planned</span>
+            <strong id="plannedTablets">0</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Estimated used</span>
+            <strong id="estimatedUsed">0</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Estimated remaining</span>
+            <strong id="estimatedRemaining">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="footer-nav">
+        <a class="nav-button" href="./index.html">Home</a>
+        <a class="nav-button" href="./settings.html">Settings</a>
+      </section>
+    </main>
+
+    <script src="./journal-core.js"></script>
+    <script src="./summary.js"></script>
+  </body>
+</html>

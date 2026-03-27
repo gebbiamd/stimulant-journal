@@ -1,7 +1,7 @@
 {
   "name": "Stimulant Journal",
   "short_name": "Journal",
-  "description": "Private local stimulant-use journal with simple usage pattern flags.",
+  "description": "Private local stimulant journal with tracking, notes, and trend review.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f3ecdf",

@@ -1,30 +1,21 @@
 # Stimulant Journal
 
-A small static web app for logging dose timing on a phone or desktop.
+Static mobile-friendly journal for stimulant tracking on GitHub Pages.
 
-## What it does
+## Structure
 
-- Logs dose amount with current time or a manual date/time override
-- Stores entries privately in browser `localStorage`
-- Shows recent history, rolling averages, and month totals
-- Estimates a simple usage-pattern status from recent entries and personal thresholds
-- Supports JSON export/import for backup
-- Works on GitHub Pages and can be added to a phone home screen
+- `index.html`: daily home page with dose entry, note entry, thermometer-style gauge, and quick trend
+- `summary.html`: broader analytics, 30-day trend, calendar, and tablet inventory
+- `settings.html`: thresholds, targets, vacation-review settings, and backup tools
+- `journal-core.js`: shared local-storage model and calculations
 
-## Important limitation
+## Notes
 
-GitHub Pages can host the app, but it cannot store shared cloud data by itself. This version keeps data on the specific device/browser where you use it.
+- Data stays in browser storage on the device you use unless you export/import it.
+- GitHub Pages hosts the UI only. It does not sync your data across devices by itself.
 
 ## Local preview
-
-From this folder:
 
 ```sh
 python3 -m http.server 4173
 ```
-
-Then open `http://localhost:4173`.
-
-## GitHub Pages deployment
-
-Create a repository, push this folder, and enable Pages from the root branch.
