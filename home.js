@@ -31,6 +31,7 @@ const els = {
   gaugeReason: document.querySelector("#gaugeReason"),
   monthTabletUsage: document.querySelector("#monthTabletUsage"),
   miniTrendChart: document.querySelector("#miniTrendChart"),
+  miniTrendAxis: document.querySelector("#miniTrendAxis"),
   miniTrendLegend: document.querySelector("#miniTrendLegend"),
   recentList: document.querySelector("#recentList"),
   recentEmpty: document.querySelector("#recentEmpty"),
@@ -95,6 +96,15 @@ function renderMiniTrend() {
       });
       return `<line x1="${x}" y1="${chartBottom}" x2="${x}" y2="${chartBottom + 8}" stroke="rgba(88,112,143,0.18)" stroke-width="1" />
       <text x="${x}" y="196" text-anchor="middle" font-size="10" fill="#58708f">${label}</text>`;
+    })
+    .join("");
+  els.miniTrendAxis.innerHTML = tickIndexes
+    .map((index) => {
+      const label = new Date(levels[index].timestamp).toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+      return `<span>${label}</span>`;
     })
     .join("");
   const doseMarkers = getDoseEntries(state)

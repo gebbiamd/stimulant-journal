@@ -466,6 +466,20 @@ textarea {
   font-size: 0.82rem;
 }
 
+.trend-axis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.trend-axis span {
+  text-align: center;
+  font-weight: 600;
+}
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
