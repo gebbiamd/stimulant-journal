@@ -312,7 +312,7 @@ function setDateTimeInputNow(input) {
 }
 
 function buildOuraRedirectUri() {
-  return `${window.location.origin}${window.location.pathname}`;
+  return `${window.location.origin}/stimulant-journal/settings.html`;
 }
 
 function consumeOuraRedirect(state) {
@@ -349,7 +349,7 @@ function startOuraAuth(state) {
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("scope", scope);
   authUrl.searchParams.set("state", stateToken);
-  window.location.href = authUrl.toString();
+  window.location.assign(authUrl.toString());
 }
 
 function disconnectOura(state) {
