@@ -83,13 +83,13 @@
         <div class="section-header">
           <div>
             <p class="eyebrow">Log Dose</p>
-            <h2>Add a dose now</h2>
+            <h2>Add tablets now</h2>
           </div>
           <button id="nowButton" class="ghost-button" type="button">Use Current Time</button>
         </div>
         <form id="doseForm" class="stack-form">
           <label>
-            Dose amount
+            Tablets taken
             <div class="input-with-unit">
               <input
                 id="doseAmount"
@@ -98,12 +98,13 @@
                 inputmode="decimal"
                 min="0"
                 step="0.5"
-                placeholder="10"
+                placeholder="1.5"
                 required
               />
-              <span id="doseUnitLabel" class="unit-label">mg</span>
+              <span id="doseUnitLabel" class="unit-label">tabs</span>
             </div>
           </label>
+          <p id="doseMgHint" class="field-hint muted">Interpreted using your mg-per-tablet setting.</p>
           <label>
             Manual date/time override
             <input id="doseTime" name="doseTime" type="datetime-local" />
@@ -172,8 +173,8 @@
       </section>
 
       <section class="footer-nav">
-        <a class="nav-button" href="./summary.html">More Details</a>
-        <a class="nav-button" href="./settings.html">Settings</a>
+        <a class="nav-button emphasis-button" href="./summary.html">More Details</a>
+        <a class="nav-button emphasis-button" href="./settings.html">Settings</a>
       </section>
     </main>
 

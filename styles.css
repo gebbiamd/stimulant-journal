@@ -88,7 +88,7 @@ a {
   position: relative;
   width: min(760px, calc(100% - 1.25rem));
   margin: 0 auto;
-  padding: 1rem 0 4rem;
+  padding: 1.2rem 0 5rem;
 }
 
 .card {
@@ -97,14 +97,14 @@ a {
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 1.1rem;
-  margin-top: 1rem;
+  padding: 1.35rem;
+  margin-top: 1.2rem;
   animation: fade-up 0.45s ease both;
 }
 
 .hero {
-  margin-top: 0.75rem;
-  padding: 1.35rem;
+  margin-top: 0.8rem;
+  padding: 1.55rem;
 }
 
 .compact-hero h1 {
@@ -153,43 +153,50 @@ h2 {
 }
 
 .hero-copy {
-  margin: 0.7rem 0 0;
+  margin: 0.85rem 0 0;
   max-width: 38rem;
-  line-height: 1.45;
+  line-height: 1.52;
 }
 
 .header-layout {
   display: grid;
   grid-template-columns: 1.05fr 1fr;
-  gap: 1rem;
+  gap: 1.5rem;
   align-items: center;
-  margin-top: 1rem;
+  margin-top: 1.25rem;
+}
+
+.header-card {
+  padding: 1.5rem;
+  background: linear-gradient(180deg, rgba(255, 249, 241, 0.92), rgba(245, 235, 222, 0.86));
 }
 
 .thermo-panel {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 1.35rem;
+  padding: 0.5rem 0;
 }
 
 .thermo-shell {
   position: relative;
-  width: 74px;
-  height: 254px;
+  width: 84px;
+  height: 282px;
   display: flex;
   justify-content: center;
 }
 
 .thermo-track {
   position: absolute;
-  bottom: 40px;
-  width: 32px;
-  height: 190px;
+  bottom: 46px;
+  width: 34px;
+  height: 210px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.5);
   overflow: hidden;
   border: 1px solid rgba(95, 72, 53, 0.12);
+  box-shadow: inset 0 10px 18px rgba(34, 23, 17, 0.08);
 }
 
 .thermo-fill {
@@ -217,18 +224,19 @@ h2 {
 .thermo-bulb {
   position: absolute;
   bottom: 0;
-  width: 74px;
-  height: 74px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, #f6dfd8, #c97956 72%);
   border: 1px solid rgba(95, 72, 53, 0.12);
+  box-shadow: 0 12px 24px rgba(157, 58, 45, 0.18);
 }
 
 .thermo-readout {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.2rem;
+  gap: 0.3rem;
 }
 
 .thermo-readout strong {
@@ -241,7 +249,12 @@ h2 {
 .stack-form,
 .today-summary {
   display: grid;
-  gap: 0.8rem;
+  gap: 1rem;
+}
+
+.field-hint {
+  margin: -0.2rem 0 0;
+  font-size: 0.86rem;
 }
 
 .stat-chip,
@@ -249,7 +262,7 @@ h2 {
 .calendar-cell {
   background: rgba(255, 255, 255, 0.44);
   border-radius: 18px;
-  padding: 0.9rem;
+  padding: 1rem;
 }
 
 .stat-chip span,
@@ -274,7 +287,7 @@ h2 {
 
 label {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.55rem;
   font-size: 0.94rem;
 }
 
@@ -284,7 +297,7 @@ textarea {
   border: 1px solid rgba(95, 72, 53, 0.18);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.72);
-  padding: 0.9rem 1rem;
+  padding: 1rem 1.05rem;
   color: var(--text);
 }
 
@@ -327,7 +340,7 @@ textarea {
 .upload-button,
 .nav-button,
 .link-button {
-  padding: 0.9rem 1.1rem;
+  padding: 1rem 1.2rem;
 }
 
 .primary-button {
@@ -340,6 +353,13 @@ textarea {
 .nav-button {
   background: var(--secondary);
   color: #f9f4ed;
+}
+
+.emphasis-button {
+  min-height: 58px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: 0 14px 28px rgba(47, 74, 66, 0.16);
 }
 
 .ghost-button,
@@ -405,7 +425,7 @@ textarea {
 
 .mini-trend-chart {
   height: 160px;
-  margin-top: 1rem;
+  margin-top: 1.1rem;
 }
 
 .trend-chart {
@@ -468,8 +488,8 @@ textarea {
 
 .history-list {
   display: grid;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  gap: 0.9rem;
+  margin-top: 1.1rem;
 }
 
 .history-item {
@@ -489,8 +509,8 @@ textarea {
 }
 
 .empty-state {
-  margin-top: 1rem;
-  padding: 1rem;
+  margin-top: 1.1rem;
+  padding: 1.1rem;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.4);
   color: var(--muted);
@@ -501,7 +521,8 @@ textarea {
 }
 
 .footer-nav {
-  margin-top: 1rem;
+  margin-top: 1.35rem;
+  gap: 0.85rem;
 }
 
 .footer-nav .nav-button {
@@ -542,9 +563,14 @@ textarea {
 
   .thermo-panel {
     justify-content: flex-start;
+    align-items: center;
   }
 
   .calendar-grid {
     grid-template-columns: repeat(4, 1fr);
+  }
+
+  .card {
+    padding: 1.15rem;
   }
 }

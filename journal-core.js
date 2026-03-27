@@ -51,11 +51,23 @@ function normalizeEntry(entry) {
       note: String(entry.note || "").trim(),
     };
   }
+  const tabletCount =
+    entry.tabletCount !== undefined && entry.tabletCount !== null
+      ? Number(entry.tabletCount) || 0
+      : (Number(entry.amount) || 0) / ((Number(entry.mgPerTablet) || Number(defaultState.settings.mgPerTablet)));
+  const mgPerTablet =
+    Number(entry.mgPerTablet) || Number(defaultState.settings.mgPerTablet);
+  const amount =
+    entry.amount !== undefined && entry.amount !== null
+      ? Number(entry.amount) || 0
+      : tabletCount * mgPerTablet;
   return {
     id: entry.id || crypto.randomUUID(),
     type: "dose",
     timestamp,
-    amount: Number(entry.amount) || 0,
+    amount,
+    tabletCount,
+    mgPerTablet,
     note: String(entry.note || "").trim(),
   };
 }
@@ -102,6 +114,10 @@ function parseTimestamp(input) {
 
 function formatNumber(value) {
   return Number(value).toLocaleString(undefined, { maximumFractionDigits: 1 });
+}
+
+function tabletLabel(count) {
+  return `${formatNumber(count)} ${Number(count) === 1 ? "tablet" : "tablets"}`;
 }
 
 function unitLabel(state) {
@@ -157,10 +173,9 @@ function getRollingAverage(state, days) {
 }
 
 function getCurrentMonthTabletUsage(state) {
-  const totalDose = getCurrentMonthDoseEntries(state).reduce((sum, entry) => sum + Number(entry.amount), 0);
-  const mgPerTablet = Number(state.settings.mgPerTablet) || defaultState.settings.mgPerTablet;
+  const totalTablets = getCurrentMonthDoseEntries(state).reduce((sum, entry) => sum + Number(entry.tabletCount || 0), 0);
   const planned = Number(state.settings.monthlyTablets) || 0;
-  const used = mgPerTablet > 0 ? totalDose / mgPerTablet : 0;
+  const used = totalTablets;
   return {
     used,
     planned,
@@ -195,11 +210,15 @@ function getHomeGauge(state) {
   return { tone: "good", label: "Within target", ratio, reason: "Today is still within your target range." };
 }
 
-function saveDoseEntry(state, amount, timestamp, note) {
+function saveDoseEntry(state, tabletCount, timestamp, note) {
+  const mgPerTablet = Number(state.settings.mgPerTablet) || defaultState.settings.mgPerTablet;
+  const amount = Number(tabletCount) * mgPerTablet;
   state.entries.push({
     id: crypto.randomUUID(),
     type: "dose",
     amount,
+    tabletCount: Number(tabletCount),
+    mgPerTablet,
     timestamp: parseTimestamp(timestamp),
     note: String(note || "").trim(),
   });

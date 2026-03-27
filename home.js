@@ -12,6 +12,7 @@ const els = {
   doseAmount: document.querySelector("#doseAmount"),
   doseTime: document.querySelector("#doseTime"),
   doseNote: document.querySelector("#doseNote"),
+  doseMgHint: document.querySelector("#doseMgHint"),
   noteTime: document.querySelector("#noteTime"),
   journalNote: document.querySelector("#journalNote"),
   nowButton: document.querySelector("#nowButton"),
@@ -35,6 +36,7 @@ const els = {
 function renderGauge() {
   const todayEntries = getTodayDoseEntries(state);
   const total = todayEntries.reduce((sum, entry) => sum + Number(entry.amount), 0);
+  const totalTablets = todayEntries.reduce((sum, entry) => sum + Number(entry.tabletCount || 0), 0);
   const lastDose = todayEntries[0] ? new Date(todayEntries[0].timestamp) : null;
   const gauge = getHomeGauge(state);
   const tabletUsage = getCurrentMonthTabletUsage(state);
@@ -47,12 +49,13 @@ function renderGauge() {
     : "None";
   els.todayGaugeBadge.textContent = gauge.label;
   els.todayGaugeBadge.className = `status-badge ${gauge.tone}`;
-  els.todayGaugeLabel.textContent = `${Math.round(gauge.ratio * 100)}% of your daily target`;
-  els.gaugeReason.textContent = gauge.reason;
+  els.todayGaugeLabel.textContent = `${tabletLabel(totalTablets)} today • ${Math.round(gauge.ratio * 100)}% of your daily mg target`;
+  els.gaugeReason.textContent = `${gauge.reason} Monthly tablets used: ${formatNumber(tabletUsage.used)} of ${formatNumber(tabletUsage.planned)}.`;
   els.monthTabletUsage.textContent = `${formatNumber(tabletUsage.used)} / ${formatNumber(tabletUsage.planned)}`;
   els.thermoFill.style.height = `${Math.min(gauge.ratio * 100, 100)}%`;
   els.thermoFill.className = `thermo-fill ${gauge.tone}`;
-  els.doseUnitLabel.textContent = unitLabel(state);
+  els.doseUnitLabel.textContent = "tabs";
+  els.doseMgHint.textContent = `Current conversion: 1 tablet = ${formatNumber(state.settings.mgPerTablet || defaultState.settings.mgPerTablet)} ${unitLabel(state)}.`;
 }
 
 function renderMiniTrend() {
@@ -96,7 +99,9 @@ function renderRecent() {
     const fragment = els.activityItemTemplate.content.cloneNode(true);
     const date = new Date(entry.timestamp);
     fragment.querySelector(".history-dose").textContent =
-      entry.type === "note" ? "Journal note" : `${formatNumber(entry.amount)} ${unitLabel(state)}`;
+      entry.type === "note"
+        ? "Journal note"
+        : `${tabletLabel(entry.tabletCount || 0)} • ${formatNumber(entry.amount)} ${unitLabel(state)}`;
     fragment.querySelector(".history-time").textContent = date.toLocaleString(undefined, {
       weekday: "short",
       hour: "numeric",
@@ -119,9 +124,9 @@ function render() {
 els.nowButton.addEventListener("click", () => setDateTimeInputNow(els.doseTime));
 els.doseForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  const amount = Number.parseFloat(els.doseAmount.value);
-  if (!Number.isFinite(amount) || amount <= 0) return;
-  saveDoseEntry(state, amount, els.doseTime.value, els.doseNote.value);
+  const tabletCount = Number.parseFloat(els.doseAmount.value);
+  if (!Number.isFinite(tabletCount) || tabletCount <= 0) return;
+  saveDoseEntry(state, tabletCount, els.doseTime.value, els.doseNote.value);
   els.doseForm.reset();
   setDateTimeInputNow(els.doseTime);
   render();
