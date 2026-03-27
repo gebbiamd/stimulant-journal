@@ -10,6 +10,7 @@ const defaultState = {
     medicationName: "",
     doseUnit: "mg",
     monthlyTarget: 300,
+    doseDaysTarget: 16,
     vacationThreshold: 10,
   },
 };
@@ -40,8 +41,11 @@ const els = {
   medicationName: document.querySelector("#medicationName"),
   doseUnit: document.querySelector("#doseUnit"),
   monthlyTarget: document.querySelector("#monthlyTarget"),
+  doseDaysTarget: document.querySelector("#doseDaysTarget"),
   vacationThreshold: document.querySelector("#vacationThreshold"),
   installButton: document.querySelector("#installButton"),
+  trendChart: document.querySelector("#trendChart"),
+  trendLegend: document.querySelector("#trendLegend"),
 };
 
 let state = loadState();
@@ -124,6 +128,7 @@ function saveSettings(event) {
     medicationName: els.medicationName.value.trim(),
     doseUnit: (els.doseUnit.value || "mg").trim(),
     monthlyTarget: Number.parseFloat(els.monthlyTarget.value) || defaultState.settings.monthlyTarget,
+    doseDaysTarget: Number.parseInt(els.doseDaysTarget.value, 10) || defaultState.settings.doseDaysTarget,
     vacationThreshold:
       Number.parseInt(els.vacationThreshold.value, 10) || defaultState.settings.vacationThreshold,
   };
@@ -207,9 +212,13 @@ function getRecommendation() {
   const monthUsedDays = new Set(monthEntries.map((entry) => dateKey(entry.timestamp))).size;
   const consecutiveDays = getConsecutiveUseDays();
   const target = Number(state.settings.monthlyTarget) || defaultState.settings.monthlyTarget;
+  const doseDaysTarget = Number(state.settings.doseDaysTarget) || defaultState.settings.doseDaysTarget;
   const noDoseIn48Hours = Date.now() - new Date(state.entries[0].timestamp).getTime() > 2 * DAY_MS;
 
-  if (consecutiveDays >= Number(state.settings.vacationThreshold || 10) || monthUsedDays >= 22) {
+  if (
+    consecutiveDays >= Number(state.settings.vacationThreshold || 10) ||
+    monthUsedDays >= Math.max(doseDaysTarget + 4, 22)
+  ) {
     return {
       tone: "danger",
       badge: "Vacation",
@@ -219,21 +228,23 @@ function getRecommendation() {
     };
   }
 
-  if (avg7 >= avg3 * 0.9 && monthTotal > target * 1.15) {
+  if (avg7 >= avg3 * 0.9 && (monthTotal > target * 1.15 || monthUsedDays > doseDaysTarget * 1.15)) {
     return {
       tone: "danger",
       badge: "Cut Back",
       title: "This month is running hot",
-      reason: "Your current month total is well above your personal target and recent intake has stayed elevated.",
+      reason:
+        "Your current month total or number of use-days is well above your personal target and recent intake has stayed elevated.",
     };
   }
 
-  if (avg3 > avg7 * 1.2 || monthTotal > target) {
+  if (avg3 > avg7 * 1.2 || monthTotal > target || monthUsedDays > doseDaysTarget) {
     return {
       tone: "warn",
       badge: "Slow Down",
       title: "Recent use is trending up",
-      reason: "The short-term average is above your longer view or the month total has crossed your target.",
+      reason:
+        "The short-term average is above your longer view or your month total/use-days have crossed your target.",
     };
   }
 
@@ -300,7 +311,72 @@ function hydrateSettings() {
   els.medicationName.value = state.settings.medicationName;
   els.doseUnit.value = state.settings.doseUnit;
   els.monthlyTarget.value = state.settings.monthlyTarget;
+  els.doseDaysTarget.value = state.settings.doseDaysTarget;
   els.vacationThreshold.value = state.settings.vacationThreshold;
+}
+
+function renderTrendChart() {
+  const days = 14;
+  const today = startOfLocalDay(new Date());
+  const totals = [];
+
+  for (let offset = days - 1; offset >= 0; offset -= 1) {
+    const day = new Date(today.getTime() - offset * DAY_MS);
+    const key = dateKey(day);
+    const total = state.entries.reduce((sum, entry) => {
+      return dateKey(entry.timestamp) === key ? sum + Number(entry.amount) : sum;
+    }, 0);
+    totals.push({
+      key,
+      total,
+      label: day.toLocaleDateString(undefined, { month: "numeric", day: "numeric" }),
+    });
+  }
+
+  const width = 360;
+  const height = 180;
+  const padding = 16;
+  const chartHeight = 132;
+  const chartBottom = 152;
+  const barWidth = 18;
+  const gap = 7;
+  const maxTotal = Math.max(...totals.map((item) => item.total), 1);
+
+  const gridLines = [0.25, 0.5, 0.75, 1].map((ratio) => {
+    const y = chartBottom - chartHeight * ratio;
+    return `<line x1="${padding}" y1="${y}" x2="${width - padding}" y2="${y}" stroke="rgba(95,72,53,0.12)" stroke-width="1" />`;
+  });
+
+  const bars = totals
+    .map((item, index) => {
+      const x = padding + index * (barWidth + gap);
+      const barHeight = (item.total / maxTotal) * chartHeight;
+      const y = chartBottom - barHeight;
+      const fill = item.total > 0 ? "url(#barGradient)" : "rgba(95,72,53,0.12)";
+      const textY = height - 10;
+      const shortLabel = item.label.replace("/", ".");
+
+      return `
+        <rect x="${x}" y="${y}" width="${barWidth}" height="${Math.max(barHeight, 2)}" rx="6" fill="${fill}" />
+        <text x="${x + barWidth / 2}" y="${textY}" text-anchor="middle" font-size="8" fill="#6f6157">${shortLabel}</text>
+      `;
+    })
+    .join("");
+
+  els.trendChart.innerHTML = `
+    <defs>
+      <linearGradient id="barGradient" x1="0%" x2="0%" y1="0%" y2="100%">
+        <stop offset="0%" stop-color="#c97956" />
+        <stop offset="100%" stop-color="#2f4a42" />
+      </linearGradient>
+    </defs>
+    ${gridLines.join("")}
+    <line x1="${padding}" y1="${chartBottom}" x2="${width - padding}" y2="${chartBottom}" stroke="rgba(95,72,53,0.2)" stroke-width="1.2" />
+    ${bars}
+  `;
+
+  const recentTotal = totals.reduce((sum, item) => sum + item.total, 0);
+  els.trendLegend.textContent = `14-day total: ${formatNumber(recentTotal)} ${unitLabel()} | Peak day: ${formatNumber(maxTotal)} ${unitLabel()}`;
 }
 
 function exportData() {
@@ -372,6 +448,7 @@ function registerServiceWorker() {
 function render() {
   hydrateSettings();
   renderMetrics();
+  renderTrendChart();
   renderHistory();
 }
 

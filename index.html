@@ -145,6 +145,19 @@
         </div>
       </section>
 
+      <section class="card trend-card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Visual Trend</p>
+            <h2>Last 14 days</h2>
+          </div>
+        </div>
+        <div class="trend-wrap">
+          <svg id="trendChart" class="trend-chart" viewBox="0 0 360 180" preserveAspectRatio="none" aria-label="Dose trend chart"></svg>
+          <div id="trendLegend" class="trend-legend"></div>
+        </div>
+      </section>
+
       <section class="card settings-card">
         <div class="section-header">
           <div>
@@ -162,8 +175,12 @@
             <input id="doseUnit" name="doseUnit" type="text" maxlength="12" placeholder="mg" />
           </label>
           <label>
-            Monthly comfort target
+            Monthly total target
             <input id="monthlyTarget" name="monthlyTarget" type="number" min="0" step="1" />
+          </label>
+          <label>
+            Target use-days per month
+            <input id="doseDaysTarget" name="doseDaysTarget" type="number" min="0" step="1" />
           </label>
           <label>
             Consecutive-use days before vacation flag
