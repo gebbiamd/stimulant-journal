@@ -181,15 +181,29 @@ h2 {
 
 .thermo-shell {
   position: relative;
-  width: 84px;
+  width: 128px;
   height: 282px;
   display: flex;
   justify-content: center;
 }
 
+.thermo-scale {
+  position: absolute;
+  left: 0;
+  top: 16px;
+  bottom: 52px;
+  width: 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
 .thermo-track {
   position: absolute;
   bottom: 46px;
+  left: 54px;
   width: 34px;
   height: 210px;
   border-radius: 999px;
@@ -197,6 +211,17 @@ h2 {
   overflow: hidden;
   border: 1px solid rgba(95, 72, 53, 0.12);
   box-shadow: inset 0 10px 18px rgba(34, 23, 17, 0.08);
+}
+
+.target-marker {
+  position: absolute;
+  left: -10px;
+  right: -10px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(34, 23, 17, 0.45);
+  bottom: 100%;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
 }
 
 .thermo-fill {
@@ -224,6 +249,7 @@ h2 {
 .thermo-bulb {
   position: absolute;
   bottom: 0;
+  left: 29px;
   width: 84px;
   height: 84px;
   border-radius: 50%;

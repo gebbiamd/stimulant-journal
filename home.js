@@ -18,6 +18,10 @@ const els = {
   nowButton: document.querySelector("#nowButton"),
   doseUnitLabel: document.querySelector("#doseUnitLabel"),
   thermoFill: document.querySelector("#thermoFill"),
+  targetMarker: document.querySelector("#targetMarker"),
+  scaleTop: document.querySelector("#scaleTop"),
+  scaleMid: document.querySelector("#scaleMid"),
+  scaleBase: document.querySelector("#scaleBase"),
   todayTotal: document.querySelector("#todayTotal"),
   todayUnit: document.querySelector("#todayUnit"),
   todayEntries: document.querySelector("#todayEntries"),
@@ -40,6 +44,7 @@ function renderGauge() {
   const lastDose = todayEntries[0] ? new Date(todayEntries[0].timestamp) : null;
   const gauge = getHomeGauge(state);
   const tabletUsage = getCurrentMonthTabletUsage(state);
+  const dailyTarget = Number(state.settings.dailyTarget) || defaultState.settings.dailyTarget;
 
   els.todayTotal.textContent = formatNumber(total);
   els.todayUnit.textContent = unitLabel(state);
@@ -54,6 +59,10 @@ function renderGauge() {
   els.monthTabletUsage.textContent = `${formatNumber(tabletUsage.used)} / ${formatNumber(tabletUsage.planned)}`;
   els.thermoFill.style.height = `${Math.min(gauge.ratio * 100, 100)}%`;
   els.thermoFill.className = `thermo-fill ${gauge.tone}`;
+  els.targetMarker.style.bottom = `${Math.min(100, Math.max(0, 100))}%`;
+  els.scaleTop.textContent = `${formatNumber(dailyTarget)} ${unitLabel(state)}`;
+  els.scaleMid.textContent = `${formatNumber(dailyTarget / 2)} ${unitLabel(state)}`;
+  els.scaleBase.textContent = `0 ${unitLabel(state)}`;
   els.doseUnitLabel.textContent = "tabs";
   els.doseMgHint.textContent = `Current conversion: 1 tablet = ${formatNumber(state.settings.mgPerTablet || defaultState.settings.mgPerTablet)} ${unitLabel(state)}.`;
 }
