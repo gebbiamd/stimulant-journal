@@ -366,20 +366,30 @@ async function syncOuraSleep(state) {
     start_date: dateKey(startDate),
     end_date: dateKey(endDate),
   });
-  const response = await fetch(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Oura sync failed: ${response.status} ${detail}`);
+  const endpoints = [
+    "https://api.ouraring.com/v2/usercollection/sleep",
+    "https://api.ouraring.com/v2/usercollection/daily_sleep",
+  ];
+
+  let lastError = "Unknown Oura sync error";
+  for (const endpoint of endpoints) {
+    const response = await fetch(`${endpoint}?${query.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (response.ok) {
+      const payload = await response.json();
+      state.integrations.oura.sleep = Array.isArray(payload.data) ? payload.data : [];
+      state.integrations.oura.lastSyncAt = new Date().toISOString();
+      persistState(state);
+      return state.integrations.oura.sleep;
+    }
+
+    const text = await response.text();
+    lastError = `Oura sync failed on ${endpoint}: ${response.status} ${text}`;
   }
-  const payload = await response.json();
-  state.integrations.oura.sleep = Array.isArray(payload.data) ? payload.data : [];
-  state.integrations.oura.lastSyncAt = new Date().toISOString();
-  persistState(state);
-  return state.integrations.oura.sleep;
+  throw new Error(lastError);
 }
 
 function getRecentOuraSleep(state) {
