@@ -256,6 +256,10 @@ function getSettingsRedirectUrl() {
   return `${window.location.origin}/stimulant-journal/settings.html`;
 }
 
+function getDefaultOpenAiRelayUrl() {
+  return `${SUPABASE_URL}/functions/v1/openai-summary`;
+}
+
 async function signUpWithEmailPassword(email, password) {
   const client = getSupabaseClient();
   const { data, error } = await client.auth.signUp({
@@ -788,8 +792,7 @@ function getOuraAiContext(state) {
 }
 
 async function generateAiSummary(state) {
-  const relayUrl = (state.settings.openAiRelayUrl || "").trim();
-  if (!relayUrl) throw new Error("Add your OpenAI relay URL in Settings first.");
+  const relayUrl = (state.settings.openAiRelayUrl || "").trim() || getDefaultOpenAiRelayUrl();
 
   const recentEntries = state.entries.slice(0, 60);
   const payload = {
@@ -802,9 +805,18 @@ async function generateAiSummary(state) {
     },
   };
 
+  const headers = { "Content-Type": "application/json" };
+  if (relayUrl === getDefaultOpenAiRelayUrl()) {
+    const session = await getSupabaseSession();
+    if (!session?.access_token) {
+      throw new Error("Sign in with email first so the built-in AI summary can use your Supabase relay.");
+    }
+    headers.Authorization = `Bearer ${session.access_token}`;
+  }
+
   const response = await fetch(relayUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(payload),
   });
   if (!response.ok) {

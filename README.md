@@ -15,6 +15,7 @@ Static mobile-friendly journal for stimulant tracking on GitHub Pages.
 - GitHub Pages hosts the UI only. It does not sync your data across devices by itself.
 - Oura can be connected client-side with an Oura developer app and client ID.
 - OpenAI summaries should use a secure relay, not a browser-exposed API key. A starter relay example is in `openai-relay-example.js`.
+- The simplest AI setup for this project is the built-in Supabase Edge Function at `supabase/functions/openai-summary`.
 - Supabase-backed account sync is scaffolded. Run `supabase-schema.sql` in your project and use email/password sign-up and sign-in from the Settings page.
 - Oura is now intended to use Supabase Edge Functions instead of browser-direct fetches. Deploy the functions under `supabase/functions/` and set secrets for `OURA_CLIENT_ID`, `OURA_CLIENT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, and `SITE_URL`.
 - iPhone Shortcuts can post doses into the same synced journal via `supabase/functions/shortcut-log-dose`.
@@ -101,4 +102,32 @@ Recommended Shortcut actions:
 
 ```sh
 python3 -m http.server 4173
+```
+
+## Built-in OpenAI Summary Setup
+
+This project can use Supabase itself as the OpenAI relay, so you do not need Cloudflare or another separate host.
+
+1. Set your OpenAI API key as a Supabase secret:
+
+```sh
+supabase secrets set OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+```
+
+2. Deploy the summary function:
+
+```sh
+supabase functions deploy openai-summary --no-verify-jwt
+```
+
+3. In the app, leave `OpenAI relay URL` blank.
+
+4. Sign in to your Supabase-backed account in Settings.
+
+5. Go to `More Details` and tap `Generate Summary`.
+
+The app will default to:
+
+```text
+https://fuobbnjqvdltxcmczwft.supabase.co/functions/v1/openai-summary
 ```
