@@ -336,10 +336,17 @@ els.ouraConnectButton?.addEventListener("click", async () => {
     setBusy(els.ouraConnectButton, "Connecting...", false);
   }
 });
-els.ouraDisconnectButton?.addEventListener("click", () => {
-  disconnectOura(state);
-  setNotice("Oura disconnected.", "success");
-  hydrate();
+els.ouraDisconnectButton?.addEventListener("click", async () => {
+  setBusy(els.ouraDisconnectButton, "Disconnecting...", true);
+  try {
+    await disconnectOuraRemote(state);
+    setNotice("Oura disconnected.", "success");
+    hydrate();
+  } catch (error) {
+    setNotice(getFriendlyAuthMessage(error), "error");
+  } finally {
+    setBusy(els.ouraDisconnectButton, "Disconnect Oura", false);
+  }
 });
 
 (async () => {

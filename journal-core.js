@@ -567,6 +567,27 @@ function disconnectOura(state) {
   persistState(state);
 }
 
+async function disconnectOuraRemote(state) {
+  const session = await getSupabaseSession();
+  if (!session?.access_token) {
+    disconnectOura(state);
+    return;
+  }
+
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/oura-disconnect`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || payload.message || `Oura disconnect failed: ${response.status}`);
+  }
+
+  disconnectOura(state);
+}
+
 async function syncOuraSleep(state) {
   const session = await getSupabaseSession();
   if (!session?.access_token) throw new Error("Sign in with email first.");
