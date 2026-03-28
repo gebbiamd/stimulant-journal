@@ -846,21 +846,50 @@ textarea {
   margin-top: 0.35rem;
 }
 
-.oura-compact-table .recent-table-head {
-  padding: 0.42rem 0.72rem 0.38rem;
-  font-size: 0.7rem;
+.oura-table-head,
+.oura-table-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.7fr 0.7fr;
+  column-gap: 0.55rem;
+  align-items: center;
 }
 
-.oura-compact-table .recent-row {
-  padding: 0.42rem 0.72rem;
-  min-height: 0;
+.oura-table-head {
+  padding: 0.38rem 0.72rem 0.34rem;
+  background: rgba(208, 226, 255, 0.62);
+  color: #5d82b4;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.oura-compact-table .history-time,
-.oura-compact-table .history-dose,
-.oura-compact-table .history-hours {
+.oura-table-row {
+  padding: 0.38rem 0.72rem;
+  min-height: 2rem;
+  background: rgba(255, 255, 255, 0.72);
+  border-top: 1px solid rgba(255, 255, 255, 0.38);
+}
+
+.oura-table-row:nth-child(even) {
+  background: rgba(228, 240, 255, 0.74);
+}
+
+.oura-table-day,
+.oura-table-score,
+.oura-table-hours {
   font-size: 0.8rem;
-  line-height: 1.15;
+  line-height: 1.1;
+}
+
+.oura-table-day,
+.oura-table-hours {
+  color: #315f99;
+}
+
+.oura-table-score,
+.oura-table-hours {
+  text-align: right;
 }
 
 .entry-editor-list {

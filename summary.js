@@ -193,7 +193,7 @@ function renderSleepPatterns() {
 function renderOuraSleep() {
   const sleep = getSortedOuraSleep(state).slice(0, 10);
   els.ouraSleepList.innerHTML = `
-    <div class="recent-table-head recent-table-head-3col" aria-hidden="true">
+    <div class="oura-table-head" aria-hidden="true">
       <span>Day</span>
       <span>Score</span>
       <span>Hours</span>
@@ -213,16 +213,16 @@ function renderOuraSleep() {
     setNotice(`Oura sleep records loaded. Last synced ${lastSync}.`, "success");
   }
   for (const item of sleep) {
-    const entry = document.createElement("article");
-    entry.className = "recent-row recent-row-3col";
+    const entry = document.createElement("div");
+    entry.className = "oura-table-row";
     const displayDate = getOuraDisplayDate(item);
     const durationHours = item.total_sleep_duration ? item.total_sleep_duration / 3600 : null;
     const scoreLabel = item.score ?? "Pending";
     const hoursLabel = durationHours ? `${formatNumber(durationHours)}h` : "-";
     entry.innerHTML = `
-      <p class="history-time">${displayDate ? displayDate.toLocaleDateString() : "Recent sleep"}</p>
-      <strong class="history-dose">${scoreLabel}</strong>
-      <p class="history-hours">${hoursLabel}</p>
+      <span class="oura-table-day">${displayDate ? displayDate.toLocaleDateString() : "Recent sleep"}</span>
+      <strong class="oura-table-score">${scoreLabel}</strong>
+      <span class="oura-table-hours">${hoursLabel}</span>
     `;
     els.ouraSleepList.appendChild(entry);
   }
