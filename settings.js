@@ -155,9 +155,19 @@ function renderEntryEditor() {
   els.entryEditorList.innerHTML = "";
   if (!entries.length) return;
 
+  const head = document.createElement("div");
+  head.className = "entry-editor-head";
+  head.innerHTML = `
+    <span>Time</span>
+    <span>Tabs</span>
+    <span>Note</span>
+    <span>Actions</span>
+  `;
+  els.entryEditorList.appendChild(head);
+
   for (const entry of entries) {
-    const article = document.createElement("article");
-    article.className = "entry-editor-item";
+    const row = document.createElement("article");
+    row.className = "entry-editor-item";
     const doseValue = entry.type === "dose" ? Number(entry.tabletCount || 0) : "";
     const doseLabel = entry.type === "dose"
       ? `${formatNumber(entry.amount || 0)} ${unitLabel(state)}`
@@ -168,30 +178,25 @@ function renderEntryEditor() {
       hour: "numeric",
       minute: "2-digit",
     });
-    article.innerHTML = `
-      <div class="entry-editor-grid">
-        <label>
-          <span class="entry-field-label">Time</span>
-          <input class="entry-input" data-field="timestamp" type="datetime-local" value="${formatDateTimeLocalValue(entry.timestamp)}" />
-          <span class="field-hint muted">${timestampLabel}</span>
-        </label>
-        <label>
-          <span class="entry-field-label">Tabs</span>
-          <input class="entry-input" data-field="tabletCount" type="number" min="0" step="0.25" value="${doseValue}" ${entry.type === "note" ? "disabled" : ""} />
-          <span class="field-hint muted">${doseLabel}</span>
-        </label>
-        <label class="entry-note-field">
-          <span class="entry-field-label">Note</span>
-          <input class="entry-input" data-field="note" type="text" value="${String(entry.note || "").replace(/"/g, "&quot;")}" />
-        </label>
+    row.innerHTML = `
+      <div class="entry-editor-time">
+        <input class="entry-input" data-field="timestamp" type="datetime-local" value="${formatDateTimeLocalValue(entry.timestamp)}" />
+        <span class="field-hint muted">${timestampLabel}</span>
+      </div>
+      <div class="entry-editor-dose">
+        <input class="entry-input" data-field="tabletCount" type="number" min="0" step="0.25" value="${doseValue}" ${entry.type === "note" ? "disabled" : ""} />
+        <span class="field-hint muted">${doseLabel}</span>
+      </div>
+      <div class="entry-editor-note">
+        <input class="entry-input" data-field="note" type="text" value="${String(entry.note || "").replace(/"/g, "&quot;")}" placeholder="${entry.type === "note" ? "Note entry" : "Optional note"}" />
       </div>
       <div class="entry-editor-actions">
         <span class="entry-type-chip">${entry.type === "dose" ? "Dose" : "Note"}</span>
-        <button class="ghost-button entry-save-button" type="button" data-id="${entry.id}">Save Row</button>
+        <button class="ghost-button entry-save-button" type="button" data-id="${entry.id}">Save</button>
         <button class="delete-button entry-delete-button" type="button" data-id="${entry.id}">Delete</button>
       </div>
     `;
-    els.entryEditorList.appendChild(article);
+    els.entryEditorList.appendChild(row);
   }
 }
 
