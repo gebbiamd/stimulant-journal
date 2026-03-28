@@ -132,9 +132,16 @@ els.generateSummaryButton.addEventListener("click", async () => {
   }
 });
 
-renderHeaderMetrics();
-renderSummaryTrend();
-renderCalendar();
-renderInventory();
-renderOuraSleep();
-registerServiceWorker();
+(async () => {
+  try {
+    await loadRemoteStateInto(state);
+  } catch (error) {
+    els.aiSummaryBox.textContent = error.message;
+  }
+  renderHeaderMetrics();
+  renderSummaryTrend();
+  renderCalendar();
+  renderInventory();
+  renderOuraSleep();
+  registerServiceWorker();
+})();

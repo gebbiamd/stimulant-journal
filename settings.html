@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=12" />
+    <link rel="manifest" href="./manifest.webmanifest?v=13" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=12" />
+    <link rel="stylesheet" href="./styles.css?v=13" />
     <title>Settings | Stimulant Journal</title>
   </head>
   <body data-page="settings">
@@ -25,6 +25,33 @@
             <h1>Targets</h1>
           </div>
           <a class="ghost-button link-button" href="./index.html">Back Home</a>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Account</p>
+            <h2>Supabase sync</h2>
+          </div>
+        </div>
+        <div class="stack-form">
+          <div class="stat-chip">
+            <span>Cloud account</span>
+            <strong id="authStatus">Not signed in</strong>
+          </div>
+          <label>
+            Email for magic link login
+            <input id="authEmail" name="authEmail" type="email" placeholder="you@example.com" />
+          </label>
+          <div class="data-actions">
+            <button id="authSignInButton" class="secondary-button" type="button">Email Me a Login Link</button>
+            <button id="authRefreshButton" class="ghost-button" type="button">Pull Latest Cloud Data</button>
+            <button id="authSignOutButton" class="ghost-button" type="button">Sign Out</button>
+          </div>
+          <p id="authMessage" class="muted">
+            Sign in with email to save entries and settings to your Supabase-backed account.
+          </p>
         </div>
       </section>
 
@@ -154,7 +181,8 @@
       </section>
     </main>
 
-    <script src="./journal-core.js?v=12"></script>
-    <script src="./settings.js?v=12"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./journal-core.js?v=13"></script>
+    <script src="./settings.js?v=13"></script>
   </body>
 </html>

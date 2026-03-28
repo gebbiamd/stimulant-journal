@@ -205,5 +205,12 @@ els.recentList.addEventListener("click", (event) => {
 setDateTimeInputNow(els.doseTime);
 setDateTimeInputNow(els.noteTime);
 renderInstallPrompt(els.installButton);
-registerServiceWorker();
-render();
+(async () => {
+  try {
+    await loadRemoteStateInto(state);
+  } catch (error) {
+    console.error(error);
+  }
+  registerServiceWorker();
+  render();
+})();

@@ -3,6 +3,9 @@
 const STORAGE_KEY = "stimulant-journal-data-v2";
 const LEGACY_STORAGE_KEY = "stimulant-journal-data-v1";
 const DAY_MS = 24 * 60 * 60 * 1000;
+const SUPABASE_URL = "https://fuobbnjqvdltxcmczwft.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1b2JibmpxdmRsdHhjbWN6d2Z0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTI4MDcsImV4cCI6MjA5MDIyODgwN30.nXxmv1_Bc2rj6Zu7yZtQwUEWGtliNL64m1KlY5Ki3O8";
 
 const defaultState = {
   entries: [],
@@ -31,6 +34,10 @@ const defaultState = {
       sleep: [],
     },
   },
+  auth: {
+    email: "",
+    userId: "",
+  },
 };
 
 function cloneDefaultState() {
@@ -38,6 +45,7 @@ function cloneDefaultState() {
     entries: [],
     settings: { ...defaultState.settings },
     integrations: JSON.parse(JSON.stringify(defaultState.integrations)),
+    auth: { ...defaultState.auth },
   };
 }
 
@@ -88,6 +96,7 @@ function loadState() {
           ...((parsed.integrations && parsed.integrations.oura) || {}),
         },
       },
+      auth: { ...defaultState.auth, ...(parsed.auth || {}) },
     };
   } catch {
     return cloneDefaultState();
@@ -96,6 +105,162 @@ function loadState() {
 
 function persistState(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+let supabaseClient = null;
+let remoteSyncPromise = Promise.resolve();
+
+function getSupabaseClient() {
+  if (!window.supabase) throw new Error("Supabase client library is not loaded.");
+  if (!supabaseClient) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    });
+  }
+  return supabaseClient;
+}
+
+async function refreshAuthState(state) {
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.getSession();
+  if (error) throw error;
+  const user = data.session?.user || null;
+  state.auth = {
+    email: user?.email || "",
+    userId: user?.id || "",
+  };
+  persistState(state);
+  return user;
+}
+
+async function loadRemoteStateInto(state) {
+  const client = getSupabaseClient();
+  const user = await refreshAuthState(state);
+  if (!user) return state;
+
+  const [{ data: settingsRows, error: settingsError }, { data: entryRows, error: entriesError }] = await Promise.all([
+    client.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
+    client.from("journal_entries").select("*").eq("user_id", user.id).order("timestamp", { ascending: false }),
+  ]);
+
+  if (settingsError) throw settingsError;
+  if (entriesError) throw entriesError;
+
+  if (settingsRows) {
+    state.settings = {
+      ...defaultState.settings,
+      medicationName: settingsRows.medication_name ?? defaultState.settings.medicationName,
+      doseUnit: settingsRows.dose_unit ?? defaultState.settings.doseUnit,
+      dailyTarget: Number(settingsRows.daily_target ?? defaultState.settings.dailyTarget),
+      monthlyTarget: Number(settingsRows.monthly_target ?? defaultState.settings.monthlyTarget),
+      doseDaysTarget: Number(settingsRows.dose_days_target ?? defaultState.settings.doseDaysTarget),
+      monthlyTablets: Number(settingsRows.monthly_tablets ?? defaultState.settings.monthlyTablets),
+      mgPerTablet: Number(settingsRows.mg_per_tablet ?? defaultState.settings.mgPerTablet),
+      decayHalfLifeHours: Number(settingsRows.decay_half_life_hours ?? defaultState.settings.decayHalfLifeHours),
+      vacationThreshold: Number(settingsRows.vacation_threshold ?? defaultState.settings.vacationThreshold),
+      vacationDoseThreshold: Number(settingsRows.vacation_dose_threshold ?? defaultState.settings.vacationDoseThreshold),
+      vacationFrequencyDays: Number(settingsRows.vacation_frequency_days ?? defaultState.settings.vacationFrequencyDays),
+      openAiRelayUrl: settingsRows.openai_relay_url ?? defaultState.settings.openAiRelayUrl,
+      openAiModel: settingsRows.openai_model ?? defaultState.settings.openAiModel,
+      ouraClientId: settingsRows.oura_client_id ?? defaultState.settings.ouraClientId,
+    };
+  }
+
+  if (Array.isArray(entryRows)) {
+    state.entries = entryRows
+      .map((row) =>
+        normalizeEntry({
+          id: row.id,
+          type: row.type,
+          timestamp: row.timestamp,
+          amount: row.amount,
+          tabletCount: row.tablet_count,
+          mgPerTablet: row.mg_per_tablet,
+          note: row.note,
+        })
+      )
+      .filter(Boolean)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  }
+
+  persistState(state);
+  return state;
+}
+
+function queueRemoteSync(state) {
+  remoteSyncPromise = remoteSyncPromise
+    .then(() => syncStateToSupabase(state))
+    .catch((error) => {
+      console.error("Supabase sync failed", error);
+    });
+  return remoteSyncPromise;
+}
+
+async function syncStateToSupabase(state) {
+  const client = getSupabaseClient();
+  const user = await refreshAuthState(state);
+  if (!user) return;
+
+  const settingsPayload = {
+    user_id: user.id,
+    medication_name: state.settings.medicationName,
+    dose_unit: state.settings.doseUnit,
+    daily_target: state.settings.dailyTarget,
+    monthly_target: state.settings.monthlyTarget,
+    dose_days_target: state.settings.doseDaysTarget,
+    monthly_tablets: state.settings.monthlyTablets,
+    mg_per_tablet: state.settings.mgPerTablet,
+    decay_half_life_hours: state.settings.decayHalfLifeHours,
+    vacation_threshold: state.settings.vacationThreshold,
+    vacation_dose_threshold: state.settings.vacationDoseThreshold,
+    vacation_frequency_days: state.settings.vacationFrequencyDays,
+    openai_relay_url: state.settings.openAiRelayUrl,
+    openai_model: state.settings.openAiModel,
+    oura_client_id: state.settings.ouraClientId,
+  };
+
+  const entryPayload = state.entries.map((entry) => ({
+    id: entry.id,
+    user_id: user.id,
+    type: entry.type,
+    timestamp: entry.timestamp,
+    amount: entry.type === "dose" ? entry.amount : null,
+    tablet_count: entry.type === "dose" ? entry.tabletCount : null,
+    mg_per_tablet: entry.type === "dose" ? entry.mgPerTablet : null,
+    note: entry.note || "",
+  }));
+
+  const { error: settingsError } = await client.from("user_settings").upsert(settingsPayload, { onConflict: "user_id" });
+  if (settingsError) throw settingsError;
+
+  const { error: deleteError } = await client.from("journal_entries").delete().eq("user_id", user.id);
+  if (deleteError) throw deleteError;
+
+  if (entryPayload.length) {
+    const { error: insertError } = await client.from("journal_entries").insert(entryPayload);
+    if (insertError) throw insertError;
+  }
+}
+
+async function signInWithEmail(email) {
+  const client = getSupabaseClient();
+  const redirectTo = `${window.location.origin}/stimulant-journal/settings.html`;
+  const { error } = await client.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: redirectTo },
+  });
+  if (error) throw error;
+}
+
+async function signOutFromSupabase(state) {
+  const client = getSupabaseClient();
+  const { error } = await client.auth.signOut();
+  if (error) throw error;
+  state.auth = { ...defaultState.auth };
+  persistState(state);
 }
 
 function dateKey(value) {
@@ -252,6 +417,7 @@ function saveDoseEntry(state, tabletCount, timestamp, note) {
   });
   state.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   persistState(state);
+  queueRemoteSync(state);
 }
 
 function saveNoteEntry(state, timestamp, note) {
@@ -263,11 +429,13 @@ function saveNoteEntry(state, timestamp, note) {
   });
   state.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   persistState(state);
+  queueRemoteSync(state);
 }
 
 function deleteEntry(state, id) {
   state.entries = state.entries.filter((entry) => entry.id !== id);
   persistState(state);
+  queueRemoteSync(state);
 }
 
 function exportData(state) {
@@ -294,6 +462,7 @@ function importData(callback) {
         };
         nextState.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         persistState(nextState);
+        queueRemoteSync(nextState);
         callback(nextState);
       } catch {
         window.alert("That file could not be imported.");

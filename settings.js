@@ -7,6 +7,12 @@ if (consumeOuraRedirect(state)) {
 
 const els = {
   settingsForm: document.querySelector("#settingsForm"),
+  authStatus: document.querySelector("#authStatus"),
+  authEmail: document.querySelector("#authEmail"),
+  authMessage: document.querySelector("#authMessage"),
+  authSignInButton: document.querySelector("#authSignInButton"),
+  authRefreshButton: document.querySelector("#authRefreshButton"),
+  authSignOutButton: document.querySelector("#authSignOutButton"),
   medicationName: document.querySelector("#medicationName"),
   doseUnit: document.querySelector("#doseUnit"),
   dailyTarget: document.querySelector("#dailyTarget"),
@@ -33,6 +39,8 @@ function hydrate() {
   Object.entries(state.settings).forEach(([key, value]) => {
     if (els[key]) els[key].value = value;
   });
+  els.authStatus.textContent = state.auth?.email ? state.auth.email : "Not signed in";
+  els.authEmail.value = state.auth?.email || "";
   els.ouraStatus.textContent = state.integrations.oura.accessToken
     ? `Connected${state.integrations.oura.lastSyncAt ? `, last sync ${new Date(state.integrations.oura.lastSyncAt).toLocaleString()}` : ""}`
     : "Not connected";
@@ -61,6 +69,7 @@ els.settingsForm.addEventListener("submit", (event) => {
     ouraClientId: els.ouraClientId.value.trim(),
   };
   persistState(state);
+  queueRemoteSync(state);
   hydrate();
 });
 
@@ -69,11 +78,44 @@ els.importInput.addEventListener("change", importData((nextState) => {
   state = nextState;
   hydrate();
 }));
+els.authSignInButton.addEventListener("click", async () => {
+  try {
+    await signInWithEmail(els.authEmail.value.trim());
+    els.authMessage.textContent = "Magic link sent. Open it on this device to complete sign-in.";
+  } catch (error) {
+    els.authMessage.textContent = error.message;
+  }
+});
+els.authRefreshButton.addEventListener("click", async () => {
+  try {
+    await loadRemoteStateInto(state);
+    els.authMessage.textContent = "Loaded latest cloud data.";
+    hydrate();
+  } catch (error) {
+    els.authMessage.textContent = error.message;
+  }
+});
+els.authSignOutButton.addEventListener("click", async () => {
+  try {
+    await signOutFromSupabase(state);
+    els.authMessage.textContent = "Signed out.";
+    hydrate();
+  } catch (error) {
+    els.authMessage.textContent = error.message;
+  }
+});
 els.ouraConnectButton.addEventListener("click", () => startOuraAuth(state));
 els.ouraDisconnectButton.addEventListener("click", () => {
   disconnectOura(state);
   hydrate();
 });
 
-hydrate();
-registerServiceWorker();
+(async () => {
+  try {
+    await loadRemoteStateInto(state);
+  } catch (error) {
+    els.authMessage.textContent = error.message;
+  }
+  hydrate();
+  registerServiceWorker();
+})();
