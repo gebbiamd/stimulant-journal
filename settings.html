@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=13" />
+    <link rel="manifest" href="./manifest.webmanifest?v=14" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=13" />
+    <link rel="stylesheet" href="./styles.css?v=14" />
     <title>Settings | Stimulant Journal</title>
   </head>
   <body data-page="settings">
@@ -41,16 +41,27 @@
             <strong id="authStatus">Not signed in</strong>
           </div>
           <label>
-            Email for magic link login
-            <input id="authEmail" name="authEmail" type="email" placeholder="you@example.com" />
+            Email
+            <input id="authEmail" name="authEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+          </label>
+          <label>
+            Password
+            <input
+              id="authPassword"
+              name="authPassword"
+              type="password"
+              placeholder="At least 6 characters"
+              autocomplete="current-password"
+            />
           </label>
           <div class="data-actions">
-            <button id="authSignInButton" class="secondary-button" type="button">Email Me a Login Link</button>
+            <button id="authCreateButton" class="secondary-button" type="button">Create Account</button>
+            <button id="authSignInButton" class="primary-button" type="button">Sign In</button>
             <button id="authRefreshButton" class="ghost-button" type="button">Pull Latest Cloud Data</button>
             <button id="authSignOutButton" class="ghost-button" type="button">Sign Out</button>
           </div>
           <p id="authMessage" class="muted">
-            Sign in with email to save entries and settings to your Supabase-backed account.
+            Create an account once, then sign in with email and password to sync entries and settings across devices.
           </p>
         </div>
       </section>
@@ -140,7 +151,7 @@
             <button id="ouraDisconnectButton" class="ghost-button" type="button">Disconnect Oura</button>
           </div>
           <p class="muted">
-            Oura now uses a Supabase-backed server flow. Sign in with email first, then connect Oura so the integration is attached to your account.
+            Oura now uses a Supabase-backed server flow. Sign in first, then connect Oura so the integration is attached to your account.
           </p>
           <div class="stat-chip">
             <span>Apple Health</span>
@@ -182,7 +193,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=13"></script>
-    <script src="./settings.js?v=13"></script>
+    <script src="./journal-core.js?v=14"></script>
+    <script src="./settings.js?v=14"></script>
   </body>
 </html>

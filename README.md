@@ -15,7 +15,7 @@ Static mobile-friendly journal for stimulant tracking on GitHub Pages.
 - GitHub Pages hosts the UI only. It does not sync your data across devices by itself.
 - Oura can be connected client-side with an Oura developer app and client ID.
 - OpenAI summaries should use a secure relay, not a browser-exposed API key. A starter relay example is in `openai-relay-example.js`.
-- Supabase-backed account sync is scaffolded. Run `supabase-schema.sql` in your project and sign in with magic-link email from the Settings page.
+- Supabase-backed account sync is scaffolded. Run `supabase-schema.sql` in your project and use email/password sign-up and sign-in from the Settings page.
 - Oura is now intended to use Supabase Edge Functions instead of browser-direct fetches. Deploy the functions under `supabase/functions/` and set secrets for `OURA_CLIENT_ID`, `OURA_CLIENT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, and `SITE_URL`.
 
 ## Local preview

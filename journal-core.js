@@ -252,12 +252,27 @@ async function syncStateToSupabase(state) {
   }
 }
 
-async function signInWithEmail(email) {
+function getSettingsRedirectUrl() {
+  return `${window.location.origin}/stimulant-journal/settings.html`;
+}
+
+async function signUpWithEmailPassword(email, password) {
   const client = getSupabaseClient();
-  const redirectTo = `${window.location.origin}/stimulant-journal/settings.html`;
-  const { error } = await client.auth.signInWithOtp({
+  const { error } = await client.auth.signUp({
     email,
-    options: { emailRedirectTo: redirectTo },
+    password,
+    options: {
+      emailRedirectTo: getSettingsRedirectUrl(),
+    },
+  });
+  if (error) throw error;
+}
+
+async function signInWithPassword(email, password) {
+  const client = getSupabaseClient();
+  const { error } = await client.auth.signInWithPassword({
+    email,
+    password,
   });
   if (error) throw error;
 }
@@ -466,6 +481,13 @@ function importData(callback) {
         const nextState = {
           entries: Array.isArray(parsed.entries) ? parsed.entries.map(normalizeEntry).filter(Boolean) : [],
           settings: { ...defaultState.settings, ...(parsed.settings || {}) },
+          integrations: {
+            oura: {
+              ...defaultState.integrations.oura,
+              ...((parsed.integrations && parsed.integrations.oura) || {}),
+            },
+          },
+          auth: { ...defaultState.auth, ...(parsed.auth || {}) },
         };
         nextState.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         persistState(nextState);

@@ -9,7 +9,9 @@ const els = {
   settingsForm: document.querySelector("#settingsForm"),
   authStatus: document.querySelector("#authStatus"),
   authEmail: document.querySelector("#authEmail"),
+  authPassword: document.querySelector("#authPassword"),
   authMessage: document.querySelector("#authMessage"),
+  authCreateButton: document.querySelector("#authCreateButton"),
   authSignInButton: document.querySelector("#authSignInButton"),
   authRefreshButton: document.querySelector("#authRefreshButton"),
   authSignOutButton: document.querySelector("#authSignOutButton"),
@@ -41,6 +43,7 @@ function hydrate() {
   });
   els.authStatus.textContent = state.auth?.email ? state.auth.email : "Not signed in";
   els.authEmail.value = state.auth?.email || "";
+  els.authPassword.value = "";
   els.ouraStatus.textContent = state.integrations.oura.accessToken
     ? `Connected${state.integrations.oura.lastSyncAt ? `, last sync ${new Date(state.integrations.oura.lastSyncAt).toLocaleString()}` : ""}`
     : "Not connected";
@@ -78,10 +81,21 @@ els.importInput.addEventListener("change", importData((nextState) => {
   state = nextState;
   hydrate();
 }));
+els.authCreateButton.addEventListener("click", async () => {
+  try {
+    await signUpWithEmailPassword(els.authEmail.value.trim(), els.authPassword.value);
+    els.authMessage.textContent =
+      "Account created. If Supabase asks for email confirmation, confirm once, then come back and sign in.";
+  } catch (error) {
+    els.authMessage.textContent = error.message;
+  }
+});
 els.authSignInButton.addEventListener("click", async () => {
   try {
-    await signInWithEmail(els.authEmail.value.trim());
-    els.authMessage.textContent = "Magic link sent. Open it on this device to complete sign-in.";
+    await signInWithPassword(els.authEmail.value.trim(), els.authPassword.value);
+    await loadRemoteStateInto(state);
+    els.authMessage.textContent = "Signed in and loaded your cloud data.";
+    hydrate();
   } catch (error) {
     els.authMessage.textContent = error.message;
   }
