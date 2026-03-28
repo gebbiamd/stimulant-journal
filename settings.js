@@ -133,11 +133,29 @@ async function refreshOuraConnectionStatus() {
   }
 }
 
-function formatDateTimeLocalValue(value) {
+function formatCompactDateTimeValue(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
-  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const year = String(date.getFullYear()).slice(-2);
+  const hours = `${date.getHours()}`.padStart(2, "0");
+  const minutes = `${date.getMinutes()}`.padStart(2, "0");
+  return `${month}/${day}/${year} ${hours}:${minutes}`;
+}
+
+function parseCompactDateTimeValue(value) {
+  const text = String(value || "").trim();
+  const match = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s+(\d{1,2}):(\d{2})$/);
+  if (!match) return parseTimestamp(text);
+  const [, monthText, dayText, yearText, hourText, minuteText] = match;
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const year = Number(yearText.length === 2 ? `20${yearText}` : yearText);
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const candidate = new Date(year, month - 1, day, hour, minute, 0, 0);
+  return Number.isNaN(candidate.getTime()) ? parseTimestamp(text) : candidate.toISOString();
 }
 
 function saveStateAndSync(message) {
@@ -171,7 +189,7 @@ function renderEntryEditor() {
     const doseValue = entry.type === "dose" ? Number(entry.tabletCount || 0) : "";
     row.innerHTML = `
       <div class="entry-editor-time">
-        <input class="entry-input" data-field="timestamp" type="datetime-local" value="${formatDateTimeLocalValue(entry.timestamp)}" />
+        <input class="entry-input entry-time-input" data-field="timestamp" type="text" inputmode="numeric" value="${formatCompactDateTimeValue(entry.timestamp)}" placeholder="M/D/YY HH:MM" />
       </div>
       <div class="entry-editor-dose">
         <input class="entry-input" data-field="tabletCount" type="number" min="0" step="0.25" value="${doseValue}" ${entry.type === "note" ? "disabled" : ""} />
@@ -209,7 +227,7 @@ function saveEntryFromRow(button) {
   const timestampInput = row.querySelector('[data-field="timestamp"]');
   const tabletInput = row.querySelector('[data-field="tabletCount"]');
   const noteInput = row.querySelector('[data-field="note"]');
-  const nextTimestamp = parseTimestamp(timestampInput?.value || "");
+  const nextTimestamp = parseCompactDateTimeValue(timestampInput?.value || "");
   const nextNote = String(noteInput?.value || "").trim();
 
   if (entry.type === "dose") {

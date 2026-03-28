@@ -1267,7 +1267,7 @@ button.calendar-cell {
 .entry-editor-head,
 .entry-editor-item {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.4fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 0.96fr) minmax(0, 0.34fr) minmax(0, 1.08fr) auto;
   gap: 0.36rem;
   align-items: center;
 }
@@ -1364,9 +1364,17 @@ button.calendar-cell {
 }
 
 .entry-editor-toolbar .ghost-button {
-  min-height: 34px;
-  padding: 0.42rem 0.72rem;
-  font-size: 0.78rem;
+  min-height: 28px;
+  padding: 0.24rem 0.58rem;
+  font-size: 0.7rem;
+}
+
+.entry-editor-dose .entry-input {
+  text-align: center;
+}
+
+.entry-time-input {
+  letter-spacing: -0.02em;
 }
 
 .entry-icon-button {
@@ -1690,7 +1698,7 @@ button.calendar-cell {
   }
 
   .entry-editor-item {
-    grid-template-columns: minmax(0, 1.08fr) 2rem minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 0.9fr) 1.8rem minmax(0, 1fr) auto;
     gap: 0.16rem;
     padding: 0.18rem 0.24rem;
     align-items: center;
@@ -1722,10 +1730,9 @@ button.calendar-cell {
     min-height: 1.5rem;
   }
 
-  .entry-editor-time .entry-input[type="datetime-local"] {
-    padding-inline: 0.04rem;
+  .entry-time-input {
+    padding-inline: 0.08rem;
     font-size: 0.54rem;
-    letter-spacing: -0.02em;
   }
 
   .entry-editor-actions .ghost-button,
