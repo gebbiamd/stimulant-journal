@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=15" />
+    <link rel="manifest" href="./manifest.webmanifest?v=16" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=15" />
+    <link rel="stylesheet" href="./styles.css?v=16" />
     <title>Settings | Stimulant Journal</title>
   </head>
   <body data-page="settings">
@@ -60,7 +60,7 @@
             <button id="authRefreshButton" class="ghost-button" type="button">Pull Latest Cloud Data</button>
             <button id="authSignOutButton" class="ghost-button" type="button">Sign Out</button>
           </div>
-          <p id="authMessage" class="muted">
+          <p id="authMessage" class="status-callout muted" role="status" aria-live="polite">
             Create an account once, then sign in with email and password to sync entries and settings across devices.
           </p>
         </div>
@@ -193,7 +193,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=15"></script>
-    <script src="./settings.js?v=15"></script>
+    <script src="./journal-core.js?v=16"></script>
+    <script src="./settings.js?v=16"></script>
   </body>
 </html>

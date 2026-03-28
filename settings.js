@@ -37,6 +37,51 @@ const els = {
   ouraDisconnectButton: document.querySelector("#ouraDisconnectButton"),
 };
 
+function setNotice(message, tone = "info") {
+  if (!els.authMessage) return;
+  els.authMessage.textContent = message;
+  els.authMessage.dataset.tone = tone;
+  els.authMessage.classList.remove("is-fresh");
+  void els.authMessage.offsetWidth;
+  els.authMessage.classList.add("is-fresh");
+}
+
+function setBusy(button, busyLabel, isBusy) {
+  if (!button) return;
+  if (isBusy) {
+    if (!button.dataset.originalLabel) {
+      button.dataset.originalLabel = button.textContent;
+    }
+    button.textContent = busyLabel;
+    button.disabled = true;
+    button.classList.add("is-busy");
+    return;
+  }
+  if (button.dataset.originalLabel) {
+    button.textContent = button.dataset.originalLabel;
+  }
+  button.disabled = false;
+  button.classList.remove("is-busy");
+}
+
+function getFriendlyAuthMessage(error) {
+  const message = String(error?.message || "Something went wrong.").trim();
+  const normalized = message.toLowerCase();
+  if (normalized.includes("email not confirmed")) {
+    return "Your account exists, but Supabase still needs the one-time email confirmation before the first sign-in.";
+  }
+  if (normalized.includes("invalid login credentials")) {
+    return "That email/password combination did not work. If you just created the account, confirm the email first and then try again.";
+  }
+  if (normalized.includes("password should be at least")) {
+    return "Use a password that is at least 6 characters long.";
+  }
+  if (normalized.includes("user already registered")) {
+    return "That email already has an account. Try Sign In instead.";
+  }
+  return message;
+}
+
 function hydrate() {
   Object.entries(state.settings).forEach(([key, value]) => {
     if (els[key]) els[key].value = value;
@@ -84,6 +129,7 @@ els.settingsForm?.addEventListener("submit", (event) => {
   persistState(state);
   queueRemoteSync(state);
   hydrate();
+  setNotice("Settings saved.", "success");
 });
 
 els.exportButton?.addEventListener("click", () => exportData(state));
@@ -92,51 +138,74 @@ els.importInput?.addEventListener("change", importData((nextState) => {
   hydrate();
 }));
 els.authCreateButton?.addEventListener("click", async () => {
+  setBusy(els.authCreateButton, "Creating...", true);
   try {
-    await signUpWithEmailPassword(els.authEmail.value.trim(), els.authPassword.value);
-    els.authMessage.textContent =
-      "Account created. If Supabase asks for email confirmation, confirm once, then come back and sign in.";
+    const data = await signUpWithEmailPassword(els.authEmail.value.trim(), els.authPassword.value);
+    if (data.user && !data.session) {
+      setNotice(
+        "Account created. Supabase usually requires a one-time confirmation email before your first sign-in. Confirm that email, then come back and sign in here.",
+        "warning"
+      );
+    } else {
+      await loadRemoteStateInto(state);
+      setNotice("Account created and signed in.", "success");
+      hydrate();
+    }
   } catch (error) {
-    els.authMessage.textContent = error.message;
+    setNotice(getFriendlyAuthMessage(error), "error");
+  } finally {
+    setBusy(els.authCreateButton, "Creating...", false);
   }
 });
 els.authSignInButton?.addEventListener("click", async () => {
+  setBusy(els.authSignInButton, "Signing In...", true);
   try {
     await signInWithPassword(els.authEmail.value.trim(), els.authPassword.value);
     await loadRemoteStateInto(state);
-    els.authMessage.textContent = "Signed in and loaded your cloud data.";
+    setNotice("Signed in and loaded your cloud data.", "success");
     hydrate();
   } catch (error) {
-    els.authMessage.textContent = error.message;
+    setNotice(getFriendlyAuthMessage(error), "error");
+  } finally {
+    setBusy(els.authSignInButton, "Signing In...", false);
   }
 });
 els.authRefreshButton?.addEventListener("click", async () => {
+  setBusy(els.authRefreshButton, "Refreshing...", true);
   try {
     await loadRemoteStateInto(state);
-    els.authMessage.textContent = "Loaded latest cloud data.";
+    setNotice("Loaded latest cloud data.", "success");
     hydrate();
   } catch (error) {
-    els.authMessage.textContent = error.message;
+    setNotice(getFriendlyAuthMessage(error), "error");
+  } finally {
+    setBusy(els.authRefreshButton, "Refreshing...", false);
   }
 });
 els.authSignOutButton?.addEventListener("click", async () => {
+  setBusy(els.authSignOutButton, "Signing Out...", true);
   try {
     await signOutFromSupabase(state);
-    els.authMessage.textContent = "Signed out.";
+    setNotice("Signed out.", "success");
     hydrate();
   } catch (error) {
-    els.authMessage.textContent = error.message;
+    setNotice(getFriendlyAuthMessage(error), "error");
+  } finally {
+    setBusy(els.authSignOutButton, "Signing Out...", false);
   }
 });
 els.ouraConnectButton?.addEventListener("click", async () => {
+  setBusy(els.ouraConnectButton, "Connecting...", true);
   try {
     await startOuraAuth(state);
   } catch (error) {
-    els.authMessage.textContent = error.message;
+    setNotice(getFriendlyAuthMessage(error), "error");
+    setBusy(els.ouraConnectButton, "Connecting...", false);
   }
 });
 els.ouraDisconnectButton?.addEventListener("click", () => {
   disconnectOura(state);
+  setNotice("Oura disconnected.", "success");
   hydrate();
 });
 
@@ -144,7 +213,7 @@ els.ouraDisconnectButton?.addEventListener("click", () => {
   try {
     await loadRemoteStateInto(state);
   } catch (error) {
-    els.authMessage.textContent = error.message;
+    setNotice(getFriendlyAuthMessage(error), "error");
   }
   hydrate();
   registerServiceWorker();

@@ -258,7 +258,7 @@ function getSettingsRedirectUrl() {
 
 async function signUpWithEmailPassword(email, password) {
   const client = getSupabaseClient();
-  const { error } = await client.auth.signUp({
+  const { data, error } = await client.auth.signUp({
     email,
     password,
     options: {
@@ -266,15 +266,17 @@ async function signUpWithEmailPassword(email, password) {
     },
   });
   if (error) throw error;
+  return data;
 }
 
 async function signInWithPassword(email, password) {
   const client = getSupabaseClient();
-  const { error } = await client.auth.signInWithPassword({
+  const { data, error } = await client.auth.signInWithPassword({
     email,
     password,
   });
   if (error) throw error;
+  return data;
 }
 
 async function signOutFromSupabase(state) {
