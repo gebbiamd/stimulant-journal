@@ -31,8 +31,11 @@ const els = {
   todayGaugeLabel: document.querySelector("#todayGaugeLabel"),
   gaugeReason: document.querySelector("#gaugeReason"),
   monthTabletUsage: document.querySelector("#monthTabletUsage"),
+  monthTabletUsageFill: document.querySelector("#monthTabletUsageFill"),
   lastSleepHeadline: document.querySelector("#lastSleepHeadline"),
   lastSleepDetail: document.querySelector("#lastSleepDetail"),
+  doseRecommendationHeadline: document.querySelector("#doseRecommendationHeadline"),
+  doseRecommendationDetail: document.querySelector("#doseRecommendationDetail"),
   miniTrendChart: document.querySelector("#miniTrendChart"),
   miniTrendAxis: document.querySelector("#miniTrendAxis"),
   miniTrendLegend: document.querySelector("#miniTrendLegend"),
@@ -119,6 +122,7 @@ function renderGauge() {
   els.todayGaugeLabel.textContent = `${tabletLabel(totalTablets)} today • ${Math.round(suggestedRatio * 100)}% of the 30 mg suggested cap`;
   els.gaugeReason.textContent = `${gauge.reason} Monthly tablets used: ${formatNumber(tabletUsage.used)} of ${formatNumber(tabletUsage.planned)}.`;
   els.monthTabletUsage.textContent = `${formatNumber(tabletUsage.used)} / ${formatNumber(tabletUsage.planned)}`;
+  els.monthTabletUsageFill.style.width = `${tabletUsage.planned > 0 ? Math.min((tabletUsage.used / tabletUsage.planned) * 100, 100) : 0}%`;
   els.thermoFill.style.height = `${Math.min(visualRatio * 100, 100)}%`;
   els.thermoFill.className = `thermo-fill ${gauge.tone}`;
   els.targetMarker.style.bottom = `${(suggestedCap / visualMax) * 100}%`;
@@ -127,6 +131,24 @@ function renderGauge() {
   els.scaleBase.textContent = `0 ${unitLabel(state)}`;
   els.doseUnitLabel.textContent = "tabs";
   els.doseMgHint.textContent = `Current conversion: 1 tablet = ${formatNumber(state.settings.mgPerTablet || defaultState.settings.mgPerTablet)} ${unitLabel(state)}.`;
+
+  const currentLevel = getEstimatedActiveLevel(state);
+  const upcomingBedtime = getUpcomingBedtime(state);
+  const hoursUntilBedtime = (upcomingBedtime.getTime() - Date.now()) / (60 * 60 * 1000);
+  const standardDose = Number(state.settings.mgPerTablet) || defaultState.settings.mgPerTablet;
+  const predictedLevelAtBedtime = getEstimatedActiveLevel(state, upcomingBedtime.getTime());
+  const predictedWithDoseAtBedtime = predictedLevelAtBedtime + standardDose * Math.exp(-(Math.log(2) / Math.max(Number(state.settings.decayHalfLifeHours) || defaultState.settings.decayHalfLifeHours, 0.1)) * Math.max(hoursUntilBedtime, 0));
+
+  if (hoursUntilBedtime <= 2 || predictedWithDoseAtBedtime >= 20) {
+    els.doseRecommendationHeadline.textContent = "Avoid another dose";
+    els.doseRecommendationDetail.textContent = `About ${formatNumber(hoursUntilBedtime)}h until your expected bedtime. Another ${formatNumber(standardDose)} ${unitLabel(state)} now would leave about ${formatNumber(predictedWithDoseAtBedtime)} ${unitLabel(state)} active at bedtime.`;
+  } else if (hoursUntilBedtime <= 5 || predictedWithDoseAtBedtime >= 12) {
+    els.doseRecommendationHeadline.textContent = "Use caution now";
+    els.doseRecommendationDetail.textContent = `Current estimated active level is ${formatNumber(currentLevel)} ${unitLabel(state)}. A standard dose now likely leaves about ${formatNumber(predictedWithDoseAtBedtime)} ${unitLabel(state)} active by bedtime.`;
+  } else {
+    els.doseRecommendationHeadline.textContent = "Lower sleep risk window";
+    els.doseRecommendationDetail.textContent = `Roughly ${formatNumber(hoursUntilBedtime)}h until your expected bedtime. Current active level is about ${formatNumber(currentLevel)} ${unitLabel(state)}.`;
+  }
 
   const latestSleep = getLatestOuraSleep(state);
   if (latestSleep && latestSleep.total_sleep_duration) {

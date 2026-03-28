@@ -200,22 +200,34 @@ h2 {
   padding: 0.95rem 1.05rem;
 }
 
-.header-card.gauge-good {
+.header-card.gauge-green {
   background:
-    radial-gradient(circle at top right, rgba(45, 157, 120, 0.18), transparent 30%),
-    linear-gradient(180deg, rgba(245, 255, 250, 0.88), rgba(233, 249, 242, 0.74));
+    radial-gradient(circle at top right, rgba(22, 118, 63, 0.24), transparent 30%),
+    linear-gradient(180deg, rgba(240, 255, 245, 0.92), rgba(219, 246, 229, 0.8));
 }
 
-.header-card.gauge-warn {
+.header-card.gauge-lime {
   background:
-    radial-gradient(circle at top right, rgba(245, 158, 11, 0.2), transparent 30%),
-    linear-gradient(180deg, rgba(255, 251, 241, 0.9), rgba(255, 242, 214, 0.78));
+    radial-gradient(circle at top right, rgba(118, 178, 45, 0.24), transparent 30%),
+    linear-gradient(180deg, rgba(250, 255, 238, 0.94), rgba(232, 247, 198, 0.84));
 }
 
-.header-card.gauge-danger {
+.header-card.gauge-yellow {
   background:
-    radial-gradient(circle at top right, rgba(217, 29, 66, 0.22), transparent 32%),
-    linear-gradient(180deg, rgba(255, 243, 246, 0.92), rgba(255, 223, 231, 0.82));
+    radial-gradient(circle at top right, rgba(245, 179, 23, 0.24), transparent 30%),
+    linear-gradient(180deg, rgba(255, 252, 239, 0.94), rgba(255, 241, 205, 0.82));
+}
+
+.header-card.gauge-orange {
+  background:
+    radial-gradient(circle at top right, rgba(245, 127, 23, 0.24), transparent 32%),
+    linear-gradient(180deg, rgba(255, 247, 236, 0.94), rgba(255, 225, 192, 0.84));
+}
+
+.header-card.gauge-red {
+  background:
+    radial-gradient(circle at top right, rgba(217, 29, 66, 0.24), transparent 32%),
+    linear-gradient(180deg, rgba(255, 243, 246, 0.94), rgba(255, 220, 229, 0.84));
 }
 
 .thermo-panel {
@@ -281,19 +293,29 @@ h2 {
   transition: height 180ms ease;
 }
 
-.thermo-fill.good {
-  background: linear-gradient(180deg, #66e2b7, #2d9d78);
-  box-shadow: 0 0 18px rgba(45, 157, 120, 0.28);
+.thermo-fill.green {
+  background: linear-gradient(180deg, #41df86, #16763f);
+  box-shadow: 0 0 18px rgba(22, 118, 63, 0.3);
 }
 
-.thermo-fill.warn {
-  background: linear-gradient(180deg, #ffd166, #f59e0b);
-  box-shadow: 0 0 18px rgba(245, 158, 11, 0.24);
+.thermo-fill.lime {
+  background: linear-gradient(180deg, #bef267, #76b22d);
+  box-shadow: 0 0 18px rgba(118, 178, 45, 0.28);
 }
 
-.thermo-fill.danger {
-  background: linear-gradient(180deg, #ff97aa, #ef5b72);
-  box-shadow: 0 0 18px rgba(239, 91, 114, 0.24);
+.thermo-fill.yellow {
+  background: linear-gradient(180deg, #ffd968, #f2ae19);
+  box-shadow: 0 0 18px rgba(245, 179, 23, 0.26);
+}
+
+.thermo-fill.orange {
+  background: linear-gradient(180deg, #ffc06f, #f57f17);
+  box-shadow: 0 0 18px rgba(245, 127, 23, 0.28);
+}
+
+.thermo-fill.red {
+  background: linear-gradient(180deg, #ff97aa, #ef3656);
+  box-shadow: 0 0 18px rgba(239, 54, 86, 0.28);
 }
 
 .thermo-readout {
@@ -317,7 +339,9 @@ h2 {
 }
 
 .header-side {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
+  align-items: stretch;
 }
 
 .compact-settings-form {
@@ -340,17 +364,59 @@ h2 {
 }
 
 .header-side .stat-chip {
-  padding: 0.72rem 0.85rem;
+  min-height: 5.15rem;
+  padding: 0.62rem 0.74rem;
   border-radius: 15px;
 }
 
 .header-side .stat-chip span {
-  font-size: 0.75rem;
-  margin-bottom: 0.22rem;
+  font-size: 0.72rem;
+  margin-bottom: 0.12rem;
 }
 
 .header-side .stat-chip strong {
-  font-size: 1.08rem;
+  font-size: 1rem;
+  line-height: 1.08;
+}
+
+.header-side .stat-chip span:last-child {
+  margin-bottom: 0;
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.recommendation-chip {
+  grid-column: 1 / -1;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(237, 248, 255, 0.82)),
+    radial-gradient(circle at top right, rgba(22, 148, 255, 0.14), transparent 40%);
+}
+
+.stat-chip-progress strong,
+.recommendation-chip strong {
+  margin-bottom: 0.28rem;
+}
+
+.mini-progress {
+  width: 100%;
+  height: 0.42rem;
+  margin-top: auto;
+  border-radius: 999px;
+  background: rgba(16, 36, 73, 0.12);
+  overflow: hidden;
+}
+
+.mini-progress-fill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1694ff, #00dbcf);
+  transition: width 180ms ease;
+}
+
+.header-side .compact-action-button,
+.header-side .muted {
+  grid-column: 1 / -1;
 }
 
 .stat-chip span,
@@ -625,17 +691,27 @@ textarea {
   letter-spacing: 0.08em;
 }
 
-.status-badge.good {
-  background: rgba(88, 114, 73, 0.14);
-  color: var(--good);
+.status-badge.green {
+  background: rgba(46, 142, 80, 0.16);
+  color: #176137;
 }
 
-.status-badge.warn {
-  background: rgba(160, 103, 26, 0.14);
-  color: var(--warn);
+.status-badge.lime {
+  background: rgba(169, 214, 76, 0.22);
+  color: #537b12;
 }
 
-.status-badge.danger {
+.status-badge.yellow {
+  background: rgba(245, 186, 39, 0.18);
+  color: #815600;
+}
+
+.status-badge.orange {
+  background: rgba(245, 127, 23, 0.18);
+  color: #8f4900;
+}
+
+.status-badge.red {
   background: rgba(239, 91, 114, 0.26);
   color: #d91d42;
   box-shadow:
@@ -800,20 +876,32 @@ textarea {
   opacity: 0.55;
 }
 
-.calendar-cell.light {
-  background: linear-gradient(180deg, rgba(135, 222, 170, 0.44), rgba(76, 181, 121, 0.24));
-  border: 1px solid rgba(71, 164, 108, 0.34);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 20px rgba(66, 164, 108, 0.12);
+.calendar-cell.green {
+  background: linear-gradient(180deg, rgba(84, 201, 125, 0.54), rgba(28, 132, 69, 0.28));
+  border: 1px solid rgba(28, 132, 69, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 20px rgba(28, 132, 69, 0.14);
 }
 
-.calendar-cell.medium {
-  background: linear-gradient(180deg, rgba(255, 211, 118, 0.44), rgba(239, 171, 52, 0.24));
-  border: 1px solid rgba(216, 144, 38, 0.32);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 20px rgba(216, 144, 38, 0.12);
+.calendar-cell.lime {
+  background: linear-gradient(180deg, rgba(190, 234, 105, 0.6), rgba(118, 178, 45, 0.3));
+  border: 1px solid rgba(118, 178, 45, 0.36);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 20px rgba(118, 178, 45, 0.14);
 }
 
-.calendar-cell.heavy {
-  background: linear-gradient(180deg, rgba(255, 150, 138, 0.5), rgba(229, 90, 112, 0.28));
+.calendar-cell.yellow {
+  background: linear-gradient(180deg, rgba(255, 218, 117, 0.54), rgba(242, 174, 25, 0.28));
+  border: 1px solid rgba(242, 174, 25, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 20px rgba(242, 174, 25, 0.14);
+}
+
+.calendar-cell.orange {
+  background: linear-gradient(180deg, rgba(255, 190, 108, 0.58), rgba(245, 127, 23, 0.3));
+  border: 1px solid rgba(245, 127, 23, 0.36);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 20px rgba(245, 127, 23, 0.14);
+}
+
+.calendar-cell.red {
+  background: linear-gradient(180deg, rgba(255, 150, 138, 0.56), rgba(229, 90, 112, 0.3));
   border: 1px solid rgba(208, 74, 99, 0.34);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 20px rgba(208, 74, 99, 0.14);
 }

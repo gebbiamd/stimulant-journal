@@ -446,18 +446,61 @@ function getConsecutiveDoseDays(state) {
   return count;
 }
 
+function getDoseTone(totalMg) {
+  const total = Number(totalMg) || 0;
+  if (total <= 15) {
+    return {
+      tone: "green",
+      label: "Green zone",
+      reason: "15 mg or below keeps the day in the low-use range.",
+    };
+  }
+  if (total <= 20) {
+    return {
+      tone: "lime",
+      label: "Lime zone",
+      reason: "15.1 to 20 mg is still manageable, but it is starting to lean toward the yellow zone.",
+    };
+  }
+  if (total <= 25) {
+    return {
+      tone: "yellow",
+      label: "Yellow zone",
+      reason: "20.1 to 25 mg is a caution range for the day.",
+    };
+  }
+  if (total <= 30) {
+    return {
+      tone: "orange",
+      label: "Orange zone",
+      reason: "25.1 to 30 mg is a high-use day and worth treating carefully.",
+    };
+  }
+  return {
+    tone: "red",
+    label: "Red zone",
+    reason: "Over 30 mg is a hard-stop range and likely to create sleep friction.",
+  };
+}
+
 function getHomeGauge(state) {
   const todayDose = getTodayDoseEntries(state).reduce((sum, entry) => sum + Number(entry.amount), 0);
   const target = Number(state.settings.dailyTarget) || defaultState.settings.dailyTarget;
   const ratio = target > 0 ? todayDose / target : 0;
+  return { ...getDoseTone(todayDose), ratio };
+}
 
-  if (todayDose > 30) {
-    return { tone: "danger", label: "Over limit", ratio, reason: "Today is over 30 mg and should be treated as a high-use day." };
+function getEstimatedActiveLevel(state, atTime = Date.now()) {
+  const halfLifeHours = Number(state.settings.decayHalfLifeHours) || defaultState.settings.decayHalfLifeHours;
+  const decayConstant = Math.log(2) / Math.max(halfLifeHours, 0.1);
+  let level = 0;
+  for (const entry of getDoseEntries(state)) {
+    const doseTime = new Date(entry.timestamp).getTime();
+    if (doseTime > atTime) continue;
+    const elapsedHours = (atTime - doseTime) / (60 * 60 * 1000);
+    level += Number(entry.amount) * Math.exp(-decayConstant * elapsedHours);
   }
-  if (todayDose >= 20) {
-    return { tone: "warn", label: "High today", ratio, reason: "Today is in the 20-30 mg range." };
-  }
-  return { tone: "good", label: "On track", ratio, reason: "Today is 15 mg or below." };
+  return level;
 }
 
 function saveDoseEntry(state, tabletCount, timestamp, note) {
@@ -712,6 +755,35 @@ function getSortedOuraSleep(state) {
 
 function getLatestOuraSleep(state) {
   return getSortedOuraSleep(state)[0] || null;
+}
+
+function getUpcomingBedtime(state) {
+  const sleepItems = getSortedOuraSleep(state)
+    .slice(0, 10)
+    .map((item) => {
+      const bedtime = item?.bedtime_start ? new Date(item.bedtime_start) : null;
+      if (!bedtime || Number.isNaN(bedtime.getTime())) return null;
+      let hour = bedtime.getHours() + bedtime.getMinutes() / 60;
+      if (hour < 12) hour += 24;
+      return hour;
+    })
+    .filter((value) => Number.isFinite(value))
+    .sort((a, b) => a - b);
+
+  const typicalHour = sleepItems.length
+    ? sleepItems[Math.floor(sleepItems.length / 2)]
+    : 23.5;
+
+  const now = new Date();
+  const bedtimeToday = new Date(now);
+  bedtimeToday.setHours(Math.floor(typicalHour % 24), Math.round((typicalHour % 1) * 60), 0, 0);
+  if (typicalHour >= 24) bedtimeToday.setDate(bedtimeToday.getDate() + 1);
+
+  if (bedtimeToday.getTime() <= now.getTime() + 30 * 60 * 1000) {
+    bedtimeToday.setDate(bedtimeToday.getDate() + 1);
+  }
+
+  return bedtimeToday;
 }
 
 function getDoseTotalForLocalDate(state, date) {

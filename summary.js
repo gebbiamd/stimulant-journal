@@ -101,7 +101,7 @@ function renderCalendar() {
   for (let day = 1; day <= lastDay; day += 1) {
     const key = `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, "0")}-${`${day}`.padStart(2, "0")}`;
     const total = dailyTotals.get(key) || 0;
-    const tone = total === 0 ? "none" : total <= (Number(state.settings.vacationDoseThreshold) || 10) ? "light" : total <= (Number(state.settings.dailyTarget) || 40) ? "medium" : "heavy";
+    const tone = total === 0 ? "none" : getDoseTone(total).tone;
     cells.push(`
       <div class="calendar-cell ${tone}">
         <span>${day}</span>

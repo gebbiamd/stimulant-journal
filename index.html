@@ -10,10 +10,10 @@
     <meta name="theme-color" content="#efe1c7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="./manifest.webmanifest?v=41" />
+    <link rel="manifest" href="./manifest.webmanifest?v=42" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=41" />
+    <link rel="stylesheet" href="./styles.css?v=42" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -73,14 +73,22 @@
               <span>Last dose</span>
               <strong id="todayLastDose">None</strong>
             </div>
-            <div class="stat-chip">
+            <div class="stat-chip stat-chip-progress">
               <span>Tablets used this month</span>
               <strong id="monthTabletUsage">0 / 0</strong>
+              <div class="mini-progress" aria-hidden="true">
+                <div id="monthTabletUsageFill" class="mini-progress-fill"></div>
+              </div>
             </div>
             <div class="stat-chip">
               <span>Latest Oura sleep</span>
               <strong id="lastSleepHeadline">No Oura sleep yet</strong>
               <span id="lastSleepDetail">Connect and sync Oura in More Details.</span>
+            </div>
+            <div class="stat-chip recommendation-chip">
+              <span>Right now</span>
+              <strong id="doseRecommendationHeadline">No recommendation yet</strong>
+              <span id="doseRecommendationDetail">Add entries and Oura sleep to make this more useful.</span>
             </div>
             <button id="syncOuraHomeButton" class="ghost-button compact-action-button" type="button">Sync Oura</button>
             <p id="gaugeReason" class="muted">
@@ -242,7 +250,7 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=41"></script>
-    <script src="./home.js?v=41"></script>
+    <script src="./journal-core.js?v=42"></script>
+    <script src="./home.js?v=42"></script>
   </body>
 </html>
