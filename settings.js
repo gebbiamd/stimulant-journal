@@ -43,7 +43,7 @@ const els = {
   ouraDisconnectButton: document.querySelector("#ouraDisconnectButton"),
 };
 
-let ouraConnectionStatus = { connected: false };
+let ouraConnectionStatus = { connected: false, checked: false };
 
 function setNotice(message, tone = "info") {
   if (!els.authMessage) return;
@@ -104,7 +104,9 @@ function hydrate() {
     els.authPassword.value = "";
   }
   if (els.ouraStatus) {
-    els.ouraStatus.textContent = ouraConnectionStatus.connected
+    els.ouraStatus.textContent = !ouraConnectionStatus.checked
+      ? "Checking..."
+      : ouraConnectionStatus.connected
       ? `Connected${state.integrations.oura.lastSyncAt ? `, last sync ${new Date(state.integrations.oura.lastSyncAt).toLocaleString()}` : ""}`
       : "Not connected";
   }
@@ -123,7 +125,7 @@ async function refreshOuraConnectionStatus() {
   try {
     ouraConnectionStatus = await getOuraConnectionStatus();
   } catch {
-    ouraConnectionStatus = { connected: false };
+    ouraConnectionStatus = { connected: false, checked: true };
   }
 }
 
@@ -291,6 +293,7 @@ els.authCreateButton?.addEventListener("click", async () => {
       );
     } else {
       await loadRemoteStateInto(state);
+      await refreshOuraConnectionStatus();
       setNotice("Account created and signed in.", "success");
       hydrate();
     }
@@ -305,6 +308,7 @@ els.authSignInButton?.addEventListener("click", async () => {
   try {
     await signInWithPassword(els.authEmail.value.trim(), els.authPassword.value);
     await loadRemoteStateInto(state);
+    await refreshOuraConnectionStatus();
     setNotice("Signed in and loaded your cloud data.", "success");
     hydrate();
   } catch (error) {
@@ -317,6 +321,7 @@ els.authRefreshButton?.addEventListener("click", async () => {
   setBusy(els.authRefreshButton, "Refreshing...", true);
   try {
     await loadRemoteStateInto(state);
+    await refreshOuraConnectionStatus();
     setNotice("Loaded latest cloud data.", "success");
     hydrate();
   } catch (error) {
@@ -329,6 +334,7 @@ els.authSignOutButton?.addEventListener("click", async () => {
   setBusy(els.authSignOutButton, "Signing Out...", true);
   try {
     await signOutFromSupabase(state);
+    ouraConnectionStatus = { connected: false, checked: true };
     setNotice("Signed out.", "success");
     hydrate();
   } catch (error) {
@@ -350,7 +356,7 @@ els.ouraDisconnectButton?.addEventListener("click", async () => {
   setBusy(els.ouraDisconnectButton, "Disconnecting...", true);
   try {
     await disconnectOuraRemote(state);
-    ouraConnectionStatus = { connected: false };
+    ouraConnectionStatus = { connected: false, checked: true };
     setNotice("Oura disconnected.", "success");
     hydrate();
   } catch (error) {
