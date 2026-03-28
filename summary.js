@@ -21,6 +21,11 @@ const els = {
   latestSleepScore: document.querySelector("#latestSleepScore"),
   latestSleepHours: document.querySelector("#latestSleepHours"),
   latestSleepBedtime: document.querySelector("#latestSleepBedtime"),
+  lateDoseSleepHours: document.querySelector("#lateDoseSleepHours"),
+  earlyDoseSleepHours: document.querySelector("#earlyDoseSleepHours"),
+  bedtimeSpread: document.querySelector("#bedtimeSpread"),
+  sleepFrictionSummary: document.querySelector("#sleepFrictionSummary"),
+  sleepPatternList: document.querySelector("#sleepPatternList"),
   doseSleepChart: document.querySelector("#doseSleepChart"),
   doseSleepLegend: document.querySelector("#doseSleepLegend"),
   timingSleepChart: document.querySelector("#timingSleepChart"),
@@ -137,6 +142,53 @@ function renderLatestSleepMetrics() {
   els.latestSleepBedtime.textContent = bedtime
     ? bedtime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
     : "-";
+}
+
+function renderSleepFriction() {
+  const friction = getSleepFrictionInsights(state, 14);
+  const lateHours = friction.later.averageSleepHours;
+  const earlyHours = friction.earlier.averageSleepHours;
+  els.lateDoseSleepHours.textContent = Number.isFinite(lateHours) ? `${formatNumber(lateHours)}h` : "-";
+  els.earlyDoseSleepHours.textContent = Number.isFinite(earlyHours) ? `${formatNumber(earlyHours)}h` : "-";
+  els.bedtimeSpread.textContent = Number.isFinite(friction.bedtimeSpreadHours)
+    ? `${formatNumber(friction.bedtimeSpreadHours)}h`
+    : "-";
+
+  if (!friction.count) {
+    els.sleepFrictionSummary.textContent = "Sync Oura and log a few more nights to estimate what seems to hurt sleep.";
+    return;
+  }
+
+  const timingMessage =
+    Number.isFinite(lateHours) && Number.isFinite(earlyHours)
+      ? lateHours < earlyHours
+        ? `Later dose nights are averaging about ${formatNumber(earlyHours - lateHours)} fewer hours of sleep than earlier dose nights.`
+        : `Later dose nights are not currently looking worse than earlier ones.`
+      : "There are not enough later-vs-earlier dose nights yet for a strong timing read.";
+
+  const bedtimeMessage = Number.isFinite(friction.bedtimeSpreadHours)
+    ? friction.bedtimeSpreadHours > 2
+      ? `Bedtime has been fairly irregular with about a ${formatNumber(friction.bedtimeSpreadHours)} hour spread.`
+      : `Bedtime has been relatively steady within about ${formatNumber(friction.bedtimeSpreadHours)} hours.`
+    : "Bedtime regularity is not available yet.";
+
+  els.sleepFrictionSummary.textContent = `${timingMessage} ${bedtimeMessage} ${friction.shortSleepCount} short-sleep nights and ${friction.lowScoreCount} low-score nights showed up in the last ${friction.count} matched nights.`;
+}
+
+function renderSleepPatterns() {
+  const cards = getSleepPatternCards(state, 14);
+  els.sleepPatternList.innerHTML = "";
+  for (const card of cards) {
+    const item = document.createElement("article");
+    item.className = "history-item";
+    item.innerHTML = `
+      <div>
+        <strong class="history-dose">${card.title}</strong>
+        <p class="history-note muted">${card.detail}</p>
+      </div>
+    `;
+    els.sleepPatternList.appendChild(item);
+  }
 }
 
 function renderOuraSleep() {
@@ -261,6 +313,8 @@ els.syncOuraButton.addEventListener("click", async () => {
   try {
     await syncOuraSleep(state);
     renderLatestSleepMetrics();
+    renderSleepFriction();
+    renderSleepPatterns();
     renderOuraSleep();
     renderDoseSleepChart();
     renderTimingSleepChart();
@@ -300,6 +354,8 @@ els.generateSummaryButton.addEventListener("click", async () => {
   renderCalendar();
   renderInventory();
   renderLatestSleepMetrics();
+  renderSleepFriction();
+  renderSleepPatterns();
   renderOuraSleep();
   renderDoseSleepChart();
   renderTimingSleepChart();

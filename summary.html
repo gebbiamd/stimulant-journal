@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=25" />
+    <link rel="manifest" href="./manifest.webmanifest?v=26" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=25" />
+    <link rel="stylesheet" href="./styles.css?v=26" />
     <title>Summary | Stimulant Journal</title>
   </head>
   <body data-page="summary">
@@ -148,6 +148,40 @@
       <section class="card">
         <div class="section-header">
           <div>
+            <p class="eyebrow">Sleep Friction</p>
+            <h2>What seems to hurt sleep</h2>
+          </div>
+        </div>
+        <div class="metric-list compact">
+          <div class="metric">
+            <span class="metric-label">Later-dose nights</span>
+            <strong id="lateDoseSleepHours">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Earlier-dose nights</span>
+            <strong id="earlyDoseSleepHours">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Bedtime spread</span>
+            <strong id="bedtimeSpread">-</strong>
+          </div>
+        </div>
+        <div id="sleepFrictionSummary" class="trend-legend"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Patterns</p>
+            <h2>Sleep consistency</h2>
+          </div>
+        </div>
+        <div id="sleepPatternList" class="history-list"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
             <p class="eyebrow">Dose Vs Sleep</p>
             <h2>Recent nights</h2>
           </div>
@@ -187,7 +221,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=25"></script>
-    <script src="./summary.js?v=25"></script>
+    <script src="./journal-core.js?v=26"></script>
+    <script src="./summary.js?v=26"></script>
   </body>
 </html>

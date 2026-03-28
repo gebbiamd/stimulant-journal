@@ -654,8 +654,88 @@ function getSleepInsightSummary(state) {
   return `Higher-dose days averaged ${formatNumber(avgHours(higher))}h sleep and a ${formatNumber(avgScore(higher))} sleep score, versus ${formatNumber(avgHours(lower))}h and ${formatNumber(avgScore(lower))} on lower-dose days.`;
 }
 
+function getBedtimeSpreadHours(state, limit = 14) {
+  const bedtimes = getSortedOuraSleep(state)
+    .slice(0, limit)
+    .map((item) => {
+      const bedtime = item.bedtime_start ? new Date(item.bedtime_start) : null;
+      if (!bedtime || Number.isNaN(bedtime.getTime())) return null;
+      return bedtime.getHours() + bedtime.getMinutes() / 60;
+    })
+    .filter((value) => Number.isFinite(value));
+  if (bedtimes.length < 2) return null;
+  return Math.max(...bedtimes) - Math.min(...bedtimes);
+}
+
+function getSleepFrictionInsights(state, limit = 14) {
+  const points = getSleepDosePoints(state, limit).filter((point) => Number.isFinite(point.sleepHours));
+  const thresholdHour = 15;
+  const later = points.filter((point) => Number.isFinite(point.lastDoseHour) && point.lastDoseHour >= thresholdHour);
+  const earlier = points.filter((point) => Number.isFinite(point.lastDoseHour) && point.lastDoseHour < thresholdHour);
+  const avg = (items, key) => items.length ? items.reduce((sum, item) => sum + Number(item[key] || 0), 0) / items.length : null;
+  const shortSleep = points.filter((point) => Number(point.sleepHours || 0) < 6.5);
+  const lowScore = points.filter((point) => Number(point.sleepScore || 0) > 0 && Number(point.sleepScore || 0) < 70);
+  const bedtimeSpreadHours = getBedtimeSpreadHours(state, limit);
+
+  return {
+    thresholdHour,
+    count: points.length,
+    later: {
+      count: later.length,
+      averageSleepHours: avg(later, "sleepHours"),
+      averageSleepScore: avg(later, "sleepScore"),
+      averageDoseMg: avg(later, "doseTotal"),
+    },
+    earlier: {
+      count: earlier.length,
+      averageSleepHours: avg(earlier, "sleepHours"),
+      averageSleepScore: avg(earlier, "sleepScore"),
+      averageDoseMg: avg(earlier, "doseTotal"),
+    },
+    shortSleepCount: shortSleep.length,
+    lowScoreCount: lowScore.length,
+    bedtimeSpreadHours,
+  };
+}
+
+function getSleepPatternCards(state, limit = 14) {
+  const insights = getSleepFrictionInsights(state, limit);
+  const cards = [];
+  if (Number.isFinite(insights.bedtimeSpreadHours)) {
+    cards.push({
+      title: "Bedtime regularity",
+      detail:
+        insights.bedtimeSpreadHours <= 1.5
+          ? `Bedtime stayed within about ${formatNumber(insights.bedtimeSpreadHours)} hours.`
+          : `Bedtime swung by about ${formatNumber(insights.bedtimeSpreadHours)} hours.`,
+    });
+  }
+  if (insights.later.count && insights.earlier.count) {
+    const delta = Number(insights.earlier.averageSleepHours || 0) - Number(insights.later.averageSleepHours || 0);
+    cards.push({
+      title: "Dose timing",
+      detail:
+        Math.abs(delta) < 0.25
+          ? "Later and earlier dose nights are landing in a similar sleep range."
+          : delta > 0
+            ? `Earlier dose nights are averaging about ${formatNumber(delta)} more hours of sleep.`
+            : `Later dose nights are averaging about ${formatNumber(Math.abs(delta))} more hours of sleep.`,
+    });
+  }
+  cards.push({
+    title: "Short sleep nights",
+    detail: `${insights.shortSleepCount} of the last ${insights.count || 0} matched nights were under 6.5 hours.`,
+  });
+  cards.push({
+    title: "Low-score nights",
+    detail: `${insights.lowScoreCount} of the last ${insights.count || 0} matched nights had an Oura sleep score below 70.`,
+  });
+  return cards;
+}
+
 function getOuraAiContext(state) {
   const sleepPoints = getSleepDosePoints(state, 14).filter((point) => Number.isFinite(point.sleepHours));
+  const friction = getSleepFrictionInsights(state, 14);
   const latestSleep = getLatestOuraSleep(state);
   const averageSleepHours = sleepPoints.length
     ? sleepPoints.reduce((sum, point) => sum + Number(point.sleepHours || 0), 0) / sleepPoints.length
@@ -688,8 +768,9 @@ function getOuraAiContext(state) {
     averageSleepHours,
     averageSleepScore,
     sleepInsightSummary: getSleepInsightSummary(state),
+    sleepFriction: friction,
     laterDoseComparison: {
-      thresholdHour: lateDoseThreshold,
+      thresholdHour: friction.thresholdHour,
       later: summarizeGroup(lateDoseNights),
       earlier: summarizeGroup(earlierDoseNights),
     },
