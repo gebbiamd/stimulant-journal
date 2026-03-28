@@ -306,6 +306,10 @@ h2 {
   gap: 1rem;
 }
 
+.compact-settings-form {
+  gap: 0.8rem;
+}
+
 .field-hint {
   margin: -0.2rem 0 0;
   font-size: 0.86rem;
@@ -349,6 +353,11 @@ label {
   color: #173866;
 }
 
+.compact-settings-form label {
+  gap: 0.38rem;
+  font-size: 0.88rem;
+}
+
 input,
 textarea {
   width: 100%;
@@ -359,6 +368,12 @@ textarea {
   padding: 1rem 1.05rem;
   color: var(--text);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
+}
+
+.compact-settings-form input,
+.compact-settings-form textarea {
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
 }
 
 textarea {
@@ -439,6 +454,17 @@ textarea {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.04)),
     linear-gradient(135deg, #1694ff, #00dbcf);
+}
+
+.compact-action-button,
+.compact-actions .nav-button,
+.compact-actions .upload-button,
+.entry-editor-toolbar .nav-button,
+.entry-editor-toolbar .ghost-button,
+.entry-editor-actions .ghost-button,
+.entry-editor-actions .delete-button {
+  min-height: 46px;
+  padding: 0.8rem 1rem;
 }
 
 .emphasis-button:hover {
@@ -668,17 +694,17 @@ textarea {
 }
 
 .entry-editor-item {
-  padding: 0.95rem 1rem;
-  border-radius: 18px;
+  padding: 0.8rem 0.9rem;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.52);
 }
 
 .entry-editor-grid {
   display: grid;
-  grid-template-columns: 1.1fr 0.8fr 1.3fr;
-  gap: 0.85rem;
-  margin-bottom: 0.9rem;
+  grid-template-columns: 1.1fr 0.55fr 1.35fr;
+  gap: 0.7rem;
+  margin-bottom: 0.65rem;
   align-items: start;
 }
 
@@ -686,9 +712,17 @@ textarea {
   align-self: start;
 }
 
+.entry-field-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #5d82b4;
+}
+
 .entry-editor-grid .field-hint {
   display: block;
-  margin-top: 0.45rem;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
 }
 
 .entry-editor-inventory {
@@ -704,9 +738,10 @@ textarea {
 
 .entry-editor-actions {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto auto auto;
   align-items: center;
-  gap: 0.85rem;
+  justify-content: end;
+  gap: 0.65rem;
 }
 
 .entry-editor-actions .ghost-button,
@@ -718,8 +753,8 @@ textarea {
   display: grid;
   gap: 0.2rem;
   align-content: center;
-  padding: 1rem 1.05rem;
-  border-radius: 16px;
+  padding: 0.8rem 0.95rem;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(255, 255, 255, 0.34);
   color: var(--muted);
@@ -729,12 +764,13 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 5.5rem;
-  padding: 0.75rem 0.95rem;
+  min-width: 4.5rem;
+  padding: 0.55rem 0.8rem;
   border-radius: 999px;
   background: rgba(31, 156, 255, 0.1);
   color: #173866;
   font-weight: 700;
+  font-size: 0.8rem;
 }
 
 .history-item {
@@ -768,6 +804,37 @@ textarea {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.9rem;
+}
+
+.settings-grid {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.settings-grid-core {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.settings-grid-advanced {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.8rem;
+}
+
+.settings-disclosure {
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  padding: 0.8rem 0.9rem;
+}
+
+.settings-disclosure summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #173866;
+}
+
+.compact-actions {
+  gap: 0.7rem;
 }
 
 .upload-button input {
@@ -840,7 +907,9 @@ textarea {
   .header-layout,
   .metric-list,
   .entry-editor-grid,
-  .split-fields {
+  .split-fields,
+  .settings-grid-core,
+  .settings-grid-advanced {
     grid-template-columns: 1fr;
   }
 
@@ -858,6 +927,11 @@ textarea {
   }
 
   .entry-editor-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    justify-content: stretch;
+  }
+
+  .entry-type-chip {
+    grid-column: 1 / -1;
   }
 }

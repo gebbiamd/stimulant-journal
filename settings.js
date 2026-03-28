@@ -146,19 +146,26 @@ function renderEntryEditor() {
     const doseLabel = entry.type === "dose"
       ? `${formatNumber(entry.amount || 0)} ${unitLabel(state)}`
       : "Note only";
+    const timestampLabel = new Date(entry.timestamp).toLocaleString([], {
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
     article.innerHTML = `
       <div class="entry-editor-grid">
         <label>
-          Timestamp
+          <span class="entry-field-label">Time</span>
           <input class="entry-input" data-field="timestamp" type="datetime-local" value="${formatDateTimeLocalValue(entry.timestamp)}" />
+          <span class="field-hint muted">${timestampLabel}</span>
         </label>
         <label>
-          Dose (tablets)
+          <span class="entry-field-label">Tabs</span>
           <input class="entry-input" data-field="tabletCount" type="number" min="0" step="0.25" value="${doseValue}" ${entry.type === "note" ? "disabled" : ""} />
           <span class="field-hint muted">${doseLabel}</span>
         </label>
         <label class="entry-note-field">
-          Note
+          <span class="entry-field-label">Note</span>
           <input class="entry-input" data-field="note" type="text" value="${String(entry.note || "").replace(/"/g, "&quot;")}" />
         </label>
       </div>
