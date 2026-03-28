@@ -1,5 +1,59 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+async function refreshOuraToken(admin: ReturnType<typeof createClient>, connection: {
+  user_id: string;
+  refresh_token: string | null;
+}) {
+  if (!connection.refresh_token) {
+    throw new Error("Oura connection needs to be reconnected.");
+  }
+
+  const tokenResponse = await fetch("https://api.ouraring.com/oauth/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: connection.refresh_token,
+      client_id: Deno.env.get("OURA_CLIENT_ID")!,
+      client_secret: Deno.env.get("OURA_CLIENT_SECRET")!,
+    }),
+  });
+
+  const tokenPayload = await tokenResponse.json();
+  if (!tokenResponse.ok) {
+    throw new Error(tokenPayload.error_description || tokenPayload.error || "Failed to refresh Oura token.");
+  }
+
+  const expiresAt = tokenPayload.expires_in
+    ? new Date(Date.now() + Number(tokenPayload.expires_in) * 1000).toISOString()
+    : null;
+
+  const nextConnection = {
+    ...connection,
+    access_token: tokenPayload.access_token,
+    refresh_token: tokenPayload.refresh_token || connection.refresh_token,
+    token_type: tokenPayload.token_type || "Bearer",
+    expires_at: expiresAt,
+    scope: tokenPayload.scope || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await admin
+    .from("oura_connections")
+    .update({
+      access_token: nextConnection.access_token,
+      refresh_token: nextConnection.refresh_token,
+      token_type: nextConnection.token_type,
+      expires_at: nextConnection.expires_at,
+      scope: nextConnection.scope,
+      updated_at: nextConnection.updated_at,
+    })
+    .eq("user_id", connection.user_id);
+
+  if (error) throw new Error(error.message);
+  return nextConnection;
+}
+
 Deno.serve(async (request) => {
   const authHeader = request.headers.get("Authorization");
   if (!authHeader) return new Response(JSON.stringify({ error: "Missing auth header" }), { status: 401 });
@@ -30,6 +84,16 @@ Deno.serve(async (request) => {
     return new Response(JSON.stringify({ error: "Oura is not connected for this account." }), { status: 400 });
   }
 
+  let activeConnection = connection;
+  const expiresAt = activeConnection.expires_at ? new Date(activeConnection.expires_at).getTime() : 0;
+  if (expiresAt && expiresAt <= Date.now() + 60_000) {
+    try {
+      activeConnection = await refreshOuraToken(admin, activeConnection);
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Failed to refresh Oura token." }), { status: 400 });
+    }
+  }
+
   const endDate = new Date();
   const startDate = new Date(endDate.getTime() - 29 * 24 * 60 * 60 * 1000);
   const query = new URLSearchParams({
@@ -37,9 +101,21 @@ Deno.serve(async (request) => {
     end_date: endDate.toISOString().slice(0, 10),
   });
 
-  const response = await fetch(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
-    headers: { Authorization: `Bearer ${connection.access_token}` },
+  let response = await fetch(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
+    headers: { Authorization: `Bearer ${activeConnection.access_token}` },
   });
+
+  if (response.status === 401) {
+    try {
+      activeConnection = await refreshOuraToken(admin, activeConnection);
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Failed to refresh Oura token." }), { status: 400 });
+    }
+
+    response = await fetch(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
+      headers: { Authorization: `Bearer ${activeConnection.access_token}` },
+    });
+  }
 
   const payload = await response.json();
   return new Response(JSON.stringify(payload), {
