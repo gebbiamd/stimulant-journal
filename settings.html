@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=20" />
+    <link rel="manifest" href="./manifest.webmanifest?v=21" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=20" />
+    <link rel="stylesheet" href="./styles.css?v=21" />
     <title>Settings | Stimulant Journal</title>
   </head>
   <body data-page="settings">
@@ -186,6 +186,28 @@
         </div>
       </section>
 
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Repair</p>
+            <h2>Raw JSON editor</h2>
+          </div>
+        </div>
+        <div class="stack-form">
+          <p class="muted">
+            Use this to fix bad entries directly, including incorrect timestamps, stray doses, or inventory settings. This saves the full state and syncs it to Supabase.
+          </p>
+          <label>
+            Current app data
+            <textarea id="rawDataEditor" name="rawDataEditor" rows="16" spellcheck="false"></textarea>
+          </label>
+          <div class="data-actions">
+            <button id="reloadRawDataButton" class="ghost-button" type="button">Reload Current Data</button>
+            <button id="saveRawDataButton" class="nav-button emphasis-button" type="button">Save Raw JSON</button>
+          </div>
+        </div>
+      </section>
+
       <section class="footer-nav">
         <a class="nav-button emphasis-button" href="./index.html">Home</a>
         <a class="nav-button emphasis-button" href="./summary.html">More Details</a>
@@ -193,7 +215,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=20"></script>
-    <script src="./settings.js?v=20"></script>
+    <script src="./journal-core.js?v=21"></script>
+    <script src="./settings.js?v=21"></script>
   </body>
 </html>

@@ -31,6 +31,9 @@ const els = {
   ouraClientId: document.querySelector("#ouraClientId"),
   exportButton: document.querySelector("#exportButton"),
   importInput: document.querySelector("#importInput"),
+  rawDataEditor: document.querySelector("#rawDataEditor"),
+  reloadRawDataButton: document.querySelector("#reloadRawDataButton"),
+  saveRawDataButton: document.querySelector("#saveRawDataButton"),
   ouraStatus: document.querySelector("#ouraStatus"),
   openAiStatus: document.querySelector("#openAiStatus"),
   ouraConnectButton: document.querySelector("#ouraConnectButton"),
@@ -103,6 +106,24 @@ function hydrate() {
   if (els.openAiStatus) {
     els.openAiStatus.textContent = state.settings.openAiRelayUrl ? "Relay configured" : "Relay not configured";
   }
+  if (els.rawDataEditor) {
+    els.rawDataEditor.value = JSON.stringify(state, null, 2);
+  }
+}
+
+function parseRawState(raw) {
+  const parsed = JSON.parse(raw);
+  return {
+    entries: Array.isArray(parsed.entries) ? parsed.entries.map(normalizeEntry).filter(Boolean) : [],
+    settings: { ...defaultState.settings, ...(parsed.settings || {}) },
+    integrations: {
+      oura: {
+        ...defaultState.integrations.oura,
+        ...((parsed.integrations && parsed.integrations.oura) || {}),
+      },
+    },
+    auth: { ...defaultState.auth, ...(parsed.auth || {}) },
+  };
 }
 
 els.settingsForm?.addEventListener("submit", (event) => {
@@ -137,6 +158,23 @@ els.importInput?.addEventListener("change", importData((nextState) => {
   state = nextState;
   hydrate();
 }));
+els.reloadRawDataButton?.addEventListener("click", () => {
+  hydrate();
+  setNotice("Reloaded the current saved data into the editor.", "success");
+});
+els.saveRawDataButton?.addEventListener("click", () => {
+  try {
+    const nextState = parseRawState(els.rawDataEditor.value);
+    nextState.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    state = nextState;
+    persistState(state);
+    queueRemoteSync(state);
+    hydrate();
+    setNotice("Raw JSON saved.", "success");
+  } catch (error) {
+    setNotice(`Could not save raw JSON: ${getFriendlyAuthMessage(error)}`, "error");
+  }
+});
 els.authCreateButton?.addEventListener("click", async () => {
   setBusy(els.authCreateButton, "Creating...", true);
   try {

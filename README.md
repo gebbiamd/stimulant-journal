@@ -36,6 +36,7 @@ Use the existing Supabase backend as the Shortcut webhook target:
 {
   "dose": 1.5,
   "timestamp": "2026-03-27T14:22:00",
+  "utc_offset": "-05:00",
   "note": "optional"
 }
 ```
@@ -44,6 +45,7 @@ Behavior:
 
 - `dose` is interpreted as tablets
 - the function looks up your `mg_per_tablet` from `user_settings`
+- if `timestamp` does not include `Z` or an offset, `utc_offset` is used to interpret the local time correctly
 - if `dose > 0`, it inserts a `dose` entry
 - if `dose <= 0`, it inserts a `note` entry
 - response:
@@ -75,21 +77,24 @@ Recommended Shortcut actions:
 3. `Format Date`
    Format string:
    `yyyy-MM-dd'T'HH:mm:ss`
-4. Optional `Ask for Input`
+4. `Get Details of Dates`
+   Get: `Time Zone Offset`
+5. Optional `Ask for Input`
    Prompt: `Any note?`
    Type: `Text`
-5. `Dictionary`
+6. `Dictionary`
    Keys:
    - `dose` -> provided number
    - `timestamp` -> formatted date string
+   - `utc_offset` -> time zone offset from the previous step
    - `note` -> optional note text
-6. `Get Contents of URL`
+7. `Get Contents of URL`
    - URL: webhook endpoint above
    - Method: `POST`
    - Request Body: `JSON`
    - Headers:
      - `Authorization` -> `Bearer YOUR_SHORTCUT_SHARED_SECRET`
-7. `Quick Look` or `Show Result`
+8. `Quick Look` or `Show Result`
    Inspect the JSON response
 
 ## Local preview

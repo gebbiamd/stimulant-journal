@@ -14,6 +14,14 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
+function hasExplicitTimezone(value: string) {
+  return /(?:Z|[+-]\d{2}:\d{2})$/i.test(value);
+}
+
+function isValidUtcOffset(value: string) {
+  return /^[+-]\d{2}:\d{2}$/.test(value);
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -45,6 +53,7 @@ Deno.serve(async (request) => {
   const dose = Number(payload.dose);
   const timestamp = String(payload.timestamp || "").trim();
   const note = String(payload.note || "").trim();
+  const utcOffset = String(payload.utc_offset || "").trim();
 
   if (!Number.isFinite(dose)) {
     return json({ ok: false, error: "dose must be numeric" }, 400);
@@ -52,8 +61,13 @@ Deno.serve(async (request) => {
   if (!timestamp) {
     return json({ ok: false, error: "timestamp is required" }, 400);
   }
+  if (utcOffset && !isValidUtcOffset(utcOffset)) {
+    return json({ ok: false, error: "utc_offset must look like -05:00 or +01:00" }, 400);
+  }
 
-  const parsedTimestamp = new Date(timestamp);
+  const parsedTimestamp = new Date(
+    !hasExplicitTimezone(timestamp) && utcOffset ? `${timestamp}${utcOffset}` : timestamp
+  );
   if (Number.isNaN(parsedTimestamp.getTime())) {
     return json({ ok: false, error: "timestamp must be a valid ISO date string" }, 400);
   }
@@ -98,6 +112,7 @@ Deno.serve(async (request) => {
       dose,
       timestamp: entryPayload.timestamp,
       mg_per_tablet: mgPerTablet,
+      utc_offset: utcOffset || null,
     },
   });
 });
