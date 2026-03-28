@@ -10,10 +10,10 @@
     <meta name="theme-color" content="#efe1c7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="./manifest.webmanifest?v=30" />
+    <link rel="manifest" href="./manifest.webmanifest?v=31" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=30" />
+    <link rel="stylesheet" href="./styles.css?v=31" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -121,20 +121,22 @@
             </label>
           </div>
           <p id="doseMgHint" class="field-hint muted">Interpreted using your mg-per-tablet setting.</p>
-          <label>
+          <label class="entry-note-field">
             Note
             <textarea
               id="doseNote"
               name="doseNote"
-              rows="3"
+              rows="2"
               maxlength="500"
-              placeholder="Optional note about this entry. Leave tablets at 0 to save only a note."
+              placeholder="Optional note. Leave tablets at 0 for note-only."
             ></textarea>
           </label>
-          <button class="primary-button" type="submit">Save Entry</button>
-          <p id="homeMessage" class="status-callout muted" role="status" aria-live="polite">
-            Entries save here immediately and then sync to your account when you are signed in.
-          </p>
+          <div class="entry-submit-row">
+            <button class="primary-button" type="submit">Save Entry</button>
+            <p id="homeMessage" class="status-callout muted" role="status" aria-live="polite">
+              Saves locally now and syncs when signed in.
+            </p>
+          </div>
         </form>
       </section>
 
@@ -214,7 +216,7 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=30"></script>
-    <script src="./home.js?v=30"></script>
+    <script src="./journal-core.js?v=31"></script>
+    <script src="./home.js?v=31"></script>
   </body>
 </html>
