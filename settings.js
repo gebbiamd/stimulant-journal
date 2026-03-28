@@ -169,26 +169,15 @@ function renderEntryEditor() {
     const row = document.createElement("article");
     row.className = "entry-editor-item";
     const doseValue = entry.type === "dose" ? Number(entry.tabletCount || 0) : "";
-    const doseLabel = entry.type === "dose"
-      ? `${formatNumber(entry.amount || 0)} ${unitLabel(state)}`
-      : "Note only";
-    const timestampLabel = new Date(entry.timestamp).toLocaleString([], {
-      month: "numeric",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
     row.innerHTML = `
       <div class="entry-editor-time">
         <input class="entry-input" data-field="timestamp" type="datetime-local" value="${formatDateTimeLocalValue(entry.timestamp)}" />
-        <span class="field-hint muted">${timestampLabel}</span>
       </div>
       <div class="entry-editor-dose">
         <input class="entry-input" data-field="tabletCount" type="number" min="0" step="0.25" value="${doseValue}" ${entry.type === "note" ? "disabled" : ""} />
-        <span class="field-hint muted">${doseLabel}</span>
       </div>
       <div class="entry-editor-note">
-        <input class="entry-input" data-field="note" type="text" value="${String(entry.note || "").replace(/"/g, "&quot;")}" placeholder="${entry.type === "note" ? "Note entry" : "Optional note"}" />
+        <input class="entry-input" data-field="note" type="text" value="${String(entry.note || "").replace(/"/g, "&quot;")}" placeholder="Note" />
       </div>
       <div class="entry-editor-actions">
         <button class="ghost-button entry-save-button" type="button" data-id="${entry.id}">Save</button>

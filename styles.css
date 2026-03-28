@@ -1213,24 +1213,24 @@ button.calendar-cell {
 .entry-editor-head,
 .entry-editor-item {
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.48fr) minmax(0, 1.1fr) auto;
-  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.42fr) minmax(0, 1.08fr) auto;
+  gap: 0.36rem;
   align-items: center;
 }
 
 .entry-editor-head {
-  padding: 0.46rem 0.78rem 0.42rem;
+  padding: 0.3rem 0.58rem 0.28rem;
   background: rgba(208, 226, 255, 0.62);
   color: #3d679c;
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .entry-editor-item {
-  padding: 0.46rem 0.78rem;
-  min-height: 3rem;
+  padding: 0.28rem 0.58rem;
+  min-height: 2.3rem;
   background: rgba(255, 255, 255, 0.72);
   border-top: 1px solid rgba(255, 255, 255, 0.38);
 }
@@ -1252,15 +1252,6 @@ button.calendar-cell {
   color: #5d82b4;
 }
 
-.entry-editor-item .field-hint {
-  display: block;
-  margin-top: 0.16rem;
-  font-size: 0.72rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .entry-editor-inventory {
   align-items: end;
 }
@@ -1269,7 +1260,7 @@ button.calendar-cell {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.85rem;
+  gap: 0.55rem;
 }
 
 .entry-editor-actions {
@@ -1277,13 +1268,17 @@ button.calendar-cell {
   grid-template-columns: auto auto;
   align-items: center;
   justify-content: end;
-  gap: 0.35rem;
+  gap: 0.22rem;
 }
 
 .entry-editor-actions .ghost-button,
 .entry-editor-actions .delete-button {
   width: auto;
   min-width: 0;
+  min-height: 28px;
+  padding: 0.26rem 0.55rem;
+  font-size: 0.72rem;
+  border-radius: 999px;
 }
 
 .entry-editor-summary {
@@ -1298,20 +1293,26 @@ button.calendar-cell {
 }
 
 .entry-editor-item .entry-input {
-  padding: 0.46rem 0.58rem;
-  border-radius: 12px;
-  font-size: 0.86rem;
+  padding: 0.28rem 0.42rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
   min-width: 0;
   max-width: 100%;
 }
 
 .entry-editor-time .entry-input[type="datetime-local"] {
-  padding-inline: 0.28rem;
-  font-size: 0.8rem;
+  padding-inline: 0.16rem;
+  font-size: 0.72rem;
 }
 
 .entry-editor-note .entry-input {
   min-width: 0;
+}
+
+.entry-editor-toolbar .ghost-button {
+  min-height: 34px;
+  padding: 0.42rem 0.72rem;
+  font-size: 0.78rem;
 }
 
 .history-item {
@@ -1616,9 +1617,9 @@ button.calendar-cell {
   }
 
   .entry-editor-item {
-    grid-template-columns: minmax(0, 1fr) 4.1rem;
-    gap: 0.3rem 0.38rem;
-    padding: 0.38rem 0.48rem;
+    grid-template-columns: minmax(0, 1fr) 3.45rem;
+    gap: 0.24rem 0.28rem;
+    padding: 0.26rem 0.34rem;
     align-items: start;
   }
 
@@ -1638,29 +1639,25 @@ button.calendar-cell {
     grid-column: 1 / -1;
     grid-template-columns: 1fr 1fr;
     justify-content: stretch;
-    gap: 0.24rem;
+    gap: 0.18rem;
   }
 
   .entry-editor-item .entry-input {
-    padding: 0.34rem 0.44rem;
-    font-size: 0.78rem;
-    border-radius: 10px;
+    padding: 0.24rem 0.34rem;
+    font-size: 0.72rem;
+    border-radius: 9px;
   }
 
   .entry-editor-time .entry-input[type="datetime-local"] {
-    padding-inline: 0.14rem;
-    font-size: 0.7rem;
-  }
-
-  .entry-editor-item .field-hint {
-    display: none;
+    padding-inline: 0.1rem;
+    font-size: 0.64rem;
   }
 
   .entry-editor-actions .ghost-button,
   .entry-editor-actions .delete-button {
-    min-height: 32px;
-    padding: 0.38rem 0.5rem;
-    font-size: 0.74rem;
+    min-height: 28px;
+    padding: 0.28rem 0.36rem;
+    font-size: 0.68rem;
     border-radius: 999px;
   }
 
