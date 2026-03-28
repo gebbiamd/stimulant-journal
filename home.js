@@ -5,6 +5,7 @@ if (consumeOuraRedirect(state)) {
   state = loadState();
 }
 const AI_CHAT_STORAGE_KEY = "stimulant-journal-ai-chat-v1";
+const AI_SUMMARY_STORAGE_KEY = "stimulant-journal-ai-summary-v1";
 let aiChatMessages = [];
 
 const els = {
@@ -42,6 +43,7 @@ const els = {
   recentList: document.querySelector("#recentList"),
   recentEmpty: document.querySelector("#recentEmpty"),
   generateSummaryButton: document.querySelector("#generateSummaryButton"),
+  aiSummaryMeta: document.querySelector("#aiSummaryMeta"),
   aiSummaryBox: document.querySelector("#aiSummaryBox"),
   aiChatHistory: document.querySelector("#aiChatHistory"),
   aiChatForm: document.querySelector("#aiChatForm"),
@@ -62,6 +64,68 @@ function loadAiChatMessages() {
 
 function persistAiChatMessages() {
   localStorage.setItem(AI_CHAT_STORAGE_KEY, JSON.stringify(aiChatMessages.slice(-12)));
+}
+
+function loadSavedAiSummary() {
+  try {
+    const raw = localStorage.getItem(AI_SUMMARY_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (!parsed || typeof parsed.summary !== "string") return null;
+    return {
+      summary: parsed.summary,
+      generatedAt: parsed.generatedAt || "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function persistAiSummary(summary, generatedAt) {
+  localStorage.setItem(AI_SUMMARY_STORAGE_KEY, JSON.stringify({ summary, generatedAt }));
+}
+
+function extractRecommendationLines(summary) {
+  return String(summary || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !/^recommendations?:/i.test(line))
+    .filter((line) => {
+      const normalized = line.toLowerCase();
+      return (
+        normalized.includes("recommend") ||
+        normalized.includes("consider") ||
+        normalized.includes("try ") ||
+        normalized.includes("avoid") ||
+        normalized.includes("limit") ||
+        normalized.includes("move ") ||
+        normalized.includes("watch ") ||
+        normalized.includes("keep ")
+      );
+    })
+    .slice(0, 4);
+}
+
+function ensureRecommendationsSection(summary) {
+  const text = String(summary || "").trim();
+  if (!text) return text;
+  if (/recommendations?:/i.test(text)) return text;
+  const recommendations = extractRecommendationLines(text);
+  if (!recommendations.length) return text;
+  return `${text}\n\nRecommendations:\n${recommendations.map((line) => `- ${line.replace(/^[-*]\s+/, "")}`).join("\n")}`;
+}
+
+function renderAiSummary(summary, generatedAt = "") {
+  if (!els.aiSummaryBox) return;
+  if (!summary) {
+    els.aiSummaryBox.innerHTML = "Generate a concise summary from recent doses, notes, and imported Oura sleep.";
+    if (els.aiSummaryMeta) els.aiSummaryMeta.textContent = "";
+    return;
+  }
+  els.aiSummaryBox.innerHTML = formatAiSummaryHtml(ensureRecommendationsSection(summary));
+  if (els.aiSummaryMeta) {
+    els.aiSummaryMeta.textContent = generatedAt ? `Last run ${new Date(generatedAt).toLocaleString()}` : "";
+  }
 }
 
 function renderAiChat() {
@@ -304,9 +368,10 @@ els.generateSummaryButton?.addEventListener("click", async () => {
   }
   try {
     const result = await generateAiSummary(state);
-    if (els.aiSummaryBox) {
-      els.aiSummaryBox.innerHTML = formatAiSummaryHtml(result.summary || JSON.stringify(result, null, 2));
-    }
+    const summaryText = result.summary || JSON.stringify(result, null, 2);
+    const generatedAt = new Date().toISOString();
+    persistAiSummary(summaryText, generatedAt);
+    renderAiSummary(summaryText, generatedAt);
     setNotice("AI summary generated.", "success");
   } catch (error) {
     if (els.aiSummaryBox) {
@@ -367,6 +432,10 @@ setDateTimeInputNow(els.doseTime);
 renderInstallPrompt(els.installButton);
 aiChatMessages = loadAiChatMessages();
 renderAiChat();
+const savedAiSummary = loadSavedAiSummary();
+if (savedAiSummary) {
+  renderAiSummary(savedAiSummary.summary, savedAiSummary.generatedAt);
+}
 (async () => {
   try {
     await loadRemoteStateInto(state);

@@ -1246,9 +1246,11 @@ function formatAiSummaryHtml(summary) {
     }
 
     if (colonHeaderMatch) {
-      const header = formatInlineAiText(colonHeaderMatch[1]);
+      const rawHeader = colonHeaderMatch[1];
+      const header = formatInlineAiText(rawHeader);
       const body = formatInlineAiText(colonHeaderMatch[2]);
-      html.push(body ? `<p><strong>${header}:</strong> ${body}</p>` : `<p><strong>${header}</strong></p>`);
+      const classes = /recommendations?/i.test(rawHeader) ? "ai-recommendations-heading" : "";
+      html.push(body ? `<p class="${classes}"><strong>${header}:</strong> ${body}</p>` : `<p class="${classes}"><strong>${header}</strong></p>`);
       continue;
     }
 
