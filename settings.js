@@ -104,7 +104,13 @@ els.authSignOutButton.addEventListener("click", async () => {
     els.authMessage.textContent = error.message;
   }
 });
-els.ouraConnectButton.addEventListener("click", () => startOuraAuth(state));
+els.ouraConnectButton.addEventListener("click", async () => {
+  try {
+    await startOuraAuth(state);
+  } catch (error) {
+    els.authMessage.textContent = error.message;
+  }
+});
 els.ouraDisconnectButton.addEventListener("click", () => {
   disconnectOura(state);
   hydrate();

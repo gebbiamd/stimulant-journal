@@ -136,6 +136,13 @@ async function refreshAuthState(state) {
   return user;
 }
 
+async function getSupabaseSession() {
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.getSession();
+  if (error) throw error;
+  return data.session || null;
+}
+
 async function loadRemoteStateInto(state) {
   const client = getSupabaseClient();
   const user = await refreshAuthState(state);
@@ -481,7 +488,7 @@ function setDateTimeInputNow(input) {
 }
 
 function buildOuraRedirectUri() {
-  return `${window.location.origin}/stimulant-journal/settings.html`;
+  return `${SUPABASE_URL}/functions/v1/oura-callback`;
 }
 
 function consumeOuraRedirect(state) {
@@ -504,21 +511,14 @@ function consumeOuraRedirect(state) {
 }
 
 function startOuraAuth(state) {
-  const clientId = (state.settings.ouraClientId || "").trim();
-  if (!clientId) {
-    window.alert("Add your Oura Client ID in Settings first.");
-    return;
-  }
-  const stateToken = crypto.randomUUID();
-  const redirectUri = buildOuraRedirectUri();
-  const scope = "daily";
-  const authUrl = new URL("https://cloud.ouraring.com/oauth/authorize");
-  authUrl.searchParams.set("response_type", "token");
-  authUrl.searchParams.set("client_id", clientId);
-  authUrl.searchParams.set("redirect_uri", redirectUri);
-  authUrl.searchParams.set("scope", scope);
-  authUrl.searchParams.set("state", stateToken);
-  window.location.assign(authUrl.toString());
+  return getSupabaseSession().then((session) => {
+    if (!session?.access_token) {
+      throw new Error("Sign in with email first so the Oura connection can be linked to your account.");
+    }
+    const authUrl = new URL(`${SUPABASE_URL}/functions/v1/oura-authorize`);
+    authUrl.searchParams.set("access_token", session.access_token);
+    window.location.assign(authUrl.toString());
+  });
 }
 
 function disconnectOura(state) {
@@ -527,38 +527,21 @@ function disconnectOura(state) {
 }
 
 async function syncOuraSleep(state) {
-  const token = state.integrations.oura.accessToken;
-  if (!token) throw new Error("Connect Oura first.");
-  const endDate = new Date();
-  const startDate = new Date(endDate.getTime() - 29 * DAY_MS);
-  const query = new URLSearchParams({
-    start_date: dateKey(startDate),
-    end_date: dateKey(endDate),
+  const session = await getSupabaseSession();
+  if (!session?.access_token) throw new Error("Sign in with email first.");
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/oura-sync`, {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
   });
-  const endpoints = [
-    "https://api.ouraring.com/v2/usercollection/sleep",
-    "https://api.ouraring.com/v2/usercollection/daily_sleep",
-  ];
-
-  let lastError = "Unknown Oura sync error";
-  for (const endpoint of endpoints) {
-    const response = await fetch(`${endpoint}?${query.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (response.ok) {
-      const payload = await response.json();
-      state.integrations.oura.sleep = Array.isArray(payload.data) ? payload.data : [];
-      state.integrations.oura.lastSyncAt = new Date().toISOString();
-      persistState(state);
-      return state.integrations.oura.sleep;
-    }
-
-    const text = await response.text();
-    lastError = `Oura sync failed on ${endpoint}: ${response.status} ${text}`;
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || payload.message || `Oura sync failed: ${response.status}`);
   }
-  throw new Error(lastError);
+  state.integrations.oura.sleep = Array.isArray(payload.data) ? payload.data : [];
+  state.integrations.oura.lastSyncAt = new Date().toISOString();
+  persistState(state);
+  return state.integrations.oura.sleep;
 }
 
 function getRecentOuraSleep(state) {

@@ -35,6 +35,19 @@ create table if not exists public.user_settings (
 alter table public.journal_entries enable row level security;
 alter table public.user_settings enable row level security;
 
+create table if not exists public.oura_connections (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  access_token text not null,
+  refresh_token text,
+  token_type text,
+  expires_at timestamptz,
+  scope text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.oura_connections enable row level security;
+
 create policy "entries own rows"
 on public.journal_entries
 for all
