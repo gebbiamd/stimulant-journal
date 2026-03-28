@@ -557,11 +557,24 @@ function disconnectOura(state) {
 async function syncOuraSleep(state) {
   const session = await getSupabaseSession();
   if (!session?.access_token) throw new Error("Sign in with email first.");
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/oura-sync`, {
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+  let response;
+  try {
+    response = await fetch(`${SUPABASE_URL}/functions/v1/oura-sync`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Oura sync timed out after 15 seconds.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(payload.error || payload.message || `Oura sync failed: ${response.status}`);

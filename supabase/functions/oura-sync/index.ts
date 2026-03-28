@@ -14,6 +14,24 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
+async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Oura request timed out after ${Math.round(timeoutMs / 1000)} seconds.`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 async function refreshOuraToken(admin: ReturnType<typeof createClient>, connection: {
   user_id: string;
   refresh_token: string | null;
@@ -22,7 +40,7 @@ async function refreshOuraToken(admin: ReturnType<typeof createClient>, connecti
     throw new Error("Oura connection needs to be reconnected.");
   }
 
-  const tokenResponse = await fetch("https://api.ouraring.com/oauth/token", {
+  const tokenResponse = await fetchWithTimeout("https://api.ouraring.com/oauth/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -31,7 +49,7 @@ async function refreshOuraToken(admin: ReturnType<typeof createClient>, connecti
       client_id: Deno.env.get("OURA_CLIENT_ID")!,
       client_secret: Deno.env.get("OURA_CLIENT_SECRET")!,
     }),
-  });
+  }, 15000);
 
   const tokenPayload = await tokenResponse.json();
   if (!tokenResponse.ok) {
@@ -119,9 +137,9 @@ Deno.serve(async (request) => {
     end_date: endDate.toISOString().slice(0, 10),
   });
 
-  let response = await fetch(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
+  let response = await fetchWithTimeout(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
     headers: { Authorization: `Bearer ${activeConnection.access_token}` },
-  });
+  }, 15000);
 
   if (response.status === 401) {
     try {
@@ -130,9 +148,9 @@ Deno.serve(async (request) => {
       return json({ error: error instanceof Error ? error.message : "Failed to refresh Oura token." }, 400);
     }
 
-    response = await fetch(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
+    response = await fetchWithTimeout(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
       headers: { Authorization: `Bearer ${activeConnection.access_token}` },
-    });
+    }, 15000);
   }
 
   const payload = await response.json();
