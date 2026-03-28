@@ -1,15 +1,15 @@
-const CACHE_NAME = "stimulant-journal-v14";
+const CACHE_NAME = "stimulant-journal-v15";
 const ASSETS = [
   "./",
   "./index.html",
   "./summary.html",
   "./settings.html",
-  "./styles.css?v=14",
-  "./journal-core.js?v=14",
-  "./home.js?v=14",
-  "./summary.js?v=14",
-  "./settings.js?v=14",
-  "./manifest.webmanifest?v=14",
+  "./styles.css?v=15",
+  "./journal-core.js?v=15",
+  "./home.js?v=15",
+  "./summary.js?v=15",
+  "./settings.js?v=15",
+  "./manifest.webmanifest?v=15",
   "./icon.svg",
   "./apple-touch-icon.svg",
 ];
@@ -33,10 +33,10 @@ self.addEventListener("fetch", (event) => {
       fetch(event.request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => caches.match("./index.html"))
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match("./index.html")))
     );
     return;
   }

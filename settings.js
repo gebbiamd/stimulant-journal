@@ -41,16 +41,26 @@ function hydrate() {
   Object.entries(state.settings).forEach(([key, value]) => {
     if (els[key]) els[key].value = value;
   });
-  els.authStatus.textContent = state.auth?.email ? state.auth.email : "Not signed in";
-  els.authEmail.value = state.auth?.email || "";
-  els.authPassword.value = "";
-  els.ouraStatus.textContent = state.integrations.oura.accessToken
+  if (els.authStatus) {
+    els.authStatus.textContent = state.auth?.email ? state.auth.email : "Not signed in";
+  }
+  if (els.authEmail) {
+    els.authEmail.value = state.auth?.email || "";
+  }
+  if (els.authPassword) {
+    els.authPassword.value = "";
+  }
+  if (els.ouraStatus) {
+    els.ouraStatus.textContent = state.integrations.oura.accessToken
     ? `Connected${state.integrations.oura.lastSyncAt ? `, last sync ${new Date(state.integrations.oura.lastSyncAt).toLocaleString()}` : ""}`
     : "Not connected";
-  els.openAiStatus.textContent = state.settings.openAiRelayUrl ? "Relay configured" : "Relay not configured";
+  }
+  if (els.openAiStatus) {
+    els.openAiStatus.textContent = state.settings.openAiRelayUrl ? "Relay configured" : "Relay not configured";
+  }
 }
 
-els.settingsForm.addEventListener("submit", (event) => {
+els.settingsForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   state.settings = {
     medicationName: els.medicationName.value.trim(),
@@ -76,12 +86,12 @@ els.settingsForm.addEventListener("submit", (event) => {
   hydrate();
 });
 
-els.exportButton.addEventListener("click", () => exportData(state));
-els.importInput.addEventListener("change", importData((nextState) => {
+els.exportButton?.addEventListener("click", () => exportData(state));
+els.importInput?.addEventListener("change", importData((nextState) => {
   state = nextState;
   hydrate();
 }));
-els.authCreateButton.addEventListener("click", async () => {
+els.authCreateButton?.addEventListener("click", async () => {
   try {
     await signUpWithEmailPassword(els.authEmail.value.trim(), els.authPassword.value);
     els.authMessage.textContent =
@@ -90,7 +100,7 @@ els.authCreateButton.addEventListener("click", async () => {
     els.authMessage.textContent = error.message;
   }
 });
-els.authSignInButton.addEventListener("click", async () => {
+els.authSignInButton?.addEventListener("click", async () => {
   try {
     await signInWithPassword(els.authEmail.value.trim(), els.authPassword.value);
     await loadRemoteStateInto(state);
@@ -100,7 +110,7 @@ els.authSignInButton.addEventListener("click", async () => {
     els.authMessage.textContent = error.message;
   }
 });
-els.authRefreshButton.addEventListener("click", async () => {
+els.authRefreshButton?.addEventListener("click", async () => {
   try {
     await loadRemoteStateInto(state);
     els.authMessage.textContent = "Loaded latest cloud data.";
@@ -109,7 +119,7 @@ els.authRefreshButton.addEventListener("click", async () => {
     els.authMessage.textContent = error.message;
   }
 });
-els.authSignOutButton.addEventListener("click", async () => {
+els.authSignOutButton?.addEventListener("click", async () => {
   try {
     await signOutFromSupabase(state);
     els.authMessage.textContent = "Signed out.";
@@ -118,14 +128,14 @@ els.authSignOutButton.addEventListener("click", async () => {
     els.authMessage.textContent = error.message;
   }
 });
-els.ouraConnectButton.addEventListener("click", async () => {
+els.ouraConnectButton?.addEventListener("click", async () => {
   try {
     await startOuraAuth(state);
   } catch (error) {
     els.authMessage.textContent = error.message;
   }
 });
-els.ouraDisconnectButton.addEventListener("click", () => {
+els.ouraDisconnectButton?.addEventListener("click", () => {
   disconnectOura(state);
   hydrate();
 });
