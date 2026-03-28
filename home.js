@@ -30,6 +30,8 @@ const els = {
   todayGaugeLabel: document.querySelector("#todayGaugeLabel"),
   gaugeReason: document.querySelector("#gaugeReason"),
   monthTabletUsage: document.querySelector("#monthTabletUsage"),
+  lastSleepHeadline: document.querySelector("#lastSleepHeadline"),
+  lastSleepDetail: document.querySelector("#lastSleepDetail"),
   miniTrendChart: document.querySelector("#miniTrendChart"),
   miniTrendAxis: document.querySelector("#miniTrendAxis"),
   miniTrendLegend: document.querySelector("#miniTrendLegend"),
@@ -90,6 +92,19 @@ function renderGauge() {
   els.scaleBase.textContent = `0 ${unitLabel(state)}`;
   els.doseUnitLabel.textContent = "tabs";
   els.doseMgHint.textContent = `Current conversion: 1 tablet = ${formatNumber(state.settings.mgPerTablet || defaultState.settings.mgPerTablet)} ${unitLabel(state)}.`;
+
+  const latestSleep = getLatestOuraSleep(state);
+  if (latestSleep && latestSleep.total_sleep_duration) {
+    const sleepHours = Number(latestSleep.total_sleep_duration) / 3600;
+    const bedtime = latestSleep.bedtime_start ? new Date(latestSleep.bedtime_start) : null;
+    els.lastSleepHeadline.textContent = `${formatNumber(sleepHours)}h • score ${latestSleep.score ?? "?"}`;
+    els.lastSleepDetail.textContent = bedtime
+      ? `Bedtime ${bedtime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+      : "Latest synced Oura sleep";
+  } else {
+    els.lastSleepHeadline.textContent = "No Oura sleep yet";
+    els.lastSleepDetail.textContent = "Connect and sync Oura in More Details.";
+  }
 }
 
 function renderMiniTrend() {
@@ -134,6 +149,17 @@ function renderMiniTrend() {
     })
     .join("");
   const nightOverlay = (() => {
+    const ouraSegments = getSleepOverlaySegments(state, dayStart, now);
+    if (ouraSegments.length > 0) {
+      return ouraSegments
+        .map((segment) => {
+          const x = 20 + ((segment.start - dayStart) / (24 * 60 * 60 * 1000)) * (width - 40);
+          const w = ((segment.end - segment.start) / (24 * 60 * 60 * 1000)) * (width - 40);
+          return `<rect x="${x}" y="${chartTop}" width="${w}" height="${chartHeight}" fill="rgba(8,21,46,0.14)" rx="10" />`;
+        })
+        .join("");
+    }
+
     const segments = [];
     const startDate = new Date(dayStart);
     for (let dayOffset = 0; dayOffset <= 1; dayOffset += 1) {
@@ -166,7 +192,8 @@ function renderMiniTrend() {
 
   const currentLevel = levels[levels.length - 1]?.level || 0;
   const peakLevel = Math.max(...levels.map((item) => item.level), 0);
-  els.miniTrendLegend.textContent = `Estimated active level now: ${formatNumber(currentLevel)} ${unitLabel(state)} • peak over last 24h: ${formatNumber(peakLevel)} ${unitLabel(state)} • shaded bands show night hours • half-life: ${formatNumber(state.settings.decayHalfLifeHours || defaultState.settings.decayHalfLifeHours)}h`;
+  const hasOuraOverlay = getSleepOverlaySegments(state, dayStart, now).length > 0;
+  els.miniTrendLegend.textContent = `Estimated active level now: ${formatNumber(currentLevel)} ${unitLabel(state)} • peak over last 24h: ${formatNumber(peakLevel)} ${unitLabel(state)} • shaded bands show ${hasOuraOverlay ? "actual Oura sleep" : "night hours"} • half-life: ${formatNumber(state.settings.decayHalfLifeHours || defaultState.settings.decayHalfLifeHours)}h`;
 }
 
 function renderRecent() {

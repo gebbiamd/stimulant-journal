@@ -572,6 +572,88 @@ function getRecentOuraSleep(state) {
   return Array.isArray(state.integrations?.oura?.sleep) ? state.integrations.oura.sleep : [];
 }
 
+function getSortedOuraSleep(state) {
+  return getRecentOuraSleep(state)
+    .filter((item) => item && (item.bedtime_start || item.day))
+    .slice()
+    .sort((a, b) => {
+      const aTime = new Date(a.bedtime_start || a.day).getTime();
+      const bTime = new Date(b.bedtime_start || b.day).getTime();
+      return bTime - aTime;
+    });
+}
+
+function getLatestOuraSleep(state) {
+  return getSortedOuraSleep(state)[0] || null;
+}
+
+function getDoseTotalForLocalDate(state, date) {
+  const key = dateKey(date);
+  return getDoseEntries(state).reduce((sum, entry) => {
+    return dateKey(entry.timestamp) === key ? sum + Number(entry.amount || 0) : sum;
+  }, 0);
+}
+
+function getLastDoseForLocalDate(state, date) {
+  const key = dateKey(date);
+  return getDoseEntries(state).find((entry) => dateKey(entry.timestamp) === key) || null;
+}
+
+function getSleepDosePoints(state, limit = 14) {
+  const sleep = getSortedOuraSleep(state).slice(0, limit);
+  return sleep
+    .map((item) => {
+      const bedtime = item.bedtime_start ? new Date(item.bedtime_start) : null;
+      if (!bedtime || Number.isNaN(bedtime.getTime())) return null;
+      const doseDate = new Date(bedtime.getFullYear(), bedtime.getMonth(), bedtime.getDate());
+      const lastDose = getLastDoseForLocalDate(state, doseDate);
+      return {
+        dayLabel: bedtime.toLocaleDateString(undefined, { month: "numeric", day: "numeric" }),
+        bedtime,
+        doseTotal: getDoseTotalForLocalDate(state, doseDate),
+        lastDose,
+        lastDoseHour:
+          lastDose ? new Date(lastDose.timestamp).getHours() + new Date(lastDose.timestamp).getMinutes() / 60 : null,
+        sleepScore: Number(item.score || 0),
+        sleepHours: item.total_sleep_duration ? Number(item.total_sleep_duration) / 3600 : null,
+        item,
+      };
+    })
+    .filter(Boolean);
+}
+
+function getSleepOverlaySegments(state, startMs, endMs) {
+  return getSortedOuraSleep(state)
+    .map((item) => {
+      const start = item.bedtime_start ? new Date(item.bedtime_start).getTime() : null;
+      const end = item.bedtime_end ? new Date(item.bedtime_end).getTime() : null;
+      if (!start || !end || Number.isNaN(start) || Number.isNaN(end)) return null;
+      if (end <= startMs || start >= endMs) return null;
+      return {
+        start: Math.max(start, startMs),
+        end: Math.min(end, endMs),
+        score: Number(item.score || 0),
+      };
+    })
+    .filter(Boolean);
+}
+
+function getSleepInsightSummary(state) {
+  const points = getSleepDosePoints(state, 14).filter((point) => Number.isFinite(point.sleepHours));
+  if (points.length < 4) {
+    return "Sync a few more Oura sleep records to unlock dose-vs-sleep insights.";
+  }
+
+  const sortedByDose = points.slice().sort((a, b) => a.doseTotal - b.doseTotal);
+  const midpoint = Math.ceil(sortedByDose.length / 2);
+  const lower = sortedByDose.slice(0, midpoint);
+  const higher = sortedByDose.slice(midpoint);
+  const avgHours = (items) => items.reduce((sum, item) => sum + Number(item.sleepHours || 0), 0) / items.length;
+  const avgScore = (items) => items.reduce((sum, item) => sum + Number(item.sleepScore || 0), 0) / items.length;
+
+  return `Higher-dose days averaged ${formatNumber(avgHours(higher))}h sleep and a ${formatNumber(avgScore(higher))} sleep score, versus ${formatNumber(avgHours(lower))}h and ${formatNumber(avgScore(lower))} on lower-dose days.`;
+}
+
 async function generateAiSummary(state) {
   const relayUrl = (state.settings.openAiRelayUrl || "").trim();
   if (!relayUrl) throw new Error("Add your OpenAI relay URL in Settings first.");

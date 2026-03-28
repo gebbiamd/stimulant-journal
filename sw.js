@@ -1,15 +1,15 @@
-const CACHE_NAME = "stimulant-journal-v18";
+const CACHE_NAME = "stimulant-journal-v19";
 const ASSETS = [
   "./",
   "./index.html",
   "./summary.html",
   "./settings.html",
-  "./styles.css?v=18",
-  "./journal-core.js?v=18",
-  "./home.js?v=18",
-  "./summary.js?v=18",
-  "./settings.js?v=18",
-  "./manifest.webmanifest?v=18",
+  "./styles.css?v=19",
+  "./journal-core.js?v=19",
+  "./home.js?v=19",
+  "./summary.js?v=19",
+  "./settings.js?v=19",
+  "./manifest.webmanifest?v=19",
   "./icon.svg",
   "./apple-touch-icon.svg",
 ];

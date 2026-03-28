@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=18" />
+    <link rel="manifest" href="./manifest.webmanifest?v=19" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=18" />
+    <link rel="stylesheet" href="./styles.css?v=19" />
     <title>Summary | Stimulant Journal</title>
   </head>
   <body data-page="summary">
@@ -125,6 +125,51 @@
       <section class="card">
         <div class="section-header">
           <div>
+            <p class="eyebrow">Oura Insight</p>
+            <h2>Last night</h2>
+          </div>
+        </div>
+        <div class="metric-list">
+          <div class="metric">
+            <span class="metric-label">Sleep score</span>
+            <strong id="latestSleepScore">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Hours slept</span>
+            <strong id="latestSleepHours">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Bedtime</span>
+            <strong id="latestSleepBedtime">-</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Dose Vs Sleep</p>
+            <h2>Recent nights</h2>
+          </div>
+        </div>
+        <svg id="doseSleepChart" class="trend-chart tall-chart" viewBox="0 0 360 220" preserveAspectRatio="none"></svg>
+        <div id="doseSleepLegend" class="trend-legend"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Timing Vs Sleep</p>
+            <h2>Late doses and sleep</h2>
+          </div>
+        </div>
+        <svg id="timingSleepChart" class="trend-chart tall-chart" viewBox="0 0 360 220" preserveAspectRatio="none"></svg>
+        <div id="timingSleepLegend" class="trend-legend"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
             <p class="eyebrow">AI</p>
             <h2>Journal summary</h2>
           </div>
@@ -142,7 +187,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=18"></script>
-    <script src="./summary.js?v=18"></script>
+    <script src="./journal-core.js?v=19"></script>
+    <script src="./summary.js?v=19"></script>
   </body>
 </html>

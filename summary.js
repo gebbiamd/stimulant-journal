@@ -18,6 +18,13 @@ const els = {
   syncOuraButton: document.querySelector("#syncOuraButton"),
   ouraSleepEmpty: document.querySelector("#ouraSleepEmpty"),
   ouraSleepList: document.querySelector("#ouraSleepList"),
+  latestSleepScore: document.querySelector("#latestSleepScore"),
+  latestSleepHours: document.querySelector("#latestSleepHours"),
+  latestSleepBedtime: document.querySelector("#latestSleepBedtime"),
+  doseSleepChart: document.querySelector("#doseSleepChart"),
+  doseSleepLegend: document.querySelector("#doseSleepLegend"),
+  timingSleepChart: document.querySelector("#timingSleepChart"),
+  timingSleepLegend: document.querySelector("#timingSleepLegend"),
   generateSummaryButton: document.querySelector("#generateSummaryButton"),
   aiSummaryBox: document.querySelector("#aiSummaryBox"),
   summaryMessage: document.querySelector("#summaryMessage"),
@@ -115,6 +122,23 @@ function renderInventory() {
   els.estimatedRemaining.textContent = formatNumber(usage.remaining);
 }
 
+function renderLatestSleepMetrics() {
+  const latestSleep = getLatestOuraSleep(state);
+  if (!latestSleep) {
+    els.latestSleepScore.textContent = "-";
+    els.latestSleepHours.textContent = "-";
+    els.latestSleepBedtime.textContent = "-";
+    return;
+  }
+  const bedtime = latestSleep.bedtime_start ? new Date(latestSleep.bedtime_start) : null;
+  const hours = latestSleep.total_sleep_duration ? Number(latestSleep.total_sleep_duration) / 3600 : null;
+  els.latestSleepScore.textContent = latestSleep.score ?? "-";
+  els.latestSleepHours.textContent = hours ? `${formatNumber(hours)}h` : "-";
+  els.latestSleepBedtime.textContent = bedtime
+    ? bedtime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    : "-";
+}
+
 function renderOuraSleep() {
   const sleep = getRecentOuraSleep(state).slice(0, 10);
   els.ouraSleepList.innerHTML = "";
@@ -143,12 +167,103 @@ function renderOuraSleep() {
   }
 }
 
+function renderDoseSleepChart() {
+  const points = getSleepDosePoints(state, 10).filter((point) => Number.isFinite(point.sleepHours));
+  if (!points.length) {
+    els.doseSleepChart.innerHTML = "";
+    els.doseSleepLegend.textContent = "Sync Oura to compare dose totals with sleep duration.";
+    return;
+  }
+
+  const width = 360;
+  const height = 220;
+  const chartLeft = 18;
+  const chartBottom = 184;
+  const chartTop = 24;
+  const chartWidth = width - 36;
+  const maxDose = Math.max(...points.map((point) => point.doseTotal), 1);
+  const maxSleep = Math.max(...points.map((point) => point.sleepHours || 0), 1);
+  const barWidth = Math.max(16, chartWidth / (points.length * 1.9));
+
+  const bars = points
+    .map((point, index) => {
+      const x = chartLeft + index * (chartWidth / points.length) + 6;
+      const h = ((point.doseTotal || 0) / maxDose) * (chartBottom - chartTop);
+      const y = chartBottom - h;
+      return `<rect x="${x}" y="${y}" width="${barWidth}" height="${Math.max(h, 2)}" rx="8" fill="rgba(31,156,255,0.45)" />`;
+    })
+    .join("");
+
+  const linePoints = points
+    .map((point, index) => {
+      const x = chartLeft + index * (chartWidth / points.length) + 6 + barWidth / 2;
+      const y = chartBottom - ((point.sleepHours || 0) / maxSleep) * (chartBottom - chartTop);
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  els.doseSleepChart.innerHTML = `
+    <line x1="${chartLeft}" y1="${chartBottom}" x2="${width - chartLeft}" y2="${chartBottom}" stroke="rgba(33,79,142,0.22)" stroke-width="1.5" />
+    ${bars}
+    <polyline points="${linePoints}" fill="none" stroke="#00f0df" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    ${points
+      .map((point, index) => {
+        const x = chartLeft + index * (chartWidth / points.length) + 6 + barWidth / 2;
+        const y = chartBottom - ((point.sleepHours || 0) / maxSleep) * (chartBottom - chartTop);
+        return `<circle cx="${x}" cy="${y}" r="4.5" fill="#00f0df" />`;
+      })
+      .join("")}
+  `;
+
+  els.doseSleepLegend.textContent = `${getSleepInsightSummary(state)} Blue bars = total dose on the day before sleep. Teal line = hours slept.`;
+}
+
+function renderTimingSleepChart() {
+  const points = getSleepDosePoints(state, 10).filter((point) => Number.isFinite(point.sleepHours) && Number.isFinite(point.lastDoseHour));
+  if (!points.length) {
+    els.timingSleepChart.innerHTML = "";
+    els.timingSleepLegend.textContent = "Log doses with timestamps to compare last-dose timing with sleep.";
+    return;
+  }
+
+  const width = 360;
+  const height = 220;
+  const chartLeft = 22;
+  const chartRight = 338;
+  const chartTop = 22;
+  const chartBottom = 184;
+  const minHour = Math.min(...points.map((point) => point.lastDoseHour), 8);
+  const maxHour = Math.max(...points.map((point) => point.lastDoseHour), 24);
+  const minSleep = Math.min(...points.map((point) => point.sleepHours), 0);
+  const maxSleep = Math.max(...points.map((point) => point.sleepHours), 10);
+
+  const circles = points
+    .map((point) => {
+      const x = chartLeft + ((point.lastDoseHour - minHour) / Math.max(maxHour - minHour, 1)) * (chartRight - chartLeft);
+      const y = chartBottom - ((point.sleepHours - minSleep) / Math.max(maxSleep - minSleep, 1)) * (chartBottom - chartTop);
+      return `<circle cx="${x}" cy="${y}" r="7" fill="rgba(239,91,114,0.72)" stroke="rgba(255,255,255,0.85)" stroke-width="2" />`;
+    })
+    .join("");
+
+  els.timingSleepChart.innerHTML = `
+    <line x1="${chartLeft}" y1="${chartBottom}" x2="${chartRight}" y2="${chartBottom}" stroke="rgba(33,79,142,0.22)" stroke-width="1.5" />
+    <line x1="${chartLeft}" y1="${chartTop}" x2="${chartLeft}" y2="${chartBottom}" stroke="rgba(33,79,142,0.22)" stroke-width="1.5" />
+    ${circles}
+  `;
+
+  const avgLastDoseHour = points.reduce((sum, point) => sum + point.lastDoseHour, 0) / points.length;
+  els.timingSleepLegend.textContent = `Recent matched nights: ${points.length}. Later dots on the x-axis mean later last doses; higher dots mean more sleep. Average last-dose time: ${formatNumber(avgLastDoseHour)}h.`;
+}
+
 els.syncOuraButton.addEventListener("click", async () => {
   setBusy(els.syncOuraButton, "Syncing Oura...", true);
   setNotice("Syncing recent Oura sleep data...", "warning");
   try {
     await syncOuraSleep(state);
+    renderLatestSleepMetrics();
     renderOuraSleep();
+    renderDoseSleepChart();
+    renderTimingSleepChart();
     setNotice("Oura sleep data synced.", "success");
   } catch (error) {
     setNotice(error.message, "error");
@@ -184,6 +299,9 @@ els.generateSummaryButton.addEventListener("click", async () => {
   renderSummaryTrend();
   renderCalendar();
   renderInventory();
+  renderLatestSleepMetrics();
   renderOuraSleep();
+  renderDoseSleepChart();
+  renderTimingSleepChart();
   registerServiceWorker();
 })();
