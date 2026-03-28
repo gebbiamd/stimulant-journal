@@ -4,6 +4,8 @@ let state = loadState();
 if (consumeOuraRedirect(state)) {
   state = loadState();
 }
+const AI_CHAT_STORAGE_KEY = "stimulant-journal-ai-chat-v1";
+let aiChatMessages = [];
 
 const els = {
   installButton: document.querySelector("#installButton"),
@@ -38,9 +40,43 @@ const els = {
   recentEmpty: document.querySelector("#recentEmpty"),
   generateSummaryButton: document.querySelector("#generateSummaryButton"),
   aiSummaryBox: document.querySelector("#aiSummaryBox"),
+  aiChatHistory: document.querySelector("#aiChatHistory"),
+  aiChatForm: document.querySelector("#aiChatForm"),
+  aiChatInput: document.querySelector("#aiChatInput"),
+  aiChatSendButton: document.querySelector("#aiChatSendButton"),
   activityItemTemplate: document.querySelector("#activityItemTemplate"),
   homeMessage: document.querySelector("#homeMessage"),
 };
+
+function loadAiChatMessages() {
+  try {
+    const raw = localStorage.getItem(AI_CHAT_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((item) => item && typeof item.role === "string" && typeof item.content === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistAiChatMessages() {
+  localStorage.setItem(AI_CHAT_STORAGE_KEY, JSON.stringify(aiChatMessages.slice(-12)));
+}
+
+function renderAiChat() {
+  if (!els.aiChatHistory) return;
+  els.aiChatHistory.innerHTML = "";
+  const messages = aiChatMessages.length
+    ? aiChatMessages
+    : [{ role: "assistant", content: "Ask things like “How has dose timing lined up with sleep this week?” or “What stands out from the last few short-sleep nights?”" }];
+
+  for (const message of messages) {
+    const article = document.createElement("article");
+    article.className = `ai-chat-message ${message.role === "user" ? "ai-chat-user" : "ai-chat-assistant"}`;
+    article.innerHTML = formatAiSummaryHtml(message.content);
+    els.aiChatHistory.appendChild(article);
+  }
+  els.aiChatHistory.scrollTop = els.aiChatHistory.scrollHeight;
+}
 
 function setNotice(message, tone = "info") {
   if (!els.homeMessage) return;
@@ -270,6 +306,32 @@ els.generateSummaryButton?.addEventListener("click", async () => {
     setBusy(els.generateSummaryButton, "Generating...", false);
   }
 });
+els.aiChatForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const content = String(els.aiChatInput?.value || "").trim();
+  if (!content) return;
+  aiChatMessages.push({ role: "user", content });
+  renderAiChat();
+  persistAiChatMessages();
+  els.aiChatInput.value = "";
+  setBusy(els.aiChatSendButton, "Sending...", true);
+  setNotice("Sending AI chat question...", "warning");
+  try {
+    const result = await askAiJournalChat(state, aiChatMessages);
+    const answer = String(result.answer || result.summary || "No reply returned.").trim();
+    aiChatMessages.push({ role: "assistant", content: answer });
+    renderAiChat();
+    persistAiChatMessages();
+    setNotice("AI reply received.", "success");
+  } catch (error) {
+    aiChatMessages.push({ role: "assistant", content: `⚠️ ${error.message}` });
+    renderAiChat();
+    persistAiChatMessages();
+    setNotice(error.message, "error");
+  } finally {
+    setBusy(els.aiChatSendButton, "Send", false);
+  }
+});
 els.doseForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const tabletCount = Number.parseFloat(els.doseAmount.value);
@@ -292,6 +354,8 @@ els.doseForm.addEventListener("submit", (event) => {
 
 setDateTimeInputNow(els.doseTime);
 renderInstallPrompt(els.installButton);
+aiChatMessages = loadAiChatMessages();
+renderAiChat();
 (async () => {
   try {
     await loadRemoteStateInto(state);

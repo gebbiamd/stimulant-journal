@@ -791,6 +791,53 @@ function getOuraAiContext(state) {
   };
 }
 
+function formatLocalDateTimeForAi(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString([], {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatLocalTimeForAi(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function buildAiJournalPayload(state) {
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "local";
+  return {
+    timezone,
+    generatedAtLocal: formatLocalDateTimeForAi(new Date().toISOString()),
+    settings: state.settings,
+    entries: state.entries.slice(0, 60).map((entry) => ({
+      type: entry.type,
+      localDateTime: formatLocalDateTimeForAi(entry.timestamp),
+      localTime: formatLocalTimeForAi(entry.timestamp),
+      tabletCount: entry.type === "dose" ? Number(entry.tabletCount || 0) : null,
+      amountMg: entry.type === "dose" ? Number(entry.amount || 0) : null,
+      mgPerTablet: entry.type === "dose" ? Number(entry.mgPerTablet || state.settings.mgPerTablet || defaultState.settings.mgPerTablet) : null,
+      note: entry.note || "",
+    })),
+    ouraSleep: getRecentOuraSleep(state).slice(0, 14).map((item) => ({
+      day: item.day || null,
+      bedtimeStartLocal: item.bedtime_start ? formatLocalDateTimeForAi(item.bedtime_start) : null,
+      bedtimeEndLocal: item.bedtime_end ? formatLocalDateTimeForAi(item.bedtime_end) : null,
+      sleepHours: item.total_sleep_duration ? Number(item.total_sleep_duration) / 3600 : null,
+      score: Number(item.score || 0) || null,
+    })),
+    ouraDerived: getOuraAiContext(state),
+  };
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -798,6 +845,13 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function formatInlineAiText(value) {
+  let text = escapeHtml(value);
+  text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/\*(.+?)\*/g, "<em>$1</em>");
+  return text;
 }
 
 function formatAiSummaryHtml(summary) {
@@ -821,33 +875,35 @@ function formatAiSummaryHtml(summary) {
 
   for (const line of lines) {
     const bulletMatch = line.match(/^[-*]\s+(.+)$/);
+    const emojiBulletMatch = line.match(/^([\p{Extended_Pictographic}\u2600-\u27BF]+)\s+(.+)$/u);
     const numberedHeaderMatch = line.match(/^\d+\.\s+(.+)$/);
     const colonHeaderMatch = line.match(/^([^:]{2,60}):\s*(.*)$/);
 
-    if (bulletMatch) {
+    if (bulletMatch || emojiBulletMatch) {
+      const bulletContent = bulletMatch ? bulletMatch[1] : `${emojiBulletMatch[1]} ${emojiBulletMatch[2]}`;
       if (!inList) {
         html.push("<ul>");
         inList = true;
       }
-      html.push(`<li>${escapeHtml(bulletMatch[1])}</li>`);
+      html.push(`<li>${formatInlineAiText(bulletContent)}</li>`);
       continue;
     }
 
     closeList();
 
     if (numberedHeaderMatch) {
-      html.push(`<p><strong>${escapeHtml(numberedHeaderMatch[1])}</strong></p>`);
+      html.push(`<p><strong>${formatInlineAiText(numberedHeaderMatch[1])}</strong></p>`);
       continue;
     }
 
     if (colonHeaderMatch) {
-      const header = escapeHtml(colonHeaderMatch[1]);
-      const body = escapeHtml(colonHeaderMatch[2]);
+      const header = formatInlineAiText(colonHeaderMatch[1]);
+      const body = formatInlineAiText(colonHeaderMatch[2]);
       html.push(body ? `<p><strong>${header}:</strong> ${body}</p>` : `<p><strong>${header}</strong></p>`);
       continue;
     }
 
-    html.push(`<p>${escapeHtml(line)}</p>`);
+    html.push(`<p>${formatInlineAiText(line)}</p>`);
   }
 
   closeList();
@@ -856,16 +912,10 @@ function formatAiSummaryHtml(summary) {
 
 async function generateAiSummary(state) {
   const relayUrl = (state.settings.openAiRelayUrl || "").trim() || getDefaultOpenAiRelayUrl();
-
-  const recentEntries = state.entries.slice(0, 60);
   const payload = {
+    mode: "summary",
     model: state.settings.openAiModel || "gpt-5.4",
-    journal: {
-      settings: state.settings,
-      entries: recentEntries,
-      ouraSleep: getRecentOuraSleep(state).slice(0, 14),
-      ouraDerived: getOuraAiContext(state),
-    },
+    journal: buildAiJournalPayload(state),
   };
 
   const headers = { "Content-Type": "application/json" };
@@ -885,6 +935,36 @@ async function generateAiSummary(state) {
   if (!response.ok) {
     const detail = await response.text();
     throw new Error(`AI summary failed: ${response.status} ${detail}`);
+  }
+  return response.json();
+}
+
+async function askAiJournalChat(state, messages) {
+  const relayUrl = (state.settings.openAiRelayUrl || "").trim() || getDefaultOpenAiRelayUrl();
+  const payload = {
+    mode: "chat",
+    model: state.settings.openAiModel || "gpt-5.4",
+    journal: buildAiJournalPayload(state),
+    messages,
+  };
+
+  const headers = { "Content-Type": "application/json" };
+  if (relayUrl === getDefaultOpenAiRelayUrl()) {
+    const session = await getSupabaseSession();
+    if (!session?.access_token) {
+      throw new Error("Sign in with email first so the built-in AI chat can use your Supabase relay.");
+    }
+    headers.Authorization = `Bearer ${session.access_token}`;
+  }
+
+  const response = await fetch(relayUrl, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`AI chat failed: ${response.status} ${detail}`);
   }
   return response.json();
 }

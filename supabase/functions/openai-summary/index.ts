@@ -34,26 +34,46 @@ Deno.serve(async (request) => {
   }
 
   const model = String(payload.model || "gpt-5.4").trim() || "gpt-5.4";
+  const mode = String(payload.mode || "summary").trim() || "summary";
   const journal = payload.journal;
   if (!journal || typeof journal !== "object") {
     return json({ error: "journal payload is required." }, 400);
   }
 
-  const prompt = [
-    "You are summarizing a private stimulant journal that includes Oura sleep data and derived sleep/dose features.",
+  const baseInstructions = [
+    "You are helping with a private stimulant journal that includes Oura sleep data and derived sleep/dose features.",
+    "Treat localDateTime, localTime, bedtimeStartLocal, and bedtimeEndLocal fields as the source of truth for timing.",
+    "Do not infer local dose timing from UTC ISO strings.",
     "Use the derived Oura context when available instead of only restating raw records.",
-    "Provide a concise structured summary with these sections:",
-    "1. Overall pattern",
-    "2. Sleep and timing patterns",
-    "3. Journal themes and context",
-    "4. Friction points or recovery patterns",
-    "5. Signals to watch next week",
-    "Make concrete observations from the data.",
-    "Write declarative observations, not direct questions to the user.",
-    "Use short headers and bullet lists where useful.",
+    "Use emoji heavily when it improves scanability, especially for positive, neutral, and cautionary bullet points.",
     "Do not give medical advice. Do not recommend dose changes. Do not invent facts that are not in the payload.",
-    `Data: ${JSON.stringify(journal)}`,
-  ].join("\n");
+  ];
+
+  const messages = Array.isArray(payload.messages) ? payload.messages : [];
+  const prompt =
+    mode === "chat"
+      ? [
+          ...baseInstructions,
+          "You are in chat mode. Answer the user's question directly using the journal and Oura context.",
+          "Be conversational but concise.",
+          "Use short headers and emoji bullets where useful.",
+          "Do not ask the user follow-up questions unless absolutely necessary.",
+          `Journal data: ${JSON.stringify(journal)}`,
+          `Conversation: ${JSON.stringify(messages)}`,
+        ].join("\n")
+      : [
+          ...baseInstructions,
+          "You are in summary mode.",
+          "Provide a concise structured summary with these sections:",
+          "1. Overall pattern",
+          "2. Sleep and timing patterns",
+          "3. Journal themes and context",
+          "4. Friction points or recovery patterns",
+          "5. Signals to watch next week",
+          "Write declarative observations, not direct questions to the user.",
+          "Use short headers and emoji bullet lists where useful.",
+          `Data: ${JSON.stringify(journal)}`,
+        ].join("\n");
 
   const openAiResponse = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -76,10 +96,10 @@ Deno.serve(async (request) => {
     return json({ error }, openAiResponse.status);
   }
 
-  const summary =
+  const text =
     data.output_text ||
     data.output?.[0]?.content?.[0]?.text ||
     "No summary returned.";
 
-  return json({ summary });
+  return json(mode === "chat" ? { answer: text } : { summary: text });
 });
