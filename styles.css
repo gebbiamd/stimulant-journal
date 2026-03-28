@@ -798,6 +798,11 @@ textarea {
   text-transform: uppercase;
 }
 
+.recent-table-head-3col,
+.recent-row-3col {
+  grid-template-columns: 1.3fr 0.7fr 0.7fr;
+}
+
 .recent-row {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -824,6 +829,21 @@ textarea {
 .recent-row .history-dose {
   font-size: 0.9rem;
   text-align: right;
+}
+
+.recent-row-3col .history-dose,
+.recent-row-3col .history-hours {
+  text-align: right;
+}
+
+.recent-row-3col .history-hours {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #315f99;
+}
+
+.oura-compact-table {
+  margin-top: 0.45rem;
 }
 
 .entry-editor-list {

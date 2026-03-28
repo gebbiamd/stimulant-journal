@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=32" />
+    <link rel="manifest" href="./manifest.webmanifest?v=34" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=32" />
+    <link rel="stylesheet" href="./styles.css?v=34" />
     <title>Summary | Stimulant Journal</title>
   </head>
   <body data-page="summary">
@@ -100,8 +100,9 @@
         <p id="summaryMessage" class="status-callout muted" role="status" aria-live="polite">
           Oura sync and AI summary actions will show progress here.
         </p>
+        <p id="ouraDebugInfo" class="trend-legend"></p>
         <div id="ouraSleepEmpty" class="empty-state">Connect Oura in Settings to import recent sleep data.</div>
-        <div id="ouraSleepList" class="history-list"></div>
+        <div id="ouraSleepList" class="recent-table oura-compact-table"></div>
       </section>
 
       <section class="card">
@@ -208,7 +209,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=32"></script>
-    <script src="./summary.js?v=32"></script>
+    <script src="./journal-core.js?v=34"></script>
+    <script src="./summary.js?v=34"></script>
   </body>
 </html>

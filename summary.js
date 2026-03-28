@@ -18,6 +18,7 @@ const els = {
   syncOuraButton: document.querySelector("#syncOuraButton"),
   ouraSleepEmpty: document.querySelector("#ouraSleepEmpty"),
   ouraSleepList: document.querySelector("#ouraSleepList"),
+  ouraDebugInfo: document.querySelector("#ouraDebugInfo"),
   latestSleepScore: document.querySelector("#latestSleepScore"),
   latestSleepHours: document.querySelector("#latestSleepHours"),
   latestSleepBedtime: document.querySelector("#latestSleepBedtime"),
@@ -191,8 +192,20 @@ function renderSleepPatterns() {
 
 function renderOuraSleep() {
   const sleep = getSortedOuraSleep(state).slice(0, 10);
-  els.ouraSleepList.innerHTML = "";
+  els.ouraSleepList.innerHTML = `
+    <div class="recent-table-head recent-table-head-3col" aria-hidden="true">
+      <span>Day</span>
+      <span>Score</span>
+      <span>Hours</span>
+    </div>
+  `;
   els.ouraSleepEmpty.classList.toggle("hidden", sleep.length > 0);
+  if (els.ouraDebugInfo) {
+    const newestDay = sleep[0]?.day || null;
+    els.ouraDebugInfo.textContent = newestDay
+      ? `Newest Oura day fetched: ${newestDay} • ${sleep.length} sleep records shown`
+      : "No Oura sleep day returned yet.";
+  }
   if (sleep.length > 0) {
     const lastSync = state.integrations?.oura?.lastSyncAt
       ? new Date(state.integrations.oura.lastSyncAt).toLocaleString()
@@ -201,18 +214,15 @@ function renderOuraSleep() {
   }
   for (const item of sleep) {
     const entry = document.createElement("article");
-    entry.className = "history-item";
-    const bedtime = item.bedtime_start ? new Date(item.bedtime_start) : null;
+    entry.className = "recent-row recent-row-3col";
     const displayDate = getOuraDisplayDate(item);
     const durationHours = item.total_sleep_duration ? item.total_sleep_duration / 3600 : null;
+    const scoreLabel = item.score ?? "Pending";
+    const hoursLabel = durationHours ? `${formatNumber(durationHours)}h` : "-";
     entry.innerHTML = `
-      <div class="history-main">
-        <div>
-          <strong class="history-dose">${item.score ?? "Pending"} sleep score</strong>
-          <p class="history-time">${displayDate ? displayDate.toLocaleDateString() : "Recent sleep"}</p>
-          <p class="history-note muted">${durationHours ? `${formatNumber(durationHours)} hours asleep` : "Sleep duration unavailable"}</p>
-        </div>
-      </div>
+      <p class="history-time">${displayDate ? displayDate.toLocaleDateString() : "Recent sleep"}</p>
+      <strong class="history-dose">${scoreLabel}</strong>
+      <p class="history-hours">${hoursLabel}</p>
     `;
     els.ouraSleepList.appendChild(entry);
   }

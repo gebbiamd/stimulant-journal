@@ -187,6 +187,9 @@ Deno.serve(async (request) => {
           return {
             ...item,
             score: dailyItem?.score ?? item?.score ?? null,
+            total_sleep_duration: dailyItem?.total_sleep_duration ?? item?.total_sleep_duration ?? null,
+            time_in_bed: dailyItem?.time_in_bed ?? item?.time_in_bed ?? null,
+            daily_sleep: dailyItem || null,
           };
         })
       : [],
