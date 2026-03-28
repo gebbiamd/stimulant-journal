@@ -173,7 +173,7 @@ function renderCalendar() {
   const monthEntries = getDoseEntriesForMonth(selectedCalendarMonthKey);
   const dailyTotals = new Map();
 
-  els.calendarMonthTitle.textContent = formatMonthKey(selectedCalendarMonthKey);
+  els.calendarMonthTitle.textContent = `🗓️ ${formatMonthKey(selectedCalendarMonthKey)}`;
 
   for (const entry of monthEntries) {
     const key = dateKey(entry.timestamp);
@@ -201,7 +201,7 @@ function renderCalendar() {
 function renderFocusedDecay() {
   const selectedDate = parseLocalDateKey(selectedCalendarDateKey);
   if (!selectedDate) {
-    els.focusedDayTitle.textContent = "Select a date";
+    els.focusedDayTitle.textContent = "🎯 Select a date";
     els.focusedDecayChart.innerHTML = "";
     els.focusedDecayAxis.innerHTML = "";
     els.focusedDecayLegend.textContent = "";
@@ -294,7 +294,7 @@ function renderFocusedDecay() {
   `;
 
   const centerLevel = getEstimatedActiveLevel(state, center.getTime());
-  els.focusedDayTitle.textContent = `48 hours around ${center.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+  els.focusedDayTitle.textContent = `🎯 48 hours around ${center.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
   els.focusedDecayLegend.textContent = `Centered on 12 PM for the selected day. Estimated active level at center: ${formatNumber(centerLevel)} ${unitLabel(state)}. Shaded bands show ${ouraSegments.length ? "actual Oura sleep" : "fallback night hours"}.`;
 }
 

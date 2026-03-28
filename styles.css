@@ -470,6 +470,7 @@ h3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
+  min-width: 0;
 }
 
 label {
@@ -477,6 +478,7 @@ label {
   gap: 0.55rem;
   font-size: 0.94rem;
   color: #173866;
+  min-width: 0;
 }
 
 .compact-settings-form label {
@@ -853,7 +855,7 @@ textarea {
 .data-actions .nav-button,
 .data-actions .primary-button,
 .data-actions .secondary-button {
-  min-width: 9.5rem;
+  min-width: 0;
 }
 
 .mini-trend-chart,
@@ -987,7 +989,8 @@ button.calendar-cell {
 .calendar-month-picker {
   display: grid;
   gap: 0.3rem;
-  min-width: 11rem;
+  min-width: 0;
+  width: min(11rem, 100%);
 }
 
 .calendar-month-picker span {
@@ -1308,6 +1311,20 @@ button.calendar-cell {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.9rem;
+  min-width: 0;
+}
+
+.section-header > div,
+.metric,
+.stat-chip,
+.entry-editor-summary,
+.entry-editor-item,
+.data-actions,
+.compact-actions,
+.calendar-month-picker,
+.entry-editor-grid > label,
+.history-item {
+  min-width: 0;
 }
 
 .settings-grid {
