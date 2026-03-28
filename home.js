@@ -69,7 +69,10 @@ function renderGauge() {
   const lastDose = todayEntries[0] ? new Date(todayEntries[0].timestamp) : null;
   const gauge = getHomeGauge(state);
   const tabletUsage = getCurrentMonthTabletUsage(state);
-  const dailyTarget = Number(state.settings.dailyTarget) || defaultState.settings.dailyTarget;
+  const visualMax = 50;
+  const suggestedCap = 30;
+  const visualRatio = total / visualMax;
+  const suggestedRatio = total / suggestedCap;
 
   els.todayTotal.textContent = formatNumber(total);
   els.todayUnit.textContent = unitLabel(state);
@@ -80,14 +83,14 @@ function renderGauge() {
   els.todayGaugeBadge.textContent = gauge.label;
   els.todayGaugeBadge.className = `status-badge ${gauge.tone}`;
   els.headerCard.className = `card header-card gauge-${gauge.tone}`;
-  els.todayGaugeLabel.textContent = `${tabletLabel(totalTablets)} today • ${Math.round(gauge.ratio * 100)}% of your daily mg target`;
+  els.todayGaugeLabel.textContent = `${tabletLabel(totalTablets)} today • ${Math.round(suggestedRatio * 100)}% of the 30 mg suggested cap`;
   els.gaugeReason.textContent = `${gauge.reason} Monthly tablets used: ${formatNumber(tabletUsage.used)} of ${formatNumber(tabletUsage.planned)}.`;
   els.monthTabletUsage.textContent = `${formatNumber(tabletUsage.used)} / ${formatNumber(tabletUsage.planned)}`;
-  els.thermoFill.style.height = `${Math.min(gauge.ratio * 100, 100)}%`;
+  els.thermoFill.style.height = `${Math.min(visualRatio * 100, 100)}%`;
   els.thermoFill.className = `thermo-fill ${gauge.tone}`;
-  els.targetMarker.style.bottom = "75%";
-  els.scaleTop.textContent = `${formatNumber(dailyTarget)} ${unitLabel(state)}`;
-  els.scaleMid.textContent = `${formatNumber(dailyTarget / 2)} ${unitLabel(state)}`;
+  els.targetMarker.style.bottom = `${(suggestedCap / visualMax) * 100}%`;
+  els.scaleTop.textContent = `${formatNumber(visualMax)} ${unitLabel(state)}`;
+  els.scaleMid.textContent = `${formatNumber(visualMax / 2)} ${unitLabel(state)}`;
   els.scaleBase.textContent = `0 ${unitLabel(state)}`;
   els.doseUnitLabel.textContent = "tabs";
   els.doseMgHint.textContent = `Current conversion: 1 tablet = ${formatNumber(state.settings.mgPerTablet || defaultState.settings.mgPerTablet)} ${unitLabel(state)}.`;
