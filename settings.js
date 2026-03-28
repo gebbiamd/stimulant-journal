@@ -180,8 +180,20 @@ function renderEntryEditor() {
         <input class="entry-input" data-field="note" type="text" value="${String(entry.note || "").replace(/"/g, "&quot;")}" placeholder="Note" />
       </div>
       <div class="entry-editor-actions">
-        <button class="ghost-button entry-save-button" type="button" data-id="${entry.id}">Save</button>
-        <button class="delete-button entry-delete-button" type="button" data-id="${entry.id}">Delete</button>
+        <button class="ghost-button entry-icon-button entry-save-button" type="button" data-id="${entry.id}" aria-label="Save entry" title="Save">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M5 4h11l3 3v13H5z"></path>
+            <path d="M8 4v6h8V4"></path>
+            <path d="M9 17h6"></path>
+          </svg>
+        </button>
+        <button class="delete-button entry-icon-button entry-delete-button" type="button" data-id="${entry.id}" aria-label="Delete entry" title="Delete">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M4 7h16"></path>
+            <path d="M9 7V4h6v3"></path>
+            <path d="M8 7l1 12h6l1-12"></path>
+          </svg>
+        </button>
       </div>
     `;
     els.entryEditorList.appendChild(row);
