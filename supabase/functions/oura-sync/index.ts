@@ -178,21 +178,39 @@ Deno.serve(async (request) => {
       .map((item) => [item.day, item])
   );
 
+  const mergedByDay = new Map<string, Record<string, unknown>>();
+
+  if (Array.isArray(payload?.data)) {
+    for (const item of payload.data) {
+      if (!item?.day) continue;
+      const dailyItem = dailyScoreByDay.get(item.day) || null;
+      mergedByDay.set(item.day, {
+        ...item,
+        score: dailyItem?.score ?? item?.score ?? null,
+        total_sleep_duration: dailyItem?.total_sleep_duration ?? item?.total_sleep_duration ?? null,
+        time_in_bed: dailyItem?.time_in_bed ?? item?.time_in_bed ?? null,
+        daily_sleep: dailyItem,
+      });
+    }
+  }
+
+  for (const dailyItem of dailyItems) {
+    if (!dailyItem?.day || mergedByDay.has(dailyItem.day)) continue;
+    mergedByDay.set(dailyItem.day, {
+      day: dailyItem.day,
+      score: dailyItem.score ?? null,
+      total_sleep_duration: dailyItem.total_sleep_duration ?? null,
+      time_in_bed: dailyItem.time_in_bed ?? null,
+      bedtime_start: null,
+      bedtime_end: null,
+      daily_sleep: dailyItem,
+    });
+  }
+
   const mergedPayload = {
     ...payload,
     daily_data: dailyResponse.ok ? dailyItems : [],
-    data: Array.isArray(payload?.data)
-      ? payload.data.map((item) => {
-          const dailyItem = item?.day ? dailyScoreByDay.get(item.day) : null;
-          return {
-            ...item,
-            score: dailyItem?.score ?? item?.score ?? null,
-            total_sleep_duration: dailyItem?.total_sleep_duration ?? item?.total_sleep_duration ?? null,
-            time_in_bed: dailyItem?.time_in_bed ?? item?.time_in_bed ?? null,
-            daily_sleep: dailyItem || null,
-          };
-        })
-      : [],
+    data: Array.from(mergedByDay.values()),
   };
 
   return json(mergedPayload, response.status);

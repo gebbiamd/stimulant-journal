@@ -623,8 +623,37 @@ function getRecentOuraSleep(state) {
   return Array.isArray(state.integrations?.oura?.sleep) ? state.integrations.oura.sleep : [];
 }
 
+function mergeOuraSleepDay(existing, incoming) {
+  const existingDuration = Number(existing?.total_sleep_duration || 0);
+  const incomingDuration = Number(incoming?.total_sleep_duration || 0);
+  const primary = incomingDuration > existingDuration ? incoming : existing;
+  const secondary = primary === incoming ? existing : incoming;
+
+  return {
+    ...secondary,
+    ...primary,
+    day: primary?.day || secondary?.day || null,
+    score: primary?.score ?? secondary?.score ?? null,
+    total_sleep_duration: incomingDuration > existingDuration ? incoming.total_sleep_duration : existing.total_sleep_duration,
+    time_in_bed: primary?.time_in_bed ?? secondary?.time_in_bed ?? null,
+    bedtime_start: primary?.bedtime_start ?? secondary?.bedtime_start ?? null,
+    bedtime_end: primary?.bedtime_end ?? secondary?.bedtime_end ?? null,
+  };
+}
+
+function getNormalizedOuraSleep(state) {
+  const byDay = new Map();
+  for (const item of getRecentOuraSleep(state)) {
+    if (!item) continue;
+    const key = item.day || dateKey(getOuraDisplayDate(item) || new Date());
+    const existing = byDay.get(key);
+    byDay.set(key, existing ? mergeOuraSleepDay(existing, item) : item);
+  }
+  return Array.from(byDay.values());
+}
+
 function getSortedOuraSleep(state) {
-  return getRecentOuraSleep(state)
+  return getNormalizedOuraSleep(state)
     .filter((item) => item && (item.bedtime_start || item.day))
     .slice()
     .sort((a, b) => {
@@ -674,7 +703,7 @@ function getSleepDosePoints(state, limit = 14) {
 }
 
 function getSleepOverlaySegments(state, startMs, endMs) {
-  return getSortedOuraSleep(state)
+  return getRecentOuraSleep(state)
     .map((item) => {
       const start = item.bedtime_start ? new Date(item.bedtime_start).getTime() : null;
       const end = item.bedtime_end ? new Date(item.bedtime_end).getTime() : null;

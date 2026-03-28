@@ -843,7 +843,24 @@ textarea {
 }
 
 .oura-compact-table {
-  margin-top: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.oura-compact-table .recent-table-head {
+  padding: 0.42rem 0.72rem 0.38rem;
+  font-size: 0.7rem;
+}
+
+.oura-compact-table .recent-row {
+  padding: 0.42rem 0.72rem;
+  min-height: 0;
+}
+
+.oura-compact-table .history-time,
+.oura-compact-table .history-dose,
+.oura-compact-table .history-hours {
+  font-size: 0.8rem;
+  line-height: 1.15;
 }
 
 .entry-editor-list {
