@@ -43,6 +43,8 @@ const els = {
   ouraDisconnectButton: document.querySelector("#ouraDisconnectButton"),
 };
 
+let ouraConnectionStatus = { connected: false };
+
 function setNotice(message, tone = "info") {
   if (!els.authMessage) return;
   els.authMessage.textContent = message;
@@ -102,9 +104,9 @@ function hydrate() {
     els.authPassword.value = "";
   }
   if (els.ouraStatus) {
-    els.ouraStatus.textContent = state.integrations.oura.accessToken
-    ? `Connected${state.integrations.oura.lastSyncAt ? `, last sync ${new Date(state.integrations.oura.lastSyncAt).toLocaleString()}` : ""}`
-    : "Not connected";
+    els.ouraStatus.textContent = ouraConnectionStatus.connected
+      ? `Connected${state.integrations.oura.lastSyncAt ? `, last sync ${new Date(state.integrations.oura.lastSyncAt).toLocaleString()}` : ""}`
+      : "Not connected";
   }
   if (els.openAiStatus) {
     els.openAiStatus.textContent = state.settings.openAiRelayUrl ? "Relay configured" : "Relay not configured";
@@ -115,6 +117,14 @@ function hydrate() {
     els.inventorySummary.textContent = `${formatNumber(usage.remaining)} on hand • ${formatNumber(usage.used)} used this month`;
   }
   renderEntryEditor();
+}
+
+async function refreshOuraConnectionStatus() {
+  try {
+    ouraConnectionStatus = await getOuraConnectionStatus();
+  } catch {
+    ouraConnectionStatus = { connected: false };
+  }
 }
 
 function formatDateTimeLocalValue(value) {
@@ -340,6 +350,7 @@ els.ouraDisconnectButton?.addEventListener("click", async () => {
   setBusy(els.ouraDisconnectButton, "Disconnecting...", true);
   try {
     await disconnectOuraRemote(state);
+    ouraConnectionStatus = { connected: false };
     setNotice("Oura disconnected.", "success");
     hydrate();
   } catch (error) {
@@ -352,6 +363,7 @@ els.ouraDisconnectButton?.addEventListener("click", async () => {
 (async () => {
   try {
     await loadRemoteStateInto(state);
+    await refreshOuraConnectionStatus();
   } catch (error) {
     setNotice(getFriendlyAuthMessage(error), "error");
   }

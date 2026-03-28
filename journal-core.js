@@ -588,6 +588,24 @@ async function disconnectOuraRemote(state) {
   disconnectOura(state);
 }
 
+async function getOuraConnectionStatus() {
+  const session = await getSupabaseSession();
+  if (!session?.access_token) {
+    return { connected: false };
+  }
+
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/oura-status`, {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || payload.message || `Oura status failed: ${response.status}`);
+  }
+  return payload;
+}
+
 async function syncOuraSleep(state) {
   const session = await getSupabaseSession();
   if (!session?.access_token) throw new Error("Sign in with email first.");
