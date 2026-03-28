@@ -1267,7 +1267,7 @@ button.calendar-cell {
 .entry-editor-head,
 .entry-editor-item {
   display: grid;
-  grid-template-columns: minmax(0, 0.96fr) minmax(0, 0.34fr) minmax(0, 1.08fr) auto;
+  grid-template-columns: minmax(0, 0.68fr) minmax(0, 0.34fr) minmax(0, 1.34fr) auto;
   gap: 0.36rem;
   align-items: center;
 }
@@ -1329,10 +1329,10 @@ button.calendar-cell {
 .entry-editor-actions .delete-button {
   width: auto;
   min-width: 0;
-  min-height: 24px;
+  min-height: 28px;
   padding: 0;
   font-size: 0.72rem;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .entry-editor-summary {
@@ -1381,14 +1381,14 @@ button.calendar-cell {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.7rem;
-  min-width: 1.7rem;
-  height: 1.7rem;
+  width: 1.95rem;
+  min-width: 1.95rem;
+  height: 1.95rem;
 }
 
 .entry-icon-button svg {
-  width: 0.92rem;
-  height: 0.92rem;
+  width: 1.02rem;
+  height: 1.02rem;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.9;
@@ -1698,7 +1698,7 @@ button.calendar-cell {
   }
 
   .entry-editor-item {
-    grid-template-columns: minmax(0, 0.9fr) 1.8rem minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 0.56fr) 1.8rem minmax(0, 1.44fr) auto;
     gap: 0.16rem;
     padding: 0.18rem 0.24rem;
     align-items: center;
@@ -1737,22 +1737,22 @@ button.calendar-cell {
 
   .entry-editor-actions .ghost-button,
   .entry-editor-actions .delete-button {
-    min-height: 22px;
+    min-height: 24px;
     padding: 0;
     font-size: 0.6rem;
-    border-radius: 8px;
+    border-radius: 9px;
     box-shadow: none;
   }
 
   .entry-icon-button {
-    width: 1.45rem;
-    min-width: 1.45rem;
-    height: 1.45rem;
+    width: 1.62rem;
+    min-width: 1.62rem;
+    height: 1.62rem;
   }
 
   .entry-icon-button svg {
-    width: 0.78rem;
-    height: 0.78rem;
+    width: 0.88rem;
+    height: 0.88rem;
   }
 
   .ai-chat-message {
