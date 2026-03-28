@@ -191,7 +191,6 @@ function renderEntryEditor() {
         <input class="entry-input" data-field="note" type="text" value="${String(entry.note || "").replace(/"/g, "&quot;")}" placeholder="${entry.type === "note" ? "Note entry" : "Optional note"}" />
       </div>
       <div class="entry-editor-actions">
-        <span class="entry-type-chip">${entry.type === "dose" ? "Dose" : "Note"}</span>
         <button class="ghost-button entry-save-button" type="button" data-id="${entry.id}">Save</button>
         <button class="delete-button entry-delete-button" type="button" data-id="${entry.id}">Delete</button>
       </div>
