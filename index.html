@@ -10,10 +10,10 @@
     <meta name="theme-color" content="#efe1c7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="./manifest.webmanifest?v=27" />
+    <link rel="manifest" href="./manifest.webmanifest?v=28" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=27" />
+    <link rel="stylesheet" href="./styles.css?v=28" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -161,6 +161,19 @@
         <div id="recentList" class="history-list"></div>
       </section>
 
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">AI</p>
+            <h2>Journal summary</h2>
+          </div>
+          <button id="generateSummaryButton" class="nav-button emphasis-button" type="button">Generate Summary</button>
+        </div>
+        <div id="aiSummaryBox" class="empty-state">
+          Generate a concise summary from recent doses, notes, and imported Oura sleep.
+        </div>
+      </section>
+
       <section class="footer-nav">
         <a class="nav-button emphasis-button" href="./summary.html">More Details</a>
         <a class="nav-button emphasis-button" href="./settings.html">Settings</a>
@@ -180,7 +193,7 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=27"></script>
-    <script src="./home.js?v=27"></script>
+    <script src="./journal-core.js?v=28"></script>
+    <script src="./home.js?v=28"></script>
   </body>
 </html>

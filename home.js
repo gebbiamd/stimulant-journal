@@ -36,6 +36,8 @@ const els = {
   miniTrendLegend: document.querySelector("#miniTrendLegend"),
   recentList: document.querySelector("#recentList"),
   recentEmpty: document.querySelector("#recentEmpty"),
+  generateSummaryButton: document.querySelector("#generateSummaryButton"),
+  aiSummaryBox: document.querySelector("#aiSummaryBox"),
   activityItemTemplate: document.querySelector("#activityItemTemplate"),
   homeMessage: document.querySelector("#homeMessage"),
 };
@@ -245,6 +247,27 @@ els.syncOuraHomeButton?.addEventListener("click", async () => {
     setNotice(error.message, "error");
   } finally {
     setBusy(els.syncOuraHomeButton, "Syncing Oura...", false);
+  }
+});
+els.generateSummaryButton?.addEventListener("click", async () => {
+  setBusy(els.generateSummaryButton, "Generating...", true);
+  setNotice("Generating AI summary...", "warning");
+  if (els.aiSummaryBox) {
+    els.aiSummaryBox.innerHTML = "<p>Generating...</p>";
+  }
+  try {
+    const result = await generateAiSummary(state);
+    if (els.aiSummaryBox) {
+      els.aiSummaryBox.innerHTML = formatAiSummaryHtml(result.summary || JSON.stringify(result, null, 2));
+    }
+    setNotice("AI summary generated.", "success");
+  } catch (error) {
+    if (els.aiSummaryBox) {
+      els.aiSummaryBox.innerHTML = `<p>${escapeHtml(error.message)}</p>`;
+    }
+    setNotice(error.message, "error");
+  } finally {
+    setBusy(els.generateSummaryButton, "Generating...", false);
   }
 });
 els.doseForm.addEventListener("submit", (event) => {

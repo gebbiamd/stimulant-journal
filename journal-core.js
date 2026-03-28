@@ -791,6 +791,69 @@ function getOuraAiContext(state) {
   };
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function formatAiSummaryHtml(summary) {
+  const lines = String(summary || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (!lines.length) {
+    return "<p>No summary returned.</p>";
+  }
+
+  const html = [];
+  let inList = false;
+  const closeList = () => {
+    if (inList) {
+      html.push("</ul>");
+      inList = false;
+    }
+  };
+
+  for (const line of lines) {
+    const bulletMatch = line.match(/^[-*]\s+(.+)$/);
+    const numberedHeaderMatch = line.match(/^\d+\.\s+(.+)$/);
+    const colonHeaderMatch = line.match(/^([^:]{2,60}):\s*(.*)$/);
+
+    if (bulletMatch) {
+      if (!inList) {
+        html.push("<ul>");
+        inList = true;
+      }
+      html.push(`<li>${escapeHtml(bulletMatch[1])}</li>`);
+      continue;
+    }
+
+    closeList();
+
+    if (numberedHeaderMatch) {
+      html.push(`<p><strong>${escapeHtml(numberedHeaderMatch[1])}</strong></p>`);
+      continue;
+    }
+
+    if (colonHeaderMatch) {
+      const header = escapeHtml(colonHeaderMatch[1]);
+      const body = escapeHtml(colonHeaderMatch[2]);
+      html.push(body ? `<p><strong>${header}:</strong> ${body}</p>` : `<p><strong>${header}</strong></p>`);
+      continue;
+    }
+
+    html.push(`<p>${escapeHtml(line)}</p>`);
+  }
+
+  closeList();
+  return html.join("");
+}
+
 async function generateAiSummary(state) {
   const relayUrl = (state.settings.openAiRelayUrl || "").trim() || getDefaultOpenAiRelayUrl();
 

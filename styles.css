@@ -800,6 +800,26 @@ textarea {
   border: 1px solid rgba(255, 255, 255, 0.52);
 }
 
+.empty-state p,
+.empty-state ul {
+  margin: 0;
+}
+
+.empty-state p + p,
+.empty-state p + ul,
+.empty-state ul + p,
+.empty-state ul + ul {
+  margin-top: 0.75rem;
+}
+
+.empty-state ul {
+  padding-left: 1.2rem;
+}
+
+.empty-state li + li {
+  margin-top: 0.35rem;
+}
+
 .split-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;

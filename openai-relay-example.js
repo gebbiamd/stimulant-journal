@@ -14,8 +14,10 @@ export default {
       "2. Sleep and timing patterns",
       "3. Journal themes and context",
       "4. Friction points or recovery patterns",
-      "5. Questions worth watching next week",
+      "5. Signals to watch next week",
       "Make concrete observations from the data.",
+      "Write declarative observations, not direct questions to the user.",
+      "Use short headers and bullet lists where useful.",
       "Do not give medical advice. Do not recommend dose changes. Do not invent facts that are not in the payload.",
       `Data: ${JSON.stringify(journal)}`,
     ].join("\n");

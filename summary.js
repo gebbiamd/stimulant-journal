@@ -30,8 +30,6 @@ const els = {
   doseSleepLegend: document.querySelector("#doseSleepLegend"),
   timingSleepChart: document.querySelector("#timingSleepChart"),
   timingSleepLegend: document.querySelector("#timingSleepLegend"),
-  generateSummaryButton: document.querySelector("#generateSummaryButton"),
-  aiSummaryBox: document.querySelector("#aiSummaryBox"),
   summaryMessage: document.querySelector("#summaryMessage"),
 };
 
@@ -326,27 +324,10 @@ els.syncOuraButton.addEventListener("click", async () => {
   }
 });
 
-els.generateSummaryButton.addEventListener("click", async () => {
-  setBusy(els.generateSummaryButton, "Generating...", true);
-  setNotice("Generating AI summary...", "warning");
-  els.aiSummaryBox.textContent = "Generating...";
-  try {
-    const result = await generateAiSummary(state);
-    els.aiSummaryBox.textContent = result.summary || JSON.stringify(result, null, 2);
-    setNotice("AI summary generated.", "success");
-  } catch (error) {
-    els.aiSummaryBox.textContent = error.message;
-    setNotice(error.message, "error");
-  } finally {
-    setBusy(els.generateSummaryButton, "Generating...", false);
-  }
-});
-
 (async () => {
   try {
     await loadRemoteStateInto(state);
   } catch (error) {
-    els.aiSummaryBox.textContent = error.message;
     setNotice(error.message, "error");
   }
   renderHeaderMetrics();
