@@ -32,6 +32,14 @@ async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs: num
   }
 }
 
+async function fetchOuraJson(url: string, accessToken: string) {
+  const response = await fetchWithTimeout(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  }, 15000);
+  const payload = await response.json();
+  return { response, payload };
+}
+
 async function refreshOuraToken(admin: ReturnType<typeof createClient>, connection: {
   user_id: string;
   refresh_token: string | null;
@@ -137,9 +145,10 @@ Deno.serve(async (request) => {
     end_date: endDate.toISOString().slice(0, 10),
   });
 
-  let response = await fetchWithTimeout(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
-    headers: { Authorization: `Bearer ${activeConnection.access_token}` },
-  }, 15000);
+  let { response, payload } = await fetchOuraJson(
+    `https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`,
+    activeConnection.access_token
+  );
 
   if (response.status === 401) {
     try {
@@ -148,11 +157,40 @@ Deno.serve(async (request) => {
       return json({ error: error instanceof Error ? error.message : "Failed to refresh Oura token." }, 400);
     }
 
-    response = await fetchWithTimeout(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
-      headers: { Authorization: `Bearer ${activeConnection.access_token}` },
-    }, 15000);
+    ({ response, payload } = await fetchOuraJson(
+      `https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`,
+      activeConnection.access_token
+    ));
   }
 
-  const payload = await response.json();
-  return json(payload, response.status);
+  if (!response.ok) {
+    return json(payload, response.status);
+  }
+
+  const { response: dailyResponse, payload: dailyPayload } = await fetchOuraJson(
+    `https://api.ouraring.com/v2/usercollection/daily_sleep?${query.toString()}`,
+    activeConnection.access_token
+  );
+  const dailyItems = Array.isArray(dailyPayload?.data) ? dailyPayload.data : [];
+  const dailyScoreByDay = new Map(
+    dailyItems
+      .filter((item) => item && item.day)
+      .map((item) => [item.day, item])
+  );
+
+  const mergedPayload = {
+    ...payload,
+    daily_data: dailyResponse.ok ? dailyItems : [],
+    data: Array.isArray(payload?.data)
+      ? payload.data.map((item) => {
+          const dailyItem = item?.day ? dailyScoreByDay.get(item.day) : null;
+          return {
+            ...item,
+            score: dailyItem?.score ?? item?.score ?? null,
+          };
+        })
+      : [],
+  };
+
+  return json(mergedPayload, response.status);
 });
