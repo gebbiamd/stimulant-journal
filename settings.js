@@ -28,6 +28,9 @@ const els = {
   openAiRelayUrl: document.querySelector("#openAiRelayUrl"),
   openAiModel: document.querySelector("#openAiModel"),
   ouraClientId: document.querySelector("#ouraClientId"),
+  lastRefillDate: document.querySelector("#lastRefillDate"),
+  refillIntervalDays: document.querySelector("#refillIntervalDays"),
+  refillRequestLeadDays: document.querySelector("#refillRequestLeadDays"),
   exportButton: document.querySelector("#exportButton"),
   importInput: document.querySelector("#importInput"),
   tabletsOnHand: document.querySelector("#tabletsOnHand"),
@@ -241,6 +244,9 @@ els.settingsForm?.addEventListener("submit", (event) => {
     openAiRelayUrl: els.openAiRelayUrl.value.trim(),
     openAiModel: (els.openAiModel.value || defaultState.settings.openAiModel).trim(),
     ouraClientId: els.ouraClientId.value.trim(),
+    lastRefillDate: els.lastRefillDate.value || "",
+    refillIntervalDays: Number.parseInt(els.refillIntervalDays.value, 10) || defaultState.settings.refillIntervalDays,
+    refillRequestLeadDays: Number.parseInt(els.refillRequestLeadDays.value, 10) || defaultState.settings.refillRequestLeadDays,
   };
   persistState(state);
   queueRemoteSync(state);

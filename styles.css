@@ -397,6 +397,28 @@ h3 {
     radial-gradient(circle at top right, rgba(22, 148, 255, 0.14), transparent 40%);
 }
 
+.refill-chip {
+  margin-top: 0.4rem;
+}
+
+.refill-chip.refill-green {
+  background:
+    linear-gradient(180deg, rgba(243, 255, 247, 0.92), rgba(227, 247, 234, 0.82)),
+    radial-gradient(circle at top right, rgba(22, 118, 63, 0.16), transparent 40%);
+}
+
+.refill-chip.refill-orange {
+  background:
+    linear-gradient(180deg, rgba(255, 249, 238, 0.94), rgba(255, 231, 204, 0.84)),
+    radial-gradient(circle at top right, rgba(245, 127, 23, 0.16), transparent 40%);
+}
+
+.refill-chip.refill-red {
+  background:
+    linear-gradient(180deg, rgba(255, 244, 247, 0.94), rgba(255, 223, 231, 0.84)),
+    radial-gradient(circle at top right, rgba(217, 29, 66, 0.18), transparent 42%);
+}
+
 .stat-chip-progress strong,
 .recommendation-chip strong {
   margin-bottom: 0.28rem;

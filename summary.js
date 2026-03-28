@@ -18,6 +18,9 @@ const els = {
   focusedDecayChart: document.querySelector("#focusedDecayChart"),
   focusedDecayAxis: document.querySelector("#focusedDecayAxis"),
   focusedDecayLegend: document.querySelector("#focusedDecayLegend"),
+  refillStatusLabel: document.querySelector("#refillStatusLabel"),
+  refillStatusHeadline: document.querySelector("#refillStatusHeadline"),
+  refillStatusDetail: document.querySelector("#refillStatusDetail"),
   plannedTablets: document.querySelector("#plannedTablets"),
   estimatedUsed: document.querySelector("#estimatedUsed"),
   estimatedRemaining: document.querySelector("#estimatedRemaining"),
@@ -302,6 +305,18 @@ function renderInventory() {
   els.estimatedRemaining.textContent = formatNumber(usage.remaining);
 }
 
+function renderRefillStatus() {
+  const refill = getRefillStatus(state);
+  const chip = els.refillStatusHeadline?.closest(".refill-chip");
+  if (!chip) return;
+  chip.className = `stat-chip refill-chip refill-${refill.tone}`;
+  els.refillStatusLabel.textContent = refill.dueDate
+    ? `Due ${refill.dueDate.toLocaleDateString()}`
+    : "Refill status";
+  els.refillStatusHeadline.textContent = refill.headline;
+  els.refillStatusDetail.textContent = refill.detail;
+}
+
 function renderLatestSleepMetrics() {
   const latestSleep = getLatestOuraSleep(state);
   if (!latestSleep) {
@@ -512,6 +527,7 @@ els.syncOuraButton.addEventListener("click", async () => {
     renderTimingSleepChart();
     renderCalendar();
     renderFocusedDecay();
+    renderRefillStatus();
     setNotice("Oura sleep data synced.", "success");
   } catch (error) {
     setNotice(error.message, "error");
@@ -546,6 +562,7 @@ els.calendarGrid?.addEventListener("click", (event) => {
   renderSummaryTrend();
   renderCalendar();
   renderFocusedDecay();
+  renderRefillStatus();
   renderInventory();
   renderLatestSleepMetrics();
   renderSleepFriction();

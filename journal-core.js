@@ -24,6 +24,9 @@ const defaultState = {
     openAiRelayUrl: "",
     openAiModel: "gpt-5.4",
     ouraClientId: "",
+    lastRefillDate: "",
+    refillIntervalDays: 30,
+    refillRequestLeadDays: 7,
   },
   integrations: {
     oura: {
@@ -175,6 +178,7 @@ async function loadRemoteStateInto(state) {
   if (settingsRows) {
     state.settings = {
       ...defaultState.settings,
+      ...state.settings,
       medicationName: settingsRows.medication_name ?? defaultState.settings.medicationName,
       doseUnit: settingsRows.dose_unit ?? defaultState.settings.doseUnit,
       dailyTarget: Number(settingsRows.daily_target ?? defaultState.settings.dailyTarget),
@@ -475,6 +479,69 @@ function getCurrentMonthTabletUsage(state) {
     used,
     planned,
     remaining: Math.max(planned - used, 0),
+  };
+}
+
+function getRefillStatus(state) {
+  const refillDate = parseLocalDateKey(state.settings.lastRefillDate);
+  const refillIntervalDays = Number(state.settings.refillIntervalDays) || defaultState.settings.refillIntervalDays;
+  const refillRequestLeadDays = Number(state.settings.refillRequestLeadDays) || defaultState.settings.refillRequestLeadDays;
+  const usage = getCurrentMonthTabletUsage(state);
+
+  if (!refillDate) {
+    return {
+      tone: "neutral",
+      headline: "No refill date set",
+      detail: "Add your last refill date in Settings to get a request reminder.",
+      dueDate: null,
+      requestDate: null,
+      daysUntilDue: null,
+      daysUntilRequest: null,
+      onHand: usage.remaining,
+    };
+  }
+
+  const dueDate = new Date(refillDate.getFullYear(), refillDate.getMonth(), refillDate.getDate() + refillIntervalDays);
+  const requestDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate() - refillRequestLeadDays);
+  const today = startOfLocalDay(new Date());
+  const daysUntilDue = Math.round((dueDate.getTime() - today.getTime()) / DAY_MS);
+  const daysUntilRequest = Math.round((requestDate.getTime() - today.getTime()) / DAY_MS);
+
+  if (daysUntilDue < 0) {
+    return {
+      tone: "red",
+      headline: "Refill overdue",
+      detail: `Due ${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) === 1 ? "" : "s"} ago. About ${formatNumber(usage.remaining)} tablets estimated on hand.`,
+      dueDate,
+      requestDate,
+      daysUntilDue,
+      daysUntilRequest,
+      onHand: usage.remaining,
+    };
+  }
+
+  if (daysUntilRequest <= 0) {
+    return {
+      tone: "orange",
+      headline: "Request refill now",
+      detail: `Due ${dueDate.toLocaleDateString()}. Request window opened ${Math.abs(daysUntilRequest)} day${Math.abs(daysUntilRequest) === 1 ? "" : "s"} ago.`,
+      dueDate,
+      requestDate,
+      daysUntilDue,
+      daysUntilRequest,
+      onHand: usage.remaining,
+    };
+  }
+
+  return {
+    tone: "green",
+    headline: `Refill due in ${daysUntilDue} day${daysUntilDue === 1 ? "" : "s"}`,
+    detail: `Ask ${refillRequestLeadDays} day${refillRequestLeadDays === 1 ? "" : "s"} early. Request window opens ${requestDate.toLocaleDateString()}.`,
+    dueDate,
+    requestDate,
+    daysUntilDue,
+    daysUntilRequest,
+    onHand: usage.remaining,
   };
 }
 

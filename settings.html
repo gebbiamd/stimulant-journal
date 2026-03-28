@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=44" />
+    <link rel="manifest" href="./manifest.webmanifest?v=45" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=44" />
+    <link rel="stylesheet" href="./styles.css?v=45" />
     <title>Settings | Stimulant Journal</title>
   </head>
   <body data-page="settings">
@@ -22,7 +22,7 @@
         <div class="hero-row">
           <div>
             <p class="eyebrow">Settings</p>
-            <h1>Manage</h1>
+            <h1>⚙️ Manage</h1>
           </div>
           <a class="ghost-button link-button" href="./index.html">Back Home</a>
         </div>
@@ -32,25 +32,14 @@
         <div class="section-header">
           <div>
             <p class="eyebrow">Repair</p>
-            <h2>Edit entries</h2>
+            <h2>🛠️ Edit entries</h2>
           </div>
         </div>
         <div class="stack-form compact-settings-form">
           <p class="muted">
             Fix bad timestamps, wrong doses, or stray notes here. Each change saves the current state and syncs it to Supabase.
           </p>
-          <div class="split-fields entry-editor-inventory">
-            <label>
-              Current tablets on hand
-              <input id="tabletsOnHand" name="tabletsOnHand" type="number" min="0" step="0.5" />
-            </label>
-            <div class="entry-editor-summary">
-              <span>Inventory shortcut</span>
-              <strong id="inventorySummary">0 on hand</strong>
-            </div>
-          </div>
           <div class="entry-editor-toolbar">
-            <button id="applyInventoryButton" class="nav-button emphasis-button" type="button">Update Tablets On Hand</button>
             <button id="reloadEntriesButton" class="ghost-button" type="button">Reload Entries</button>
           </div>
           <div id="entryEditorEmpty" class="empty-state hidden">No entries saved yet.</div>
@@ -62,7 +51,7 @@
         <div class="section-header">
           <div>
             <p class="eyebrow">Personalize</p>
-            <h2>Targets and inventory</h2>
+            <h2>🎯 Targets and inventory</h2>
           </div>
         </div>
         <form id="settingsForm" class="stack-form compact-settings-form">
@@ -124,8 +113,47 @@
       <section class="card">
         <div class="section-header">
           <div>
+            <p class="eyebrow">Refills</p>
+            <h2>💊 Refill tracking</h2>
+          </div>
+        </div>
+        <div class="stack-form compact-settings-form">
+          <div class="settings-grid settings-grid-core">
+            <label>
+              Last refill date
+              <input id="lastRefillDate" name="lastRefillDate" type="date" />
+            </label>
+            <label>
+              Refill every (days)
+              <input id="refillIntervalDays" name="refillIntervalDays" type="number" min="1" step="1" />
+            </label>
+            <label>
+              Request early by (days)
+              <input id="refillRequestLeadDays" name="refillRequestLeadDays" type="number" min="0" step="1" />
+            </label>
+          </div>
+          <div class="split-fields entry-editor-inventory">
+            <label>
+              Current tablets on hand
+              <input id="tabletsOnHand" name="tabletsOnHand" type="number" min="0" step="0.5" />
+            </label>
+            <div class="entry-editor-summary">
+              <span>Inventory shortcut</span>
+              <strong id="inventorySummary">0 on hand</strong>
+            </div>
+          </div>
+          <div class="data-actions compact-actions">
+            <button id="applyInventoryButton" class="nav-button emphasis-button" type="button">Update Tablets On Hand</button>
+          </div>
+          <p class="muted">Summary will remind you when you are inside the refill request window.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
             <p class="eyebrow">Backup</p>
-            <h2>Export or import data</h2>
+            <h2>🗂️ Export or import data</h2>
           </div>
         </div>
         <div class="data-actions compact-actions">
@@ -141,7 +169,7 @@
         <div class="section-header">
           <div>
             <p class="eyebrow">Integrations</p>
-            <h2>Oura and AI</h2>
+            <h2>🔗 Oura and AI</h2>
           </div>
         </div>
         <div class="stack-form compact-settings-form">
@@ -181,7 +209,7 @@
         <div class="section-header">
           <div>
             <p class="eyebrow">Account</p>
-            <h2>Supabase sync</h2>
+            <h2>☁️ Supabase sync</h2>
           </div>
         </div>
         <div class="stack-form compact-settings-form">
@@ -247,7 +275,7 @@
     <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=44"></script>
-    <script src="./settings.js?v=44"></script>
+    <script src="./journal-core.js?v=45"></script>
+    <script src="./settings.js?v=45"></script>
   </body>
 </html>
