@@ -496,35 +496,35 @@ function getDoseTone(totalMg) {
   if (total <= 15) {
     return {
       tone: "green",
-      label: "Green zone",
-      reason: "15 mg or below keeps the day in the low-use range.",
+      label: "On track",
+      reason: "Today is at or under 15 mg, which is still in the low-use range.",
     };
   }
   if (total <= 20) {
     return {
       tone: "lime",
-      label: "Lime zone",
-      reason: "15.1 to 20 mg is still manageable, but it is starting to lean toward the yellow zone.",
+      label: "Climbing",
+      reason: "Today is above 15 mg and starting to push into a moderate range.",
     };
   }
   if (total <= 25) {
     return {
       tone: "yellow",
-      label: "Yellow zone",
-      reason: "20.1 to 25 mg is a caution range for the day.",
+      label: "Use caution",
+      reason: "Today is in the 20 to 25 mg caution range.",
     };
   }
   if (total <= 30) {
     return {
       tone: "orange",
-      label: "Orange zone",
-      reason: "25.1 to 30 mg is a high-use day and worth treating carefully.",
+      label: "High today",
+      reason: "Today is between 25 and 30 mg, which is a high-use day.",
     };
   }
   return {
     tone: "red",
-    label: "Red zone",
-    reason: "Over 30 mg is a hard-stop range and likely to create sleep friction.",
+    label: "Over limit",
+    reason: "Today is above 30 mg and likely to create sleep friction.",
   };
 }
 

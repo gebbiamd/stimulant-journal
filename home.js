@@ -140,13 +140,13 @@ function renderGauge() {
   const predictedWithDoseAtBedtime = predictedLevelAtBedtime + standardDose * Math.exp(-(Math.log(2) / Math.max(Number(state.settings.decayHalfLifeHours) || defaultState.settings.decayHalfLifeHours, 0.1)) * Math.max(hoursUntilBedtime, 0));
 
   if (hoursUntilBedtime <= 2 || predictedWithDoseAtBedtime >= 20) {
-    els.doseRecommendationHeadline.textContent = "Avoid another dose";
+    els.doseRecommendationHeadline.textContent = "🚨 Avoid another dose";
     els.doseRecommendationDetail.textContent = `About ${formatNumber(hoursUntilBedtime)}h until your expected bedtime. Another ${formatNumber(standardDose)} ${unitLabel(state)} now would leave about ${formatNumber(predictedWithDoseAtBedtime)} ${unitLabel(state)} active at bedtime.`;
   } else if (hoursUntilBedtime <= 5 || predictedWithDoseAtBedtime >= 12) {
-    els.doseRecommendationHeadline.textContent = "Use caution now";
+    els.doseRecommendationHeadline.textContent = "⚠️ Use caution now";
     els.doseRecommendationDetail.textContent = `Current estimated active level is ${formatNumber(currentLevel)} ${unitLabel(state)}. A standard dose now likely leaves about ${formatNumber(predictedWithDoseAtBedtime)} ${unitLabel(state)} active by bedtime.`;
   } else {
-    els.doseRecommendationHeadline.textContent = "Lower sleep risk window";
+    els.doseRecommendationHeadline.textContent = "🟢 Lower sleep-risk window";
     els.doseRecommendationDetail.textContent = `Roughly ${formatNumber(hoursUntilBedtime)}h until your expected bedtime. Current active level is about ${formatNumber(currentLevel)} ${unitLabel(state)}.`;
   }
 
