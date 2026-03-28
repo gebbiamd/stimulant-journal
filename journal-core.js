@@ -40,6 +40,8 @@ const defaultState = {
   },
 };
 
+let toastTimerId = 0;
+
 function cloneDefaultState() {
   return {
     entries: [],
@@ -105,6 +107,20 @@ function loadState() {
 
 function persistState(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function showToast(message, tone = "info") {
+  const banner = document.querySelector("#toastBanner");
+  if (!banner) return;
+  banner.textContent = message;
+  banner.dataset.tone = tone;
+  banner.classList.add("is-visible");
+  if (toastTimerId) {
+    window.clearTimeout(toastTimerId);
+  }
+  toastTimerId = window.setTimeout(() => {
+    banner.classList.remove("is-visible");
+  }, 3200);
 }
 
 let supabaseClient = null;

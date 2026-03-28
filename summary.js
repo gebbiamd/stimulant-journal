@@ -31,16 +31,10 @@ const els = {
   doseSleepLegend: document.querySelector("#doseSleepLegend"),
   timingSleepChart: document.querySelector("#timingSleepChart"),
   timingSleepLegend: document.querySelector("#timingSleepLegend"),
-  summaryMessage: document.querySelector("#summaryMessage"),
 };
 
 function setNotice(message, tone = "info") {
-  if (!els.summaryMessage) return;
-  els.summaryMessage.textContent = message;
-  els.summaryMessage.dataset.tone = tone;
-  els.summaryMessage.classList.remove("is-fresh");
-  void els.summaryMessage.offsetWidth;
-  els.summaryMessage.classList.add("is-fresh");
+  showToast(message, tone);
 }
 
 function setBusy(button, busyLabel, isBusy) {

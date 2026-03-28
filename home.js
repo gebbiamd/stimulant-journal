@@ -45,7 +45,6 @@ const els = {
   aiChatInput: document.querySelector("#aiChatInput"),
   aiChatSendButton: document.querySelector("#aiChatSendButton"),
   activityItemTemplate: document.querySelector("#activityItemTemplate"),
-  homeMessage: document.querySelector("#homeMessage"),
 };
 
 function loadAiChatMessages() {
@@ -79,12 +78,7 @@ function renderAiChat() {
 }
 
 function setNotice(message, tone = "info") {
-  if (!els.homeMessage) return;
-  els.homeMessage.textContent = message;
-  els.homeMessage.dataset.tone = tone;
-  els.homeMessage.classList.remove("is-fresh");
-  void els.homeMessage.offsetWidth;
-  els.homeMessage.classList.add("is-fresh");
+  showToast(message, tone);
 }
 
 function setBusy(button, busyLabel, isBusy) {

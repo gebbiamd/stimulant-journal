@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=39" />
+    <link rel="manifest" href="./manifest.webmanifest?v=40" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=39" />
+    <link rel="stylesheet" href="./styles.css?v=40" />
     <title>Summary | Stimulant Journal</title>
   </head>
   <body data-page="summary">
@@ -97,9 +97,6 @@
           </div>
           <button id="syncOuraButton" class="nav-button emphasis-button" type="button">Sync Oura</button>
         </div>
-        <p id="summaryMessage" class="status-callout muted" role="status" aria-live="polite">
-          Oura sync and AI summary actions will show progress here.
-        </p>
         <p id="ouraDebugInfo" class="trend-legend"></p>
         <div id="ouraSleepEmpty" class="empty-state">Connect Oura in Settings to import recent sleep data.</div>
         <div id="ouraSleepList" class="recent-table oura-compact-table"></div>
@@ -202,14 +199,18 @@
         <div id="timingSleepLegend" class="trend-legend"></div>
       </section>
 
-      <section class="footer-nav">
-        <a class="nav-button emphasis-button" href="./index.html">Home</a>
-        <a class="nav-button emphasis-button" href="./settings.html">Settings</a>
-      </section>
     </main>
 
+    <nav class="tab-bar" aria-label="Primary">
+      <a class="tab-link" href="./index.html">Home</a>
+      <a class="tab-link is-active" href="./summary.html">More Info</a>
+      <a class="tab-link" href="./settings.html">Settings</a>
+    </nav>
+
+    <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=39"></script>
-    <script src="./summary.js?v=39"></script>
+    <script src="./journal-core.js?v=40"></script>
+    <script src="./summary.js?v=40"></script>
   </body>
 </html>

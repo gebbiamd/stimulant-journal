@@ -10,7 +10,6 @@ const els = {
   authStatus: document.querySelector("#authStatus"),
   authEmail: document.querySelector("#authEmail"),
   authPassword: document.querySelector("#authPassword"),
-  authMessage: document.querySelector("#authMessage"),
   authCreateButton: document.querySelector("#authCreateButton"),
   authSignInButton: document.querySelector("#authSignInButton"),
   authRefreshButton: document.querySelector("#authRefreshButton"),
@@ -46,12 +45,7 @@ const els = {
 let ouraConnectionStatus = { connected: false, checked: false, error: "" };
 
 function setNotice(message, tone = "info") {
-  if (!els.authMessage) return;
-  els.authMessage.textContent = message;
-  els.authMessage.dataset.tone = tone;
-  els.authMessage.classList.remove("is-fresh");
-  void els.authMessage.offsetWidth;
-  els.authMessage.classList.add("is-fresh");
+  showToast(message, tone);
 }
 
 function setBusy(button, busyLabel, isBusy) {
