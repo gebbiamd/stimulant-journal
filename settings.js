@@ -43,7 +43,7 @@ const els = {
   ouraDisconnectButton: document.querySelector("#ouraDisconnectButton"),
 };
 
-let ouraConnectionStatus = { connected: false, checked: false };
+let ouraConnectionStatus = { connected: false, checked: false, error: "" };
 
 function setNotice(message, tone = "info") {
   if (!els.authMessage) return;
@@ -106,6 +106,8 @@ function hydrate() {
   if (els.ouraStatus) {
     els.ouraStatus.textContent = !ouraConnectionStatus.checked
       ? "Checking..."
+      : ouraConnectionStatus.error
+      ? ouraConnectionStatus.error
       : ouraConnectionStatus.connected
       ? `Connected${state.integrations.oura.lastSyncAt ? `, last sync ${new Date(state.integrations.oura.lastSyncAt).toLocaleString()}` : ""}`
       : "Not connected";
@@ -124,8 +126,13 @@ function hydrate() {
 async function refreshOuraConnectionStatus() {
   try {
     ouraConnectionStatus = await getOuraConnectionStatus();
-  } catch {
-    ouraConnectionStatus = { connected: false, checked: true };
+  } catch (error) {
+    ouraConnectionStatus = {
+      connected: false,
+      checked: true,
+      error: "Status unavailable",
+    };
+    console.error("Oura status refresh failed", error);
   }
 }
 
@@ -367,6 +374,7 @@ els.ouraDisconnectButton?.addEventListener("click", async () => {
 });
 
 (async () => {
+  hydrate();
   try {
     await loadRemoteStateInto(state);
     await refreshOuraConnectionStatus();

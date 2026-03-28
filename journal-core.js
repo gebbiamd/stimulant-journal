@@ -591,19 +591,32 @@ async function disconnectOuraRemote(state) {
 async function getOuraConnectionStatus() {
   const session = await getSupabaseSession();
   if (!session?.access_token) {
-    return { connected: false };
+    return { connected: false, checked: true };
   }
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/oura-status`, {
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+  let response;
+  try {
+    response = await fetch(`${SUPABASE_URL}/functions/v1/oura-status`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Oura status check timed out.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(payload.error || payload.message || `Oura status failed: ${response.status}`);
   }
-  return payload;
+  return { ...payload, checked: true };
 }
 
 async function syncOuraSleep(state) {
