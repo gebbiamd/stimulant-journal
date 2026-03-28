@@ -1,5 +1,19 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Content-Type": "application/json",
+};
+
+function json(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: corsHeaders,
+  });
+}
+
 async function refreshOuraToken(admin: ReturnType<typeof createClient>, connection: {
   user_id: string;
   refresh_token: string | null;
@@ -55,8 +69,12 @@ async function refreshOuraToken(admin: ReturnType<typeof createClient>, connecti
 }
 
 Deno.serve(async (request) => {
+  if (request.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const authHeader = request.headers.get("Authorization");
-  if (!authHeader) return new Response(JSON.stringify({ error: "Missing auth header" }), { status: 401 });
+  if (!authHeader) return json({ error: "Missing auth header" }, 401);
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -66,7 +84,7 @@ Deno.serve(async (request) => {
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData.user) {
-    return new Response(JSON.stringify({ error: "Not signed in" }), { status: 401 });
+    return json({ error: "Not signed in" }, 401);
   }
 
   const admin = createClient(
@@ -81,7 +99,7 @@ Deno.serve(async (request) => {
     .maybeSingle();
 
   if (connectionError || !connection) {
-    return new Response(JSON.stringify({ error: "Oura is not connected for this account." }), { status: 400 });
+    return json({ error: "Oura is not connected for this account." }, 400);
   }
 
   let activeConnection = connection;
@@ -90,7 +108,7 @@ Deno.serve(async (request) => {
     try {
       activeConnection = await refreshOuraToken(admin, activeConnection);
     } catch (error) {
-      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Failed to refresh Oura token." }), { status: 400 });
+      return json({ error: error instanceof Error ? error.message : "Failed to refresh Oura token." }, 400);
     }
   }
 
@@ -109,7 +127,7 @@ Deno.serve(async (request) => {
     try {
       activeConnection = await refreshOuraToken(admin, activeConnection);
     } catch (error) {
-      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Failed to refresh Oura token." }), { status: 400 });
+      return json({ error: error instanceof Error ? error.message : "Failed to refresh Oura token." }, 400);
     }
 
     response = await fetch(`https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`, {
@@ -118,8 +136,5 @@ Deno.serve(async (request) => {
   }
 
   const payload = await response.json();
-  return new Response(JSON.stringify(payload), {
-    status: response.status,
-    headers: { "Content-Type": "application/json" },
-  });
+  return json(payload, response.status);
 });
