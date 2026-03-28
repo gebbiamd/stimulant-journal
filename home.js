@@ -149,14 +149,14 @@ function renderGauge() {
 }
 
 function renderMiniTrend() {
-  const levels = getDoseDecaySeries(state, 24, 49);
+  const levels = getDoseDecaySeries(state, 48, 73);
   const width = 360;
   const chartTop = 24;
   const chartBottom = 168;
   const chartHeight = chartBottom - chartTop;
   const maxLevel = Math.max(...levels.map((item) => item.level), 1);
   const now = Date.now();
-  const dayStart = now - 24 * 60 * 60 * 1000;
+  const windowStart = now - 48 * 60 * 60 * 1000;
   const points = levels
     .map((item, index) => {
       const x = 20 + index * ((width - 40) / (levels.length - 1));
@@ -165,7 +165,7 @@ function renderMiniTrend() {
     })
     .join(" ");
   const area = `20,${chartBottom} ${points} 340,${chartBottom}`;
-  const tickIndexes = [0, 12, 24, 36, 48];
+  const tickIndexes = [0, 18, 36, 54, 72];
   const ticks = tickIndexes
     .map((index) => {
       const x = 20 + index * ((width - 40) / (levels.length - 1));
@@ -182,35 +182,35 @@ function renderMiniTrend() {
     })
     .join("");
   const doseMarkers = getDoseEntries(state)
-    .filter((entry) => now - new Date(entry.timestamp).getTime() <= 24 * 60 * 60 * 1000)
+    .filter((entry) => now - new Date(entry.timestamp).getTime() <= 48 * 60 * 60 * 1000)
     .map((entry) => {
-      const ratio = (new Date(entry.timestamp).getTime() - dayStart) / (24 * 60 * 60 * 1000);
+      const ratio = (new Date(entry.timestamp).getTime() - windowStart) / (48 * 60 * 60 * 1000);
       const x = 20 + ratio * (width - 40);
       return `<line x1="${x}" y1="${chartTop}" x2="${x}" y2="${chartBottom}" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-dasharray="3 4" />`;
     })
     .join("");
   const nightOverlay = (() => {
-    const ouraSegments = getSleepOverlaySegments(state, dayStart, now);
+    const ouraSegments = getSleepOverlaySegments(state, windowStart, now);
     if (ouraSegments.length > 0) {
       return ouraSegments
         .map((segment) => {
-          const x = 20 + ((segment.start - dayStart) / (24 * 60 * 60 * 1000)) * (width - 40);
-          const w = ((segment.end - segment.start) / (24 * 60 * 60 * 1000)) * (width - 40);
+          const x = 20 + ((segment.start - windowStart) / (48 * 60 * 60 * 1000)) * (width - 40);
+          const w = ((segment.end - segment.start) / (48 * 60 * 60 * 1000)) * (width - 40);
           return `<rect x="${x}" y="${chartTop}" width="${w}" height="${chartHeight}" fill="rgba(8,21,46,0.14)" rx="10" />`;
         })
         .join("");
     }
 
     const segments = [];
-    const startDate = new Date(dayStart);
-    for (let dayOffset = 0; dayOffset <= 1; dayOffset += 1) {
+    const startDate = new Date(windowStart);
+    for (let dayOffset = 0; dayOffset <= 2; dayOffset += 1) {
       const nightStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + dayOffset, 22, 0, 0, 0).getTime();
       const nightEnd = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + dayOffset + 1, 7, 0, 0, 0).getTime();
-      const visibleStart = Math.max(nightStart, dayStart);
+      const visibleStart = Math.max(nightStart, windowStart);
       const visibleEnd = Math.min(nightEnd, now);
       if (visibleEnd <= visibleStart) continue;
-      const x = 20 + ((visibleStart - dayStart) / (24 * 60 * 60 * 1000)) * (width - 40);
-      const w = ((visibleEnd - visibleStart) / (24 * 60 * 60 * 1000)) * (width - 40);
+      const x = 20 + ((visibleStart - windowStart) / (48 * 60 * 60 * 1000)) * (width - 40);
+      const w = ((visibleEnd - visibleStart) / (48 * 60 * 60 * 1000)) * (width - 40);
       segments.push(`<rect x="${x}" y="${chartTop}" width="${w}" height="${chartHeight}" fill="rgba(23,32,51,0.08)" rx="10" />`);
     }
     return segments.join("");
@@ -233,31 +233,34 @@ function renderMiniTrend() {
 
   const currentLevel = levels[levels.length - 1]?.level || 0;
   const peakLevel = Math.max(...levels.map((item) => item.level), 0);
-  const hasOuraOverlay = getSleepOverlaySegments(state, dayStart, now).length > 0;
-  els.miniTrendLegend.textContent = `Estimated active level now: ${formatNumber(currentLevel)} ${unitLabel(state)} • peak over last 24h: ${formatNumber(peakLevel)} ${unitLabel(state)} • shaded bands show ${hasOuraOverlay ? "actual Oura sleep" : "night hours"} • half-life: ${formatNumber(state.settings.decayHalfLifeHours || defaultState.settings.decayHalfLifeHours)}h`;
+  const hasOuraOverlay = getSleepOverlaySegments(state, windowStart, now).length > 0;
+  els.miniTrendLegend.textContent = `Estimated active level now: ${formatNumber(currentLevel)} ${unitLabel(state)} • peak over last 48h: ${formatNumber(peakLevel)} ${unitLabel(state)} • shaded bands show ${hasOuraOverlay ? "actual Oura sleep" : "night hours"} • half-life: ${formatNumber(state.settings.decayHalfLifeHours || defaultState.settings.decayHalfLifeHours)}h`;
 }
 
 function renderRecent() {
-  const cutoff = Date.now() - DAY_MS;
-  const items = state.entries.filter((entry) => new Date(entry.timestamp).getTime() >= cutoff).slice(0, 8);
+  const cutoff = Date.now() - DAY_MS * 2;
+  const items = getDoseEntries(state)
+    .filter((entry) => new Date(entry.timestamp).getTime() >= cutoff)
+    .slice(0, 10);
   els.recentList.innerHTML = "";
+  els.recentList.innerHTML = `
+    <div class="recent-table-head" aria-hidden="true">
+      <span>Date / time</span>
+      <span>Dose</span>
+    </div>
+  `;
   els.recentEmpty.classList.toggle("hidden", items.length > 0);
 
   for (const entry of items) {
     const fragment = els.activityItemTemplate.content.cloneNode(true);
     const date = new Date(entry.timestamp);
-    fragment.querySelector(".history-dose").textContent =
-      entry.type === "note"
-        ? "Journal note"
-        : `${tabletLabel(entry.tabletCount || 0)} • ${formatNumber(entry.amount)} ${unitLabel(state)}`;
+    fragment.querySelector(".history-dose").textContent = `${tabletLabel(entry.tabletCount || 0)} • ${formatNumber(entry.amount)} ${unitLabel(state)}`;
     fragment.querySelector(".history-time").textContent = date.toLocaleString(undefined, {
-      weekday: "short",
       hour: "numeric",
       minute: "2-digit",
       month: "short",
       day: "numeric",
     });
-    fragment.querySelector(".history-note").textContent = entry.note || "No note";
     els.recentList.appendChild(fragment);
   }
 }

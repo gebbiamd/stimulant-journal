@@ -10,10 +10,10 @@
     <meta name="theme-color" content="#efe1c7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="./manifest.webmanifest?v=29" />
+    <link rel="manifest" href="./manifest.webmanifest?v=30" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=29" />
+    <link rel="stylesheet" href="./styles.css?v=30" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -98,7 +98,7 @@
           </div>
           <button id="nowButton" class="ghost-button" type="button">Use Current Time</button>
         </div>
-        <form id="doseForm" class="stack-form">
+        <form id="doseForm" class="stack-form home-entry-form compact-settings-form">
           <div class="split-fields">
             <label>
               Tablets taken
@@ -142,10 +142,10 @@
         <div class="section-header">
           <div>
             <p class="eyebrow">Active Level</p>
-            <h2>24-hour decay view</h2>
+            <h2>48-hour decay view</h2>
           </div>
         </div>
-        <svg id="miniTrendChart" class="mini-trend-chart" viewBox="0 0 360 220" preserveAspectRatio="none" aria-label="24 hour active level trend"></svg>
+        <svg id="miniTrendChart" class="mini-trend-chart" viewBox="0 0 360 220" preserveAspectRatio="none" aria-label="48 hour active level trend"></svg>
         <div id="miniTrendAxis" class="trend-axis"></div>
         <div id="miniTrendLegend" class="trend-legend"></div>
       </section>
@@ -158,7 +158,12 @@
           </div>
         </div>
         <div id="recentEmpty" class="empty-state">No recent items yet.</div>
-        <div id="recentList" class="history-list"></div>
+        <div id="recentList" class="recent-table">
+          <div class="recent-table-head" aria-hidden="true">
+            <span>Date / time</span>
+            <span>Dose</span>
+          </div>
+        </div>
       </section>
 
       <section class="card">
@@ -202,19 +207,14 @@
     </main>
 
     <template id="activityItemTemplate">
-      <article class="history-item">
-        <div class="history-main">
-          <div>
-            <strong class="history-dose"></strong>
-            <p class="history-time"></p>
-            <p class="history-note muted"></p>
-          </div>
-        </div>
+      <article class="recent-row">
+        <p class="history-time"></p>
+        <strong class="history-dose"></strong>
       </article>
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=29"></script>
-    <script src="./home.js?v=29"></script>
+    <script src="./journal-core.js?v=30"></script>
+    <script src="./home.js?v=30"></script>
   </body>
 </html>

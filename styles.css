@@ -190,6 +190,12 @@ h2 {
   overflow: hidden;
 }
 
+.entry-card,
+.quick-trend-card,
+.recent-card {
+  padding: 1.05rem 1.1rem;
+}
+
 .header-card.gauge-good {
   background:
     radial-gradient(circle at top right, rgba(45, 157, 120, 0.18), transparent 30%),
@@ -306,6 +312,10 @@ h2 {
   gap: 1rem;
 }
 
+.header-side {
+  gap: 0.65rem;
+}
+
 .compact-settings-form {
   gap: 0.8rem;
 }
@@ -323,6 +333,20 @@ h2 {
   padding: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.58);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.header-side .stat-chip {
+  padding: 0.72rem 0.85rem;
+  border-radius: 15px;
+}
+
+.header-side .stat-chip span {
+  font-size: 0.75rem;
+  margin-bottom: 0.22rem;
+}
+
+.header-side .stat-chip strong {
+  font-size: 1.08rem;
 }
 
 .stat-chip span,
@@ -374,6 +398,20 @@ textarea {
 .compact-settings-form textarea {
   padding: 0.8rem 0.9rem;
   border-radius: 14px;
+}
+
+.home-entry-form {
+  gap: 0.7rem;
+}
+
+.home-entry-form input,
+.home-entry-form textarea {
+  padding: 0.72rem 0.85rem;
+  border-radius: 13px;
+}
+
+.home-entry-form textarea {
+  min-height: 4rem;
 }
 
 textarea {
@@ -465,6 +503,18 @@ textarea {
 .entry-editor-actions .delete-button {
   min-height: 46px;
   padding: 0.8rem 1rem;
+}
+
+.home-entry-form .primary-button,
+.header-side .ghost-button {
+  min-height: 44px;
+  padding: 0.72rem 0.95rem;
+}
+
+.entry-card .section-header,
+.quick-trend-card .section-header,
+.recent-card .section-header {
+  margin-bottom: 0.15rem;
 }
 
 .emphasis-button:hover {
@@ -686,6 +736,55 @@ textarea {
   display: grid;
   gap: 0.9rem;
   margin-top: 1.1rem;
+}
+
+.recent-table {
+  margin-top: 0.7rem;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  background: rgba(255, 255, 255, 0.46);
+}
+
+.recent-table-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  padding: 0.52rem 0.95rem 0.48rem;
+  background: rgba(208, 226, 255, 0.62);
+  color: #3d679c;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.recent-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.58rem 0.95rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.recent-row:nth-child(even) {
+  background: rgba(228, 240, 255, 0.74);
+}
+
+.recent-row .history-time,
+.recent-row .history-dose {
+  margin: 0;
+}
+
+.recent-row .history-time {
+  font-size: 0.84rem;
+  color: #315f99;
+}
+
+.recent-row .history-dose {
+  font-size: 0.9rem;
+  text-align: right;
 }
 
 .entry-editor-list {
