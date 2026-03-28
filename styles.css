@@ -358,6 +358,11 @@ h3 {
   font-size: 0.86rem;
 }
 
+.field-hint:empty,
+.entry-submit-row .muted:empty {
+  display: none;
+}
+
 .stat-chip,
 .metric,
 .calendar-cell {
@@ -510,6 +515,16 @@ select {
   border-radius: 12px;
 }
 
+.home-entry-form input[type="datetime-local"] {
+  min-width: 0;
+  padding-inline: 0.52rem;
+  letter-spacing: -0.01em;
+}
+
+.home-entry-form input[type="datetime-local"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
 .home-entry-form textarea {
   min-height: 3.1rem;
 }
@@ -652,6 +667,10 @@ textarea {
 }
 
 .entry-field {
+  min-width: 0;
+}
+
+.entry-field input {
   min-width: 0;
 }
 
@@ -1509,8 +1528,8 @@ button.calendar-cell {
   }
 
   .entry-card .split-fields {
-    grid-template-columns: 0.86fr 1.14fr;
-    gap: 0.55rem;
+    grid-template-columns: 0.66fr 1.34fr;
+    gap: 0.48rem;
   }
 
   .entry-card h2 {
@@ -1520,5 +1539,10 @@ button.calendar-cell {
   .home-entry-form input,
   .home-entry-form textarea {
     padding: 0.58rem 0.72rem;
+  }
+
+  .home-entry-form input[type="datetime-local"] {
+    padding-inline: 0.44rem;
+    font-size: 16px;
   }
 }

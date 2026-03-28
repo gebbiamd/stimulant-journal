@@ -898,6 +898,48 @@ function getUpcomingBedtime(state) {
   return bedtimeToday;
 }
 
+function getDoseRecommendation(state, nowMs = Date.now()) {
+  const roundedNow = Math.round(nowMs / (15 * 60 * 1000)) * 15 * 60 * 1000;
+  const currentLevel = getEstimatedActiveLevel(state, roundedNow);
+  const upcomingBedtime = getUpcomingBedtime(state);
+  const hoursUntilBedtime = (upcomingBedtime.getTime() - roundedNow) / (60 * 60 * 1000);
+  const standardDose = Number(state.settings.mgPerTablet) || defaultState.settings.mgPerTablet;
+  const halfLifeHours = Number(state.settings.decayHalfLifeHours) || defaultState.settings.decayHalfLifeHours;
+  const predictedLevelAtBedtime = getEstimatedActiveLevel(state, upcomingBedtime.getTime());
+  const predictedWithDoseAtBedtime =
+    predictedLevelAtBedtime +
+    standardDose * Math.exp(-(Math.log(2) / Math.max(halfLifeHours, 0.1)) * Math.max(hoursUntilBedtime, 0));
+
+  if (hoursUntilBedtime <= 2 || predictedWithDoseAtBedtime >= 20) {
+    return {
+      tone: "red",
+      headline: "🚨 Avoid another dose",
+      detail: `About ${formatNumber(hoursUntilBedtime)}h until your expected bedtime. Another ${formatNumber(standardDose)} ${unitLabel(state)} now would leave about ${formatNumber(predictedWithDoseAtBedtime)} ${unitLabel(state)} active at bedtime.`,
+      currentLevel,
+      predictedWithDoseAtBedtime,
+      hoursUntilBedtime,
+    };
+  }
+  if (hoursUntilBedtime <= 5 || predictedWithDoseAtBedtime >= 12) {
+    return {
+      tone: "orange",
+      headline: "⚠️ Use caution now",
+      detail: `Current estimated active level is ${formatNumber(currentLevel)} ${unitLabel(state)}. A standard dose now likely leaves about ${formatNumber(predictedWithDoseAtBedtime)} ${unitLabel(state)} active by bedtime.`,
+      currentLevel,
+      predictedWithDoseAtBedtime,
+      hoursUntilBedtime,
+    };
+  }
+  return {
+    tone: "green",
+    headline: "🟢 Lower sleep-risk window",
+    detail: `Roughly ${formatNumber(hoursUntilBedtime)}h until your expected bedtime. Current active level is about ${formatNumber(currentLevel)} ${unitLabel(state)}.`,
+    currentLevel,
+    predictedWithDoseAtBedtime,
+    hoursUntilBedtime,
+  };
+}
+
 function getDoseTotalForLocalDate(state, date) {
   const key = dateKey(date);
   return getDoseEntries(state).reduce((sum, entry) => {
