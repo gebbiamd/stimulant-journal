@@ -31,9 +31,12 @@ const els = {
   ouraClientId: document.querySelector("#ouraClientId"),
   exportButton: document.querySelector("#exportButton"),
   importInput: document.querySelector("#importInput"),
-  rawDataEditor: document.querySelector("#rawDataEditor"),
-  reloadRawDataButton: document.querySelector("#reloadRawDataButton"),
-  saveRawDataButton: document.querySelector("#saveRawDataButton"),
+  tabletsOnHand: document.querySelector("#tabletsOnHand"),
+  inventorySummary: document.querySelector("#inventorySummary"),
+  applyInventoryButton: document.querySelector("#applyInventoryButton"),
+  reloadEntriesButton: document.querySelector("#reloadEntriesButton"),
+  entryEditorList: document.querySelector("#entryEditorList"),
+  entryEditorEmpty: document.querySelector("#entryEditorEmpty"),
   ouraStatus: document.querySelector("#ouraStatus"),
   openAiStatus: document.querySelector("#openAiStatus"),
   ouraConnectButton: document.querySelector("#ouraConnectButton"),
@@ -106,24 +109,96 @@ function hydrate() {
   if (els.openAiStatus) {
     els.openAiStatus.textContent = state.settings.openAiRelayUrl ? "Relay configured" : "Relay not configured";
   }
-  if (els.rawDataEditor) {
-    els.rawDataEditor.value = JSON.stringify(state, null, 2);
+  if (els.tabletsOnHand && els.inventorySummary) {
+    const usage = getCurrentMonthTabletUsage(state);
+    els.tabletsOnHand.value = String(usage.remaining);
+    els.inventorySummary.textContent = `${formatNumber(usage.remaining)} on hand • ${formatNumber(usage.used)} used this month`;
+  }
+  renderEntryEditor();
+}
+
+function formatDateTimeLocalValue(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function saveStateAndSync(message) {
+  state.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  persistState(state);
+  queueRemoteSync(state);
+  hydrate();
+  setNotice(message, "success");
+}
+
+function renderEntryEditor() {
+  if (!els.entryEditorList || !els.entryEditorEmpty) return;
+  const entries = [...state.entries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  els.entryEditorEmpty.classList.toggle("hidden", entries.length > 0);
+  els.entryEditorList.innerHTML = "";
+  if (!entries.length) return;
+
+  for (const entry of entries) {
+    const article = document.createElement("article");
+    article.className = "entry-editor-item";
+    const doseValue = entry.type === "dose" ? Number(entry.tabletCount || 0) : "";
+    const doseLabel = entry.type === "dose"
+      ? `${formatNumber(entry.amount || 0)} ${unitLabel(state)}`
+      : "Note only";
+    article.innerHTML = `
+      <div class="entry-editor-grid">
+        <label>
+          Timestamp
+          <input class="entry-input" data-field="timestamp" type="datetime-local" value="${formatDateTimeLocalValue(entry.timestamp)}" />
+        </label>
+        <label>
+          Dose (tablets)
+          <input class="entry-input" data-field="tabletCount" type="number" min="0" step="0.25" value="${doseValue}" ${entry.type === "note" ? "disabled" : ""} />
+          <span class="field-hint muted">${doseLabel}</span>
+        </label>
+        <label class="entry-note-field">
+          Note
+          <input class="entry-input" data-field="note" type="text" value="${String(entry.note || "").replace(/"/g, "&quot;")}" />
+        </label>
+      </div>
+      <div class="data-actions">
+        <span class="entry-type-chip">${entry.type === "dose" ? "Dose" : "Note"}</span>
+        <button class="ghost-button entry-save-button" type="button" data-id="${entry.id}">Save Row</button>
+        <button class="delete-button entry-delete-button" type="button" data-id="${entry.id}">Delete</button>
+      </div>
+    `;
+    els.entryEditorList.appendChild(article);
   }
 }
 
-function parseRawState(raw) {
-  const parsed = JSON.parse(raw);
-  return {
-    entries: Array.isArray(parsed.entries) ? parsed.entries.map(normalizeEntry).filter(Boolean) : [],
-    settings: { ...defaultState.settings, ...(parsed.settings || {}) },
-    integrations: {
-      oura: {
-        ...defaultState.integrations.oura,
-        ...((parsed.integrations && parsed.integrations.oura) || {}),
-      },
-    },
-    auth: { ...defaultState.auth, ...(parsed.auth || {}) },
-  };
+function saveEntryFromRow(button) {
+  const row = button.closest(".entry-editor-item");
+  const id = button.dataset.id;
+  const entry = state.entries.find((item) => item.id === id);
+  if (!row || !entry) return;
+
+  const timestampInput = row.querySelector('[data-field="timestamp"]');
+  const tabletInput = row.querySelector('[data-field="tabletCount"]');
+  const noteInput = row.querySelector('[data-field="note"]');
+  const nextTimestamp = parseTimestamp(timestampInput?.value || "");
+  const nextNote = String(noteInput?.value || "").trim();
+
+  if (entry.type === "dose") {
+    const nextTabletCount = Number.parseFloat(tabletInput?.value || "");
+    if (!Number.isFinite(nextTabletCount) || nextTabletCount < 0) {
+      setNotice("Dose rows need a valid tablet amount.", "error");
+      return;
+    }
+    const mgPerTablet = Number(entry.mgPerTablet || state.settings.mgPerTablet || defaultState.settings.mgPerTablet);
+    entry.tabletCount = nextTabletCount;
+    entry.mgPerTablet = mgPerTablet;
+    entry.amount = nextTabletCount * mgPerTablet;
+  }
+
+  entry.timestamp = nextTimestamp;
+  entry.note = nextNote;
+  saveStateAndSync("Entry updated.");
 }
 
 els.settingsForm?.addEventListener("submit", (event) => {
@@ -158,21 +233,34 @@ els.importInput?.addEventListener("change", importData((nextState) => {
   state = nextState;
   hydrate();
 }));
-els.reloadRawDataButton?.addEventListener("click", () => {
+els.reloadEntriesButton?.addEventListener("click", () => {
   hydrate();
-  setNotice("Reloaded the current saved data into the editor.", "success");
+  setNotice("Reloaded entries from the current saved state.", "success");
 });
-els.saveRawDataButton?.addEventListener("click", () => {
-  try {
-    const nextState = parseRawState(els.rawDataEditor.value);
-    nextState.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    state = nextState;
-    persistState(state);
-    queueRemoteSync(state);
+els.applyInventoryButton?.addEventListener("click", () => {
+  const onHand = Number.parseFloat(els.tabletsOnHand?.value || "");
+  if (!Number.isFinite(onHand) || onHand < 0) {
+    setNotice("Current tablets on hand must be zero or more.", "error");
+    return;
+  }
+  const usage = getCurrentMonthTabletUsage(state);
+  state.settings.monthlyTablets = usage.used + onHand;
+  if (els.monthlyTablets) {
+    els.monthlyTablets.value = String(state.settings.monthlyTablets);
+  }
+  saveStateAndSync("Inventory updated.");
+});
+els.entryEditorList?.addEventListener("click", (event) => {
+  const saveButton = event.target.closest(".entry-save-button");
+  if (saveButton) {
+    saveEntryFromRow(saveButton);
+    return;
+  }
+  const deleteButton = event.target.closest(".entry-delete-button");
+  if (deleteButton) {
+    deleteEntry(state, deleteButton.dataset.id);
     hydrate();
-    setNotice("Raw JSON saved.", "success");
-  } catch (error) {
-    setNotice(`Could not save raw JSON: ${getFriendlyAuthMessage(error)}`, "error");
+    setNotice("Entry deleted.", "warning");
   }
 });
 els.authCreateButton?.addEventListener("click", async () => {
