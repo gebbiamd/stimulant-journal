@@ -296,6 +296,19 @@ function dateKey(value) {
   return `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, "0")}-${`${date.getDate()}`.padStart(2, "0")}`;
 }
 
+function parseLocalDateKey(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ""))) return null;
+  const [year, month, day] = String(value).split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function getOuraDisplayDate(item) {
+  if (item?.day) return parseLocalDateKey(item.day);
+  if (item?.bedtime_end) return new Date(item.bedtime_end);
+  if (item?.bedtime_start) return new Date(item.bedtime_start);
+  return null;
+}
+
 function startOfLocalDay(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -594,8 +607,8 @@ function getSortedOuraSleep(state) {
     .filter((item) => item && (item.bedtime_start || item.day))
     .slice()
     .sort((a, b) => {
-      const aTime = new Date(a.bedtime_start || a.day).getTime();
-      const bTime = new Date(b.bedtime_start || b.day).getTime();
+      const aTime = getOuraDisplayDate(a)?.getTime?.() || 0;
+      const bTime = getOuraDisplayDate(b)?.getTime?.() || 0;
       return bTime - aTime;
     });
 }

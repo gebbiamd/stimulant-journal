@@ -135,7 +135,7 @@ function renderLatestSleepMetrics() {
   }
   const bedtime = latestSleep.bedtime_start ? new Date(latestSleep.bedtime_start) : null;
   const hours = latestSleep.total_sleep_duration ? Number(latestSleep.total_sleep_duration) / 3600 : null;
-  els.latestSleepScore.textContent = latestSleep.score ?? "-";
+  els.latestSleepScore.textContent = latestSleep.score ?? "Pending";
   els.latestSleepHours.textContent = hours ? `${formatNumber(hours)}h` : "-";
   els.latestSleepBedtime.textContent = bedtime
     ? bedtime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
@@ -190,7 +190,7 @@ function renderSleepPatterns() {
 }
 
 function renderOuraSleep() {
-  const sleep = getRecentOuraSleep(state).slice(0, 10);
+  const sleep = getSortedOuraSleep(state).slice(0, 10);
   els.ouraSleepList.innerHTML = "";
   els.ouraSleepEmpty.classList.toggle("hidden", sleep.length > 0);
   if (sleep.length > 0) {
@@ -203,12 +203,13 @@ function renderOuraSleep() {
     const entry = document.createElement("article");
     entry.className = "history-item";
     const bedtime = item.bedtime_start ? new Date(item.bedtime_start) : null;
+    const displayDate = getOuraDisplayDate(item);
     const durationHours = item.total_sleep_duration ? item.total_sleep_duration / 3600 : null;
     entry.innerHTML = `
       <div class="history-main">
         <div>
-          <strong class="history-dose">${item.score ?? "?"} sleep score</strong>
-          <p class="history-time">${bedtime ? bedtime.toLocaleDateString() : "Recent sleep"}</p>
+          <strong class="history-dose">${item.score ?? "Pending"} sleep score</strong>
+          <p class="history-time">${displayDate ? displayDate.toLocaleDateString() : "Recent sleep"}</p>
           <p class="history-note muted">${durationHours ? `${formatNumber(durationHours)} hours asleep` : "Sleep duration unavailable"}</p>
         </div>
       </div>

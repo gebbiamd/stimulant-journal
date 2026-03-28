@@ -138,7 +138,8 @@ function renderGauge() {
   if (latestSleep && latestSleep.total_sleep_duration) {
     const sleepHours = Number(latestSleep.total_sleep_duration) / 3600;
     const bedtime = latestSleep.bedtime_start ? new Date(latestSleep.bedtime_start) : null;
-    els.lastSleepHeadline.textContent = `${formatNumber(sleepHours)}h • score ${latestSleep.score ?? "?"}`;
+    const scoreLabel = latestSleep.score ?? "Pending";
+    els.lastSleepHeadline.textContent = `${formatNumber(sleepHours)}h • score ${scoreLabel}`;
     els.lastSleepDetail.textContent = bedtime
       ? `Bedtime ${bedtime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
       : "Latest synced Oura sleep";
