@@ -145,7 +145,8 @@ a {
 }
 
 h1,
-h2 {
+h2,
+h3 {
   margin: 0;
   font-family: var(--font-display);
   line-height: 0.95;
@@ -160,6 +161,10 @@ h1 {
 
 h2 {
   font-size: 1.85rem;
+}
+
+h3 {
+  font-size: 1.2rem;
 }
 
 .hero-copy,
@@ -453,7 +458,8 @@ label {
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.34);
   border-radius: 16px;
@@ -461,11 +467,13 @@ textarea {
   backdrop-filter: blur(18px) saturate(160%);
   padding: 1rem 1.05rem;
   color: var(--text);
+  font-size: 16px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
 }
 
 .compact-settings-form input,
-.compact-settings-form textarea {
+.compact-settings-form textarea,
+.compact-settings-form select {
   padding: 0.8rem 0.9rem;
   border-radius: 14px;
 }
@@ -835,18 +843,20 @@ textarea {
 }
 
 .trend-axis {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.35rem;
+  position: relative;
+  height: 1.25rem;
   margin-top: 0.5rem;
   color: var(--muted);
   font-size: 0.78rem;
 }
 
 .trend-axis span {
-  text-align: center;
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
   font-weight: 600;
   color: #1d4f89;
+  white-space: nowrap;
 }
 
 .calendar-grid {
@@ -861,6 +871,24 @@ textarea {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+button.calendar-cell {
+  appearance: none;
+  font: inherit;
+}
+
+.calendar-cell.selected {
+  transform: translateY(-1px);
+  border-color: rgba(15, 140, 255, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 0 0 2px rgba(15, 140, 255, 0.18),
+    0 12px 24px rgba(15, 140, 255, 0.16);
 }
 
 .calendar-cell span {
@@ -908,6 +936,38 @@ textarea {
 
 .calendar-cell.empty {
   visibility: hidden;
+}
+
+.calendar-month-picker {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 11rem;
+}
+
+.calendar-month-picker span {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.calendar-month-picker select {
+  padding: 0.78rem 0.9rem;
+  border-radius: 14px;
+}
+
+.focused-day-panel {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.34);
+}
+
+.compact-header {
+  margin-bottom: 0.2rem;
+}
+
+.focused-decay-chart {
+  height: 216px;
 }
 
 .history-list {

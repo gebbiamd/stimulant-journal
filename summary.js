@@ -11,7 +11,13 @@ const els = {
   monthTotal: document.querySelector("#monthTotal"),
   summaryTrendChart: document.querySelector("#summaryTrendChart"),
   summaryTrendLegend: document.querySelector("#summaryTrendLegend"),
+  calendarMonthTitle: document.querySelector("#calendarMonthTitle"),
+  calendarMonthSelect: document.querySelector("#calendarMonthSelect"),
   calendarGrid: document.querySelector("#calendarGrid"),
+  focusedDayTitle: document.querySelector("#focusedDayTitle"),
+  focusedDecayChart: document.querySelector("#focusedDecayChart"),
+  focusedDecayAxis: document.querySelector("#focusedDecayAxis"),
+  focusedDecayLegend: document.querySelector("#focusedDecayLegend"),
   plannedTablets: document.querySelector("#plannedTablets"),
   estimatedUsed: document.querySelector("#estimatedUsed"),
   estimatedRemaining: document.querySelector("#estimatedRemaining"),
@@ -32,6 +38,9 @@ const els = {
   timingSleepChart: document.querySelector("#timingSleepChart"),
   timingSleepLegend: document.querySelector("#timingSleepLegend"),
 };
+
+let selectedCalendarMonthKey = "";
+let selectedCalendarDateKey = "";
 
 function setNotice(message, tone = "info") {
   showToast(message, tone);
@@ -83,13 +92,85 @@ function renderSummaryTrend() {
   els.summaryTrendLegend.textContent = `30-day total: ${formatNumber(totals.reduce((sum, item) => sum + item.total, 0))} ${unitLabel(state)}`;
 }
 
+function getAvailableMonthKeys() {
+  const keys = new Set();
+  keys.add(`${new Date().getFullYear()}-${`${new Date().getMonth() + 1}`.padStart(2, "0")}`);
+  for (const entry of getDoseEntries(state)) {
+    const date = new Date(entry.timestamp);
+    keys.add(`${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, "0")}`);
+  }
+  for (const item of getSortedOuraSleep(state)) {
+    const date = getOuraDisplayDate(item);
+    if (!date) continue;
+    keys.add(`${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, "0")}`);
+  }
+  return Array.from(keys).sort((a, b) => b.localeCompare(a));
+}
+
+function parseMonthKey(monthKey) {
+  const [year, month] = String(monthKey).split("-").map(Number);
+  return new Date(year, month - 1, 1);
+}
+
+function formatMonthKey(monthKey) {
+  return parseMonthKey(monthKey).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+}
+
+function getDoseEntriesForMonth(monthKey) {
+  const monthStart = parseMonthKey(monthKey);
+  return getDoseEntries(state).filter((entry) => {
+    const date = new Date(entry.timestamp);
+    return date.getFullYear() === monthStart.getFullYear() && date.getMonth() === monthStart.getMonth();
+  });
+}
+
+function getDefaultSelectedDateKey(monthKey) {
+  const monthStart = parseMonthKey(monthKey);
+  const monthEntries = getDoseEntriesForMonth(monthKey);
+  if (monthEntries.length) return dateKey(monthEntries[0].timestamp);
+
+  const today = new Date();
+  if (today.getFullYear() === monthStart.getFullYear() && today.getMonth() === monthStart.getMonth()) {
+    return dateKey(today);
+  }
+  return dateKey(monthStart);
+}
+
+function ensureCalendarState() {
+  const months = getAvailableMonthKeys();
+  if (!selectedCalendarMonthKey || !months.includes(selectedCalendarMonthKey)) {
+    selectedCalendarMonthKey = months[0];
+  }
+  const selectedDate = parseLocalDateKey(selectedCalendarDateKey);
+  if (
+    !selectedDate ||
+    selectedDate.getFullYear() !== parseMonthKey(selectedCalendarMonthKey).getFullYear() ||
+    selectedDate.getMonth() !== parseMonthKey(selectedCalendarMonthKey).getMonth()
+  ) {
+    selectedCalendarDateKey = getDefaultSelectedDateKey(selectedCalendarMonthKey);
+  }
+}
+
+function populateMonthSelect() {
+  const months = getAvailableMonthKeys();
+  els.calendarMonthSelect.innerHTML = months
+    .map((monthKey) => `<option value="${monthKey}">${formatMonthKey(monthKey)}</option>`)
+    .join("");
+  els.calendarMonthSelect.value = selectedCalendarMonthKey;
+}
+
 function renderCalendar() {
-  const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  ensureCalendarState();
+  populateMonthSelect();
+
+  const monthStart = parseMonthKey(selectedCalendarMonthKey);
+  const firstDay = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
   const startWeekday = firstDay.getDay();
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const monthEntries = getCurrentMonthDoseEntries(state);
+  const lastDay = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+  const monthEntries = getDoseEntriesForMonth(selectedCalendarMonthKey);
   const dailyTotals = new Map();
+
+  els.calendarMonthTitle.textContent = formatMonthKey(selectedCalendarMonthKey);
 
   for (const entry of monthEntries) {
     const key = dateKey(entry.timestamp);
@@ -99,18 +180,119 @@ function renderCalendar() {
   const cells = [];
   for (let index = 0; index < startWeekday; index += 1) cells.push(`<div class="calendar-cell empty"></div>`);
   for (let day = 1; day <= lastDay; day += 1) {
-    const key = `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, "0")}-${`${day}`.padStart(2, "0")}`;
+    const key = `${monthStart.getFullYear()}-${`${monthStart.getMonth() + 1}`.padStart(2, "0")}-${`${day}`.padStart(2, "0")}`;
     const total = dailyTotals.get(key) || 0;
     const tone = total === 0 ? "none" : getDoseTone(total).tone;
+    const selectedClass = key === selectedCalendarDateKey ? " selected" : "";
     cells.push(`
-      <div class="calendar-cell ${tone}">
+      <button type="button" class="calendar-cell ${tone}${selectedClass}" data-date="${key}">
         <span>${day}</span>
         <strong>${total ? formatNumber(total) : ""}</strong>
-      </div>
+      </button>
     `);
   }
 
   els.calendarGrid.innerHTML = cells.join("");
+}
+
+function renderFocusedDecay() {
+  const selectedDate = parseLocalDateKey(selectedCalendarDateKey);
+  if (!selectedDate) {
+    els.focusedDayTitle.textContent = "Select a date";
+    els.focusedDecayChart.innerHTML = "";
+    els.focusedDecayAxis.innerHTML = "";
+    els.focusedDecayLegend.textContent = "";
+    return;
+  }
+
+  const center = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 12, 0, 0, 0);
+  const windowStart = center.getTime() - 24 * 60 * 60 * 1000;
+  const windowEnd = center.getTime() + 24 * 60 * 60 * 1000;
+  const levels = getDoseDecaySeriesBetween(state, windowStart, windowEnd, 73);
+  const width = 360;
+  const chartTop = 24;
+  const chartBottom = 168;
+  const chartHeight = chartBottom - chartTop;
+  const maxLevel = Math.max(...levels.map((item) => item.level), 1);
+  const points = levels
+    .map((item, index) => {
+      const x = 20 + index * ((width - 40) / (levels.length - 1));
+      const y = chartBottom - (item.level / maxLevel) * chartHeight;
+      return `${x},${y}`;
+    })
+    .join(" ");
+  const area = `20,${chartBottom} ${points} 340,${chartBottom}`;
+  const axisTicks = getStaticTimeTicks(windowStart, windowEnd);
+  const tickLines = axisTicks
+    .map((tick) => {
+      const ratio = (tick.timestamp - windowStart) / (windowEnd - windowStart);
+      const x = 20 + ratio * (width - 40);
+      return `<line x1="${x}" y1="${chartBottom}" x2="${x}" y2="${chartBottom + 6}" stroke="rgba(88,112,143,0.18)" stroke-width="1" />`;
+    })
+    .join("");
+  els.focusedDecayAxis.innerHTML = axisTicks
+    .map((tick) => {
+      const left = ((tick.timestamp - windowStart) / (windowEnd - windowStart)) * 100;
+      return `<span style="left:${left}%">${tick.label}</span>`;
+    })
+    .join("");
+
+  const doseMarkers = getDoseEntries(state)
+    .filter((entry) => {
+      const time = new Date(entry.timestamp).getTime();
+      return time >= windowStart && time <= windowEnd;
+    })
+    .map((entry) => {
+      const ratio = (new Date(entry.timestamp).getTime() - windowStart) / (windowEnd - windowStart);
+      const x = 20 + ratio * (width - 40);
+      return `<line x1="${x}" y1="${chartTop}" x2="${x}" y2="${chartBottom}" stroke="rgba(255,255,255,0.72)" stroke-width="1.5" stroke-dasharray="3 4" />`;
+    })
+    .join("");
+
+  const ouraSegments = getSleepOverlaySegments(state, windowStart, windowEnd);
+  const nightOverlay =
+    ouraSegments.length > 0
+      ? ouraSegments
+          .map((segment) => {
+            const x = 20 + ((segment.start - windowStart) / (windowEnd - windowStart)) * (width - 40);
+            const w = ((segment.end - segment.start) / (windowEnd - windowStart)) * (width - 40);
+            return `<rect x="${x}" y="${chartTop}" width="${w}" height="${chartHeight}" fill="rgba(8,21,46,0.14)" rx="10" />`;
+          })
+          .join("")
+      : (() => {
+          const segments = [];
+          const startDate = new Date(windowStart);
+          for (let dayOffset = 0; dayOffset <= 2; dayOffset += 1) {
+            const nightStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + dayOffset, 22, 0, 0, 0).getTime();
+            const nightEnd = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + dayOffset + 1, 7, 0, 0, 0).getTime();
+            const visibleStart = Math.max(nightStart, windowStart);
+            const visibleEnd = Math.min(nightEnd, windowEnd);
+            if (visibleEnd <= visibleStart) continue;
+            const x = 20 + ((visibleStart - windowStart) / (windowEnd - windowStart)) * (width - 40);
+            const w = ((visibleEnd - visibleStart) / (windowEnd - windowStart)) * (width - 40);
+            segments.push(`<rect x="${x}" y="${chartTop}" width="${w}" height="${chartHeight}" fill="rgba(23,32,51,0.08)" rx="10" />`);
+          }
+          return segments.join("");
+        })();
+
+  els.focusedDecayChart.innerHTML = `
+    <defs>
+      <linearGradient id="focusedDecayArea" x1="0%" x2="0%" y1="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(39,130,255,0.30)" />
+        <stop offset="100%" stop-color="rgba(39,130,255,0.04)" />
+      </linearGradient>
+    </defs>
+    <line x1="20" y1="${chartBottom}" x2="340" y2="${chartBottom}" stroke="rgba(88,112,143,0.18)" stroke-width="1.4" />
+    ${nightOverlay}
+    ${doseMarkers}
+    <polygon points="${area}" fill="url(#focusedDecayArea)"></polygon>
+    <polyline points="${points}" fill="none" stroke="#2782ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    ${tickLines}
+  `;
+
+  const centerLevel = getEstimatedActiveLevel(state, center.getTime());
+  els.focusedDayTitle.textContent = `48 hours around ${center.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+  els.focusedDecayLegend.textContent = `Centered on 12 PM for the selected day. Estimated active level at center: ${formatNumber(centerLevel)} ${unitLabel(state)}. Shaded bands show ${ouraSegments.length ? "actual Oura sleep" : "fallback night hours"}.`;
 }
 
 function renderInventory() {
@@ -328,12 +510,30 @@ els.syncOuraButton.addEventListener("click", async () => {
     renderOuraSleep();
     renderDoseSleepChart();
     renderTimingSleepChart();
+    renderCalendar();
+    renderFocusedDecay();
     setNotice("Oura sleep data synced.", "success");
   } catch (error) {
     setNotice(error.message, "error");
   } finally {
     setBusy(els.syncOuraButton, "Syncing Oura...", false);
   }
+});
+
+els.calendarMonthSelect?.addEventListener("change", (event) => {
+  selectedCalendarMonthKey = String(event.target.value || "");
+  selectedCalendarDateKey = getDefaultSelectedDateKey(selectedCalendarMonthKey);
+  renderCalendar();
+  renderFocusedDecay();
+});
+
+els.calendarGrid?.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target : null;
+  const button = target ? target.closest("[data-date]") : null;
+  if (!button) return;
+  selectedCalendarDateKey = button.dataset.date;
+  renderCalendar();
+  renderFocusedDecay();
 });
 
 (async () => {
@@ -345,6 +545,7 @@ els.syncOuraButton.addEventListener("click", async () => {
   renderHeaderMetrics();
   renderSummaryTrend();
   renderCalendar();
+  renderFocusedDecay();
   renderInventory();
   renderLatestSleepMetrics();
   renderSleepFriction();

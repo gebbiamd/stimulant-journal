@@ -416,6 +416,51 @@ function getDoseDecaySeries(state, hours = 24, points = 49) {
   return series;
 }
 
+function getDoseDecaySeriesBetween(state, startMs, endMs, points = 73) {
+  const halfLifeHours = Number(state.settings.decayHalfLifeHours) || defaultState.settings.decayHalfLifeHours;
+  const decayConstant = Math.log(2) / Math.max(halfLifeHours, 0.1);
+  const doseEntries = getDoseEntries(state).filter((entry) => new Date(entry.timestamp).getTime() >= startMs - 6 * halfLifeHours * 60 * 60 * 1000);
+  const series = [];
+
+  for (let index = 0; index < points; index += 1) {
+    const timestamp = startMs + (index / (points - 1)) * (endMs - startMs);
+    let level = 0;
+    for (const entry of doseEntries) {
+      const doseTime = new Date(entry.timestamp).getTime();
+      if (doseTime > timestamp) continue;
+      const elapsedHours = (timestamp - doseTime) / (60 * 60 * 1000);
+      level += Number(entry.amount) * Math.exp(-decayConstant * elapsedHours);
+    }
+    series.push({
+      timestamp,
+      level,
+      label: new Date(timestamp).toLocaleTimeString(undefined, { hour: "numeric" }),
+    });
+  }
+
+  return series;
+}
+
+function getStaticTimeTicks(startMs, endMs, hours = [0, 8, 16]) {
+  const ticks = [];
+  const cursor = startOfLocalDay(new Date(startMs - DAY_MS));
+  const endBoundary = startOfLocalDay(new Date(endMs + DAY_MS));
+
+  for (let dayMs = cursor.getTime(); dayMs <= endBoundary.getTime(); dayMs += DAY_MS) {
+    const day = new Date(dayMs);
+    for (const hour of hours) {
+      const tickTime = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, 0, 0, 0).getTime();
+      if (tickTime < startMs || tickTime > endMs) continue;
+      ticks.push({
+        timestamp: tickTime,
+        label: new Date(tickTime).toLocaleTimeString([], { hour: "numeric" }),
+      });
+    }
+  }
+
+  return ticks;
+}
+
 function getRollingAverage(state, days) {
   const totals = getTotalsByDay(state, days);
   const total = totals.reduce((sum, item) => sum + item.total, 0);

@@ -173,14 +173,14 @@ function renderGauge() {
 }
 
 function renderMiniTrend() {
-  const levels = getDoseDecaySeries(state, 48, 73);
+  const now = Date.now();
+  const windowStart = now - 48 * 60 * 60 * 1000;
+  const levels = getDoseDecaySeriesBetween(state, windowStart, now, 73);
   const width = 360;
   const chartTop = 24;
   const chartBottom = 168;
   const chartHeight = chartBottom - chartTop;
   const maxLevel = Math.max(...levels.map((item) => item.level), 1);
-  const now = Date.now();
-  const windowStart = now - 48 * 60 * 60 * 1000;
   const points = levels
     .map((item, index) => {
       const x = 20 + index * ((width - 40) / (levels.length - 1));
@@ -189,20 +189,18 @@ function renderMiniTrend() {
     })
     .join(" ");
   const area = `20,${chartBottom} ${points} 340,${chartBottom}`;
-  const tickIndexes = [0, 18, 36, 54, 72];
-  const ticks = tickIndexes
-    .map((index) => {
-      const x = 20 + index * ((width - 40) / (levels.length - 1));
+  const axisTicks = getStaticTimeTicks(windowStart, now);
+  const ticks = axisTicks
+    .map((tick) => {
+      const ratio = (tick.timestamp - windowStart) / (now - windowStart);
+      const x = 20 + ratio * (width - 40);
       return `<line x1="${x}" y1="${chartBottom}" x2="${x}" y2="${chartBottom + 6}" stroke="rgba(88,112,143,0.18)" stroke-width="1" />`;
     })
     .join("");
-  els.miniTrendAxis.innerHTML = tickIndexes
-    .map((index) => {
-      const label = new Date(levels[index].timestamp).toLocaleTimeString([], {
-        hour: "numeric",
-        minute: "2-digit",
-      });
-      return `<span>${label}</span>`;
+  els.miniTrendAxis.innerHTML = axisTicks
+    .map((tick) => {
+      const left = ((tick.timestamp - windowStart) / (now - windowStart)) * 100;
+      return `<span style="left:${left}%">${tick.label}</span>`;
     })
     .join("");
   const doseMarkers = getDoseEntries(state)

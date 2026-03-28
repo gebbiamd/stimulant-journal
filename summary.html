@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=42" />
+    <link rel="manifest" href="./manifest.webmanifest?v=43" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=42" />
+    <link rel="stylesheet" href="./styles.css?v=43" />
     <title>Summary | Stimulant Journal</title>
   </head>
   <body data-page="summary">
@@ -60,10 +60,25 @@
         <div class="section-header">
           <div>
             <p class="eyebrow">Calendar</p>
-            <h2>This month</h2>
+            <h2 id="calendarMonthTitle">This month</h2>
           </div>
+          <label class="calendar-month-picker">
+            <span>Month</span>
+            <select id="calendarMonthSelect"></select>
+          </label>
         </div>
         <div id="calendarGrid" class="calendar-grid"></div>
+        <div class="focused-day-panel">
+          <div class="section-header compact-header">
+            <div>
+              <p class="eyebrow">Focused Day</p>
+              <h3 id="focusedDayTitle">Select a date</h3>
+            </div>
+          </div>
+          <svg id="focusedDecayChart" class="mini-trend-chart focused-decay-chart" viewBox="0 0 360 220" preserveAspectRatio="none"></svg>
+          <div id="focusedDecayAxis" class="trend-axis"></div>
+          <div id="focusedDecayLegend" class="trend-legend"></div>
+        </div>
       </section>
 
       <section class="card">
@@ -234,7 +249,7 @@
     <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=42"></script>
-    <script src="./summary.js?v=42"></script>
+    <script src="./journal-core.js?v=43"></script>
+    <script src="./summary.js?v=43"></script>
   </body>
 </html>
