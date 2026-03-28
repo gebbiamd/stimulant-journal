@@ -10,10 +10,10 @@
     <meta name="theme-color" content="#efe1c7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="./manifest.webmanifest?v=24" />
+    <link rel="manifest" href="./manifest.webmanifest?v=25" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=24" />
+    <link rel="stylesheet" href="./styles.css?v=25" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -82,6 +82,7 @@
               <strong id="lastSleepHeadline">No Oura sleep yet</strong>
               <span id="lastSleepDetail">Connect and sync Oura in More Details.</span>
             </div>
+            <button id="syncOuraHomeButton" class="ghost-button compact-action-button" type="button">Sync Oura</button>
             <p id="gaugeReason" class="muted">
               Set your daily target and tablet count in Settings to personalize this view.
             </p>
@@ -174,13 +175,12 @@
             <p class="history-time"></p>
             <p class="history-note muted"></p>
           </div>
-          <button class="delete-button" type="button">Delete</button>
         </div>
       </article>
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=24"></script>
-    <script src="./home.js?v=24"></script>
+    <script src="./journal-core.js?v=25"></script>
+    <script src="./home.js?v=25"></script>
   </body>
 </html>

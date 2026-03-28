@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=24" />
+    <link rel="manifest" href="./manifest.webmanifest?v=25" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=24" />
+    <link rel="stylesheet" href="./styles.css?v=25" />
     <title>Settings | Stimulant Journal</title>
   </head>
   <body data-page="settings">
@@ -22,7 +22,7 @@
         <div class="hero-row">
           <div>
             <p class="eyebrow">Settings</p>
-            <h1>Targets</h1>
+            <h1>Manage</h1>
           </div>
           <a class="ghost-button link-button" href="./index.html">Back Home</a>
         </div>
@@ -31,38 +31,30 @@
       <section class="card">
         <div class="section-header">
           <div>
-            <p class="eyebrow">Account</p>
-            <h2>Supabase sync</h2>
+            <p class="eyebrow">Repair</p>
+            <h2>Edit entries</h2>
           </div>
         </div>
-        <div class="stack-form">
-          <div class="stat-chip">
-            <span>Cloud account</span>
-            <strong id="authStatus">Not signed in</strong>
-          </div>
-          <label>
-            Email
-            <input id="authEmail" name="authEmail" type="email" placeholder="you@example.com" autocomplete="email" />
-          </label>
-          <label>
-            Password
-            <input
-              id="authPassword"
-              name="authPassword"
-              type="password"
-              placeholder="At least 6 characters"
-              autocomplete="current-password"
-            />
-          </label>
-          <div class="data-actions">
-            <button id="authCreateButton" class="nav-button emphasis-button" type="button">Create Account</button>
-            <button id="authSignInButton" class="nav-button emphasis-button" type="button">Sign In</button>
-            <button id="authRefreshButton" class="ghost-button" type="button">Pull Latest Cloud Data</button>
-            <button id="authSignOutButton" class="ghost-button" type="button">Sign Out</button>
-          </div>
-          <p id="authMessage" class="status-callout muted" role="status" aria-live="polite">
-            Create an account once, then sign in with email and password to sync entries and settings across devices.
+        <div class="stack-form compact-settings-form">
+          <p class="muted">
+            Fix bad timestamps, wrong doses, or stray notes here. Each change saves the current state and syncs it to Supabase.
           </p>
+          <div class="split-fields entry-editor-inventory">
+            <label>
+              Current tablets on hand
+              <input id="tabletsOnHand" name="tabletsOnHand" type="number" min="0" step="0.5" />
+            </label>
+            <div class="entry-editor-summary">
+              <span>Inventory shortcut</span>
+              <strong id="inventorySummary">0 on hand</strong>
+            </div>
+          </div>
+          <div class="entry-editor-toolbar">
+            <button id="applyInventoryButton" class="nav-button emphasis-button" type="button">Update Tablets On Hand</button>
+            <button id="reloadEntriesButton" class="ghost-button" type="button">Reload Entries</button>
+          </div>
+          <div id="entryEditorEmpty" class="empty-state hidden">No entries saved yet.</div>
+          <div id="entryEditorList" class="entry-editor-list"></div>
         </div>
       </section>
 
@@ -70,7 +62,7 @@
         <div class="section-header">
           <div>
             <p class="eyebrow">Personalize</p>
-            <h2>Thresholds and inventory</h2>
+            <h2>Targets and inventory</h2>
           </div>
         </div>
         <form id="settingsForm" class="stack-form compact-settings-form">
@@ -123,58 +115,10 @@
                 Vacation cadence (days)
                 <input id="vacationFrequencyDays" name="vacationFrequencyDays" type="number" min="1" step="1" />
               </label>
-              <label>
-                OpenAI relay URL
-                <input id="openAiRelayUrl" name="openAiRelayUrl" type="url" placeholder="https://your-worker.example.com/summary" />
-              </label>
-              <label>
-                OpenAI model
-                <input id="openAiModel" name="openAiModel" type="text" placeholder="gpt-5.4" />
-              </label>
-              <label>
-                Oura client ID
-                <input id="ouraClientId" name="ouraClientId" type="text" placeholder="From your Oura developer app" />
-              </label>
             </div>
           </details>
           <button class="nav-button emphasis-button compact-action-button" type="submit">Save Settings</button>
         </form>
-      </section>
-
-      <section class="card">
-        <div class="section-header">
-          <div>
-            <p class="eyebrow">Integrations</p>
-            <h2>Oura and AI</h2>
-          </div>
-        </div>
-        <div class="stack-form compact-settings-form">
-          <div class="stat-chip">
-            <span>Oura status</span>
-            <strong id="ouraStatus">Not connected</strong>
-          </div>
-          <div class="data-actions">
-            <button id="ouraConnectButton" class="nav-button emphasis-button" type="button">Connect Oura</button>
-            <button id="ouraDisconnectButton" class="ghost-button" type="button">Disconnect Oura</button>
-          </div>
-          <p class="muted">
-            Oura now uses a Supabase-backed server flow. Sign in first, then connect Oura so the integration is attached to your account.
-          </p>
-          <div class="stat-chip">
-            <span>Apple Health</span>
-            <strong>Needs native iPhone bridge</strong>
-          </div>
-          <p class="muted">
-            Apple Health uses HealthKit, which is designed for native iPhone apps rather than a GitHub Pages website. The clean path is either a small iPhone wrapper app or a Shortcuts/export bridge later.
-          </p>
-          <div class="stat-chip">
-            <span>OpenAI summaries</span>
-            <strong id="openAiStatus">Relay not configured</strong>
-          </div>
-          <p class="muted">
-            OpenAI API keys should not live in browser code. This app expects a secure relay URL you control.
-          </p>
-        </div>
       </section>
 
       <section class="card">
@@ -196,30 +140,78 @@
       <section class="card">
         <div class="section-header">
           <div>
-            <p class="eyebrow">Repair</p>
-            <h2>Edit entries</h2>
+            <p class="eyebrow">Integrations</p>
+            <h2>Oura and AI</h2>
           </div>
         </div>
         <div class="stack-form compact-settings-form">
-          <p class="muted">
-            Fix bad timestamps, wrong doses, or stray notes here. Each change saves the current state and syncs it to Supabase.
-          </p>
-          <div class="split-fields entry-editor-inventory">
+          <div class="stat-chip">
+            <span>Oura status</span>
+            <strong id="ouraStatus">Not connected</strong>
+          </div>
+          <div class="data-actions compact-actions">
+            <button id="ouraConnectButton" class="nav-button emphasis-button" type="button">Connect Oura</button>
+            <button id="ouraDisconnectButton" class="ghost-button" type="button">Disconnect Oura</button>
+          </div>
+          <label>
+            OpenAI relay URL
+            <input id="openAiRelayUrl" name="openAiRelayUrl" type="url" placeholder="https://your-worker.example.com/summary" />
+          </label>
+          <div class="split-fields">
             <label>
-              Current tablets on hand
-              <input id="tabletsOnHand" name="tabletsOnHand" type="number" min="0" step="0.5" />
+              OpenAI model
+              <input id="openAiModel" name="openAiModel" type="text" placeholder="gpt-5.4" />
             </label>
-            <div class="entry-editor-summary">
-              <span>Inventory shortcut</span>
-              <strong id="inventorySummary">0 on hand</strong>
-            </div>
+            <label>
+              Oura client ID
+              <input id="ouraClientId" name="ouraClientId" type="text" placeholder="From your Oura developer app" />
+            </label>
           </div>
-          <div class="entry-editor-toolbar">
-            <button id="applyInventoryButton" class="nav-button emphasis-button" type="button">Update Tablets On Hand</button>
-            <button id="reloadEntriesButton" class="ghost-button" type="button">Reload Entries</button>
+          <div class="stat-chip">
+            <span>OpenAI summaries</span>
+            <strong id="openAiStatus">Relay not configured</strong>
           </div>
-          <div id="entryEditorEmpty" class="empty-state hidden">No entries saved yet.</div>
-          <div id="entryEditorList" class="entry-editor-list"></div>
+          <p class="muted">
+            Oura sync is manual right now. Connect Oura here, then use Sync Oura from Home or More Details. The AI relay can turn doses plus Oura trends into more useful pattern summaries.
+          </p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Account</p>
+            <h2>Supabase sync</h2>
+          </div>
+        </div>
+        <div class="stack-form compact-settings-form">
+          <div class="stat-chip">
+            <span>Cloud account</span>
+            <strong id="authStatus">Not signed in</strong>
+          </div>
+          <label>
+            Email
+            <input id="authEmail" name="authEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+          </label>
+          <label>
+            Password
+            <input
+              id="authPassword"
+              name="authPassword"
+              type="password"
+              placeholder="At least 6 characters"
+              autocomplete="current-password"
+            />
+          </label>
+          <div class="data-actions compact-actions">
+            <button id="authCreateButton" class="nav-button emphasis-button" type="button">Create Account</button>
+            <button id="authSignInButton" class="nav-button emphasis-button" type="button">Sign In</button>
+            <button id="authRefreshButton" class="ghost-button" type="button">Pull Latest Cloud Data</button>
+            <button id="authSignOutButton" class="ghost-button" type="button">Sign Out</button>
+          </div>
+          <p id="authMessage" class="status-callout muted" role="status" aria-live="polite">
+            Create an account once, then sign in with email and password to sync entries and settings across devices.
+          </p>
         </div>
       </section>
 
@@ -230,7 +222,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=24"></script>
-    <script src="./settings.js?v=24"></script>
+    <script src="./journal-core.js?v=25"></script>
+    <script src="./settings.js?v=25"></script>
   </body>
 </html>

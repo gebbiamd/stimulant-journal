@@ -13,6 +13,7 @@ const els = {
   doseNote: document.querySelector("#doseNote"),
   doseMgHint: document.querySelector("#doseMgHint"),
   nowButton: document.querySelector("#nowButton"),
+  syncOuraHomeButton: document.querySelector("#syncOuraHomeButton"),
   doseUnitLabel: document.querySelector("#doseUnitLabel"),
   headerCard: document.querySelector(".header-card"),
   thermoFill: document.querySelector("#thermoFill"),
@@ -219,7 +220,6 @@ function renderRecent() {
       day: "numeric",
     });
     fragment.querySelector(".history-note").textContent = entry.note || "No note";
-    fragment.querySelector(".delete-button").dataset.id = entry.id;
     els.recentList.appendChild(fragment);
   }
 }
@@ -233,6 +233,19 @@ function render() {
 els.nowButton.addEventListener("click", () => {
   setDateTimeInputNow(els.doseTime);
   setNotice("Dose timestamp set to the current time.", "success");
+});
+els.syncOuraHomeButton?.addEventListener("click", async () => {
+  setBusy(els.syncOuraHomeButton, "Syncing Oura...", true);
+  setNotice("Syncing recent Oura sleep data...", "warning");
+  try {
+    await syncOuraSleep(state);
+    render();
+    setNotice("Oura sleep data synced.", "success");
+  } catch (error) {
+    setNotice(error.message, "error");
+  } finally {
+    setBusy(els.syncOuraHomeButton, "Syncing Oura...", false);
+  }
 });
 els.doseForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -252,13 +265,6 @@ els.doseForm.addEventListener("submit", (event) => {
   render();
   setNotice(hasDose ? "Dose entry saved." : "Note saved without a dose.", "success");
   setBusy(submitButton, "Saving...", false);
-});
-els.recentList.addEventListener("click", (event) => {
-  const button = event.target.closest(".delete-button");
-  if (!button) return;
-  deleteEntry(state, button.dataset.id);
-  render();
-  setNotice("Entry deleted.", "warning");
 });
 
 setDateTimeInputNow(els.doseTime);

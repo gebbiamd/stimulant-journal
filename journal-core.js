@@ -654,6 +654,58 @@ function getSleepInsightSummary(state) {
   return `Higher-dose days averaged ${formatNumber(avgHours(higher))}h sleep and a ${formatNumber(avgScore(higher))} sleep score, versus ${formatNumber(avgHours(lower))}h and ${formatNumber(avgScore(lower))} on lower-dose days.`;
 }
 
+function getOuraAiContext(state) {
+  const sleepPoints = getSleepDosePoints(state, 14).filter((point) => Number.isFinite(point.sleepHours));
+  const latestSleep = getLatestOuraSleep(state);
+  const averageSleepHours = sleepPoints.length
+    ? sleepPoints.reduce((sum, point) => sum + Number(point.sleepHours || 0), 0) / sleepPoints.length
+    : null;
+  const averageSleepScore = sleepPoints.length
+    ? sleepPoints.reduce((sum, point) => sum + Number(point.sleepScore || 0), 0) / sleepPoints.length
+    : null;
+  const lateDoseThreshold = 15;
+  const lateDoseNights = sleepPoints.filter((point) => Number.isFinite(point.lastDoseHour) && point.lastDoseHour >= lateDoseThreshold);
+  const earlierDoseNights = sleepPoints.filter((point) => Number.isFinite(point.lastDoseHour) && point.lastDoseHour < lateDoseThreshold);
+  const summarizeGroup = (items) => {
+    if (!items.length) return null;
+    return {
+      count: items.length,
+      averageSleepHours: items.reduce((sum, point) => sum + Number(point.sleepHours || 0), 0) / items.length,
+      averageSleepScore: items.reduce((sum, point) => sum + Number(point.sleepScore || 0), 0) / items.length,
+      averageDoseMg: items.reduce((sum, point) => sum + Number(point.doseTotal || 0), 0) / items.length,
+    };
+  };
+
+  return {
+    latestSleep: latestSleep
+      ? {
+          score: latestSleep.score ?? null,
+          hours: latestSleep.total_sleep_duration ? Number(latestSleep.total_sleep_duration) / 3600 : null,
+          bedtimeStart: latestSleep.bedtime_start || null,
+          bedtimeEnd: latestSleep.bedtime_end || null,
+        }
+      : null,
+    averageSleepHours,
+    averageSleepScore,
+    sleepInsightSummary: getSleepInsightSummary(state),
+    laterDoseComparison: {
+      thresholdHour: lateDoseThreshold,
+      later: summarizeGroup(lateDoseNights),
+      earlier: summarizeGroup(earlierDoseNights),
+    },
+    matchedNights: sleepPoints.map((point) => ({
+      dayLabel: point.dayLabel,
+      bedtime: point.bedtime?.toISOString?.() || null,
+      lastDoseTime: point.lastDose?.timestamp || null,
+      lastDoseHour: point.lastDoseHour,
+      doseTotalMg: point.doseTotal,
+      sleepHours: point.sleepHours,
+      sleepScore: point.sleepScore,
+      note: point.lastDose?.note || "",
+    })),
+  };
+}
+
 async function generateAiSummary(state) {
   const relayUrl = (state.settings.openAiRelayUrl || "").trim();
   if (!relayUrl) throw new Error("Add your OpenAI relay URL in Settings first.");
@@ -665,6 +717,7 @@ async function generateAiSummary(state) {
       settings: state.settings,
       entries: recentEntries,
       ouraSleep: getRecentOuraSleep(state).slice(0, 14),
+      ouraDerived: getOuraAiContext(state),
     },
   };
 
