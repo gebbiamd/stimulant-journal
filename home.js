@@ -36,7 +36,31 @@ const els = {
   recentList: document.querySelector("#recentList"),
   recentEmpty: document.querySelector("#recentEmpty"),
   activityItemTemplate: document.querySelector("#activityItemTemplate"),
+  homeMessage: document.querySelector("#homeMessage"),
 };
+
+function setNotice(message, tone = "info") {
+  if (!els.homeMessage) return;
+  els.homeMessage.textContent = message;
+  els.homeMessage.dataset.tone = tone;
+  els.homeMessage.classList.remove("is-fresh");
+  void els.homeMessage.offsetWidth;
+  els.homeMessage.classList.add("is-fresh");
+}
+
+function setBusy(button, busyLabel, isBusy) {
+  if (!button) return;
+  if (isBusy) {
+    if (!button.dataset.originalLabel) button.dataset.originalLabel = button.textContent;
+    button.textContent = busyLabel;
+    button.disabled = true;
+    button.classList.add("is-busy");
+    return;
+  }
+  button.textContent = button.dataset.originalLabel || button.textContent;
+  button.disabled = false;
+  button.classList.remove("is-busy");
+}
 
 function renderGauge() {
   const todayEntries = getTodayDoseEntries(state);
@@ -177,29 +201,41 @@ function render() {
   renderRecent();
 }
 
-els.nowButton.addEventListener("click", () => setDateTimeInputNow(els.doseTime));
+els.nowButton.addEventListener("click", () => {
+  setDateTimeInputNow(els.doseTime);
+  setNotice("Dose timestamp set to the current time.", "success");
+});
 els.doseForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const tabletCount = Number.parseFloat(els.doseAmount.value);
   if (!Number.isFinite(tabletCount) || tabletCount <= 0) return;
+  const submitButton = els.doseForm.querySelector('button[type="submit"]');
+  setBusy(submitButton, "Saving...", true);
   saveDoseEntry(state, tabletCount, els.doseTime.value, els.doseNote.value);
   els.doseForm.reset();
   setDateTimeInputNow(els.doseTime);
   render();
+  setNotice("Dose saved.", "success");
+  setBusy(submitButton, "Saving...", false);
 });
 els.noteForm.addEventListener("submit", (event) => {
   event.preventDefault();
   if (!els.journalNote.value.trim()) return;
+  const submitButton = els.noteForm.querySelector('button[type="submit"]');
+  setBusy(submitButton, "Saving...", true);
   saveNoteEntry(state, els.noteTime.value, els.journalNote.value);
   els.noteForm.reset();
   setDateTimeInputNow(els.noteTime);
   render();
+  setNotice("Journal note saved.", "success");
+  setBusy(submitButton, "Saving...", false);
 });
 els.recentList.addEventListener("click", (event) => {
   const button = event.target.closest(".delete-button");
   if (!button) return;
   deleteEntry(state, button.dataset.id);
   render();
+  setNotice("Entry deleted.", "warning");
 });
 
 setDateTimeInputNow(els.doseTime);
@@ -210,6 +246,7 @@ renderInstallPrompt(els.installButton);
     await loadRemoteStateInto(state);
   } catch (error) {
     console.error(error);
+    setNotice(error.message, "error");
   }
   registerServiceWorker();
   render();

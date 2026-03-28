@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=16" />
+    <link rel="manifest" href="./manifest.webmanifest?v=17" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=16" />
+    <link rel="stylesheet" href="./styles.css?v=17" />
     <title>Summary | Stimulant Journal</title>
   </head>
   <body data-page="summary">
@@ -21,8 +21,8 @@
       <section class="hero card compact-hero">
         <div class="hero-row">
           <div>
-            <p class="eyebrow">Summary</p>
-            <h1>Trends</h1>
+            <p class="eyebrow">More Details</p>
+            <h1>Details</h1>
           </div>
           <a class="ghost-button link-button" href="./index.html">Back Home</a>
         </div>
@@ -95,8 +95,11 @@
             <p class="eyebrow">Oura</p>
             <h2>Sleep correlation</h2>
           </div>
-          <button id="syncOuraButton" class="secondary-button" type="button">Sync Oura</button>
+          <button id="syncOuraButton" class="nav-button emphasis-button" type="button">Sync Oura</button>
         </div>
+        <p id="summaryMessage" class="status-callout muted" role="status" aria-live="polite">
+          Oura sync and AI summary actions will show progress here.
+        </p>
         <div id="ouraSleepEmpty" class="empty-state">Connect Oura in Settings to import recent sleep data.</div>
         <div id="ouraSleepList" class="history-list"></div>
       </section>
@@ -107,7 +110,7 @@
             <p class="eyebrow">AI</p>
             <h2>Journal summary</h2>
           </div>
-          <button id="generateSummaryButton" class="secondary-button" type="button">Generate Summary</button>
+          <button id="generateSummaryButton" class="nav-button emphasis-button" type="button">Generate Summary</button>
         </div>
         <div id="aiSummaryBox" class="empty-state">
           Add an OpenAI relay URL in Settings, then generate a summary from recent doses, notes, and imported Oura sleep.
@@ -121,7 +124,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=16"></script>
-    <script src="./summary.js?v=16"></script>
+    <script src="./journal-core.js?v=17"></script>
+    <script src="./summary.js?v=17"></script>
   </body>
 </html>

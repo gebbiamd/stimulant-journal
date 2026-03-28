@@ -20,7 +20,31 @@ const els = {
   ouraSleepList: document.querySelector("#ouraSleepList"),
   generateSummaryButton: document.querySelector("#generateSummaryButton"),
   aiSummaryBox: document.querySelector("#aiSummaryBox"),
+  summaryMessage: document.querySelector("#summaryMessage"),
 };
+
+function setNotice(message, tone = "info") {
+  if (!els.summaryMessage) return;
+  els.summaryMessage.textContent = message;
+  els.summaryMessage.dataset.tone = tone;
+  els.summaryMessage.classList.remove("is-fresh");
+  void els.summaryMessage.offsetWidth;
+  els.summaryMessage.classList.add("is-fresh");
+}
+
+function setBusy(button, busyLabel, isBusy) {
+  if (!button) return;
+  if (isBusy) {
+    if (!button.dataset.originalLabel) button.dataset.originalLabel = button.textContent;
+    button.textContent = busyLabel;
+    button.disabled = true;
+    button.classList.add("is-busy");
+    return;
+  }
+  button.textContent = button.dataset.originalLabel || button.textContent;
+  button.disabled = false;
+  button.classList.remove("is-busy");
+}
 
 function renderHeaderMetrics() {
   const monthTotal = getCurrentMonthDoseEntries(state).reduce((sum, entry) => sum + Number(entry.amount), 0);
@@ -42,8 +66,14 @@ function renderSummaryTrend() {
     .join(" ");
   const area = `16,168 ${points} 344,168`;
   els.summaryTrendChart.innerHTML = `
-    <polygon points="${area}" fill="rgba(201,121,86,0.18)"></polygon>
-    <polyline points="${points}" fill="none" stroke="#9c4f2f" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    <defs>
+      <linearGradient id="summaryArea" x1="0%" x2="0%" y1="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(22,148,255,0.34)" />
+        <stop offset="100%" stop-color="rgba(22,148,255,0.06)" />
+      </linearGradient>
+    </defs>
+    <polygon points="${area}" fill="url(#summaryArea)"></polygon>
+    <polyline points="${points}" fill="none" stroke="#1694ff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
   `;
   els.summaryTrendLegend.textContent = `30-day total: ${formatNumber(totals.reduce((sum, item) => sum + item.total, 0))} ${unitLabel(state)}`;
 }
@@ -108,27 +138,32 @@ function renderOuraSleep() {
 }
 
 els.syncOuraButton.addEventListener("click", async () => {
-  els.syncOuraButton.disabled = true;
+  setBusy(els.syncOuraButton, "Syncing Oura...", true);
+  setNotice("Syncing recent Oura sleep data...", "warning");
   try {
     await syncOuraSleep(state);
     renderOuraSleep();
+    setNotice("Oura sleep data synced.", "success");
   } catch (error) {
-    window.alert(error.message);
+    setNotice(error.message, "error");
   } finally {
-    els.syncOuraButton.disabled = false;
+    setBusy(els.syncOuraButton, "Syncing Oura...", false);
   }
 });
 
 els.generateSummaryButton.addEventListener("click", async () => {
-  els.generateSummaryButton.disabled = true;
+  setBusy(els.generateSummaryButton, "Generating...", true);
+  setNotice("Generating AI summary...", "warning");
   els.aiSummaryBox.textContent = "Generating...";
   try {
     const result = await generateAiSummary(state);
     els.aiSummaryBox.textContent = result.summary || JSON.stringify(result, null, 2);
+    setNotice("AI summary generated.", "success");
   } catch (error) {
     els.aiSummaryBox.textContent = error.message;
+    setNotice(error.message, "error");
   } finally {
-    els.generateSummaryButton.disabled = false;
+    setBusy(els.generateSummaryButton, "Generating...", false);
   }
 });
 
@@ -137,6 +172,7 @@ els.generateSummaryButton.addEventListener("click", async () => {
     await loadRemoteStateInto(state);
   } catch (error) {
     els.aiSummaryBox.textContent = error.message;
+    setNotice(error.message, "error");
   }
   renderHeaderMetrics();
   renderSummaryTrend();

@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=16" />
+    <link rel="manifest" href="./manifest.webmanifest?v=17" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=16" />
+    <link rel="stylesheet" href="./styles.css?v=17" />
     <title>Settings | Stimulant Journal</title>
   </head>
   <body data-page="settings">
@@ -55,8 +55,8 @@
             />
           </label>
           <div class="data-actions">
-            <button id="authCreateButton" class="secondary-button" type="button">Create Account</button>
-            <button id="authSignInButton" class="primary-button" type="button">Sign In</button>
+            <button id="authCreateButton" class="nav-button emphasis-button" type="button">Create Account</button>
+            <button id="authSignInButton" class="nav-button emphasis-button" type="button">Sign In</button>
             <button id="authRefreshButton" class="ghost-button" type="button">Pull Latest Cloud Data</button>
             <button id="authSignOutButton" class="ghost-button" type="button">Sign Out</button>
           </div>
@@ -147,7 +147,7 @@
             <strong id="ouraStatus">Not connected</strong>
           </div>
           <div class="data-actions">
-            <button id="ouraConnectButton" class="secondary-button" type="button">Connect Oura</button>
+            <button id="ouraConnectButton" class="nav-button emphasis-button" type="button">Connect Oura</button>
             <button id="ouraDisconnectButton" class="ghost-button" type="button">Disconnect Oura</button>
           </div>
           <p class="muted">
@@ -193,7 +193,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=16"></script>
-    <script src="./settings.js?v=16"></script>
+    <script src="./journal-core.js?v=17"></script>
+    <script src="./settings.js?v=17"></script>
   </body>
 </html>
