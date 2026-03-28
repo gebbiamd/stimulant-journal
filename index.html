@@ -10,10 +10,10 @@
     <meta name="theme-color" content="#efe1c7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="./manifest.webmanifest?v=47" />
+    <link rel="manifest" href="./manifest.webmanifest?v=48" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=47" />
+    <link rel="stylesheet" href="./styles.css?v=48" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -38,12 +38,14 @@
       </section>
 
       <section class="card header-card">
-        <div class="section-header">
-          <div>
+        <div class="section-header section-header-inline">
+          <div class="title-inline-wrap">
             <p class="eyebrow">Dose Gauge</p>
-            <h2 id="todayHeaderTitle">💡 Today’s dose</h2>
+            <div class="title-inline-row">
+              <h2 id="todayHeaderTitle">💡 Today’s dose</h2>
+              <span id="todayGaugeBadge" class="status-badge neutral">Steady</span>
+            </div>
           </div>
-          <span id="todayGaugeBadge" class="status-badge neutral">Steady</span>
         </div>
         <div class="header-layout">
           <div class="thermo-panel">
@@ -250,7 +252,7 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=47"></script>
-    <script src="./home.js?v=47"></script>
+    <script src="./journal-core.js?v=48"></script>
+    <script src="./home.js?v=48"></script>
   </body>
 </html>
