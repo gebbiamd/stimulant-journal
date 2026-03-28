@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=17" />
+    <link rel="manifest" href="./manifest.webmanifest?v=18" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=17" />
+    <link rel="stylesheet" href="./styles.css?v=18" />
     <title>Summary | Stimulant Journal</title>
   </head>
   <body data-page="summary">
@@ -107,6 +107,24 @@
       <section class="card">
         <div class="section-header">
           <div>
+            <p class="eyebrow">How Oura Is Used</p>
+            <h2>Current integration</h2>
+          </div>
+        </div>
+        <div class="stack-form">
+          <div class="stat-chip">
+            <span>Current behavior</span>
+            <strong>Imports recent sleep records into the Summary page</strong>
+          </div>
+          <p class="muted">
+            Right now Oura sleep is stored with your synced journal data and shown below the Oura section. It is not yet changing the dose gauge, drawing sleep overlays from real bedtimes, or generating automatic insights unless you also add the OpenAI relay later.
+          </p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
             <p class="eyebrow">AI</p>
             <h2>Journal summary</h2>
           </div>
@@ -118,13 +136,13 @@
       </section>
 
       <section class="footer-nav">
-        <a class="nav-button" href="./index.html">Home</a>
-        <a class="nav-button" href="./settings.html">Settings</a>
+        <a class="nav-button emphasis-button" href="./index.html">Home</a>
+        <a class="nav-button emphasis-button" href="./settings.html">Settings</a>
       </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=17"></script>
-    <script src="./summary.js?v=17"></script>
+    <script src="./journal-core.js?v=18"></script>
+    <script src="./summary.js?v=18"></script>
   </body>
 </html>

@@ -119,6 +119,12 @@ function renderOuraSleep() {
   const sleep = getRecentOuraSleep(state).slice(0, 10);
   els.ouraSleepList.innerHTML = "";
   els.ouraSleepEmpty.classList.toggle("hidden", sleep.length > 0);
+  if (sleep.length > 0) {
+    const lastSync = state.integrations?.oura?.lastSyncAt
+      ? new Date(state.integrations.oura.lastSyncAt).toLocaleString()
+      : "recently";
+    setNotice(`Oura sleep records loaded. Last synced ${lastSync}.`, "success");
+  }
   for (const item of sleep) {
     const entry = document.createElement("article");
     entry.className = "history-item";

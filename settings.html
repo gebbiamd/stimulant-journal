@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=17" />
+    <link rel="manifest" href="./manifest.webmanifest?v=18" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=17" />
+    <link rel="stylesheet" href="./styles.css?v=18" />
     <title>Settings | Stimulant Journal</title>
   </head>
   <body data-page="settings">
@@ -130,7 +130,7 @@
             Oura client ID
             <input id="ouraClientId" name="ouraClientId" type="text" placeholder="From your Oura developer app" />
           </label>
-          <button class="primary-button" type="submit">Save Settings</button>
+          <button class="nav-button emphasis-button" type="submit">Save Settings</button>
         </form>
       </section>
 
@@ -178,8 +178,8 @@
           </div>
         </div>
         <div class="data-actions">
-          <button id="exportButton" class="secondary-button" type="button">Export JSON</button>
-          <label class="upload-button">
+          <button id="exportButton" class="nav-button emphasis-button" type="button">Export JSON</button>
+          <label class="upload-button nav-button emphasis-button">
             Import JSON
             <input id="importInput" type="file" accept="application/json" />
           </label>
@@ -187,13 +187,13 @@
       </section>
 
       <section class="footer-nav">
-        <a class="nav-button" href="./index.html">Home</a>
-        <a class="nav-button" href="./summary.html">Summary</a>
+        <a class="nav-button emphasis-button" href="./index.html">Home</a>
+        <a class="nav-button emphasis-button" href="./summary.html">More Details</a>
       </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=17"></script>
-    <script src="./settings.js?v=17"></script>
+    <script src="./journal-core.js?v=18"></script>
+    <script src="./settings.js?v=18"></script>
   </body>
 </html>
