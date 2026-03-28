@@ -138,11 +138,18 @@ function renderGauge() {
   if (latestSleep && latestSleep.total_sleep_duration) {
     const sleepHours = Number(latestSleep.total_sleep_duration) / 3600;
     const bedtime = latestSleep.bedtime_start ? new Date(latestSleep.bedtime_start) : null;
+    const displayDate = getOuraDisplayDate(latestSleep);
+    const todayKey = dateKey(new Date());
+    const displayKey = displayDate ? dateKey(displayDate) : "";
     const scoreLabel = latestSleep.score ?? "Pending";
     els.lastSleepHeadline.textContent = `${formatNumber(sleepHours)}h • score ${scoreLabel}`;
-    els.lastSleepDetail.textContent = bedtime
-      ? `Bedtime ${bedtime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
-      : "Latest synced Oura sleep";
+    if (displayDate && displayKey !== todayKey) {
+      els.lastSleepDetail.textContent = `Newest Oura day ${displayDate.toLocaleDateString()}`;
+    } else {
+      els.lastSleepDetail.textContent = bedtime
+        ? `Bedtime ${bedtime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+        : "Latest synced Oura sleep";
+    }
   } else {
     els.lastSleepHeadline.textContent = "No Oura sleep yet";
     els.lastSleepDetail.textContent = "Connect and sync Oura in More Details.";

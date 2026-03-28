@@ -135,12 +135,15 @@ function renderLatestSleepMetrics() {
     return;
   }
   const bedtime = latestSleep.bedtime_start ? new Date(latestSleep.bedtime_start) : null;
+  const displayDate = getOuraDisplayDate(latestSleep);
   const hours = latestSleep.total_sleep_duration ? Number(latestSleep.total_sleep_duration) / 3600 : null;
   els.latestSleepScore.textContent = latestSleep.score ?? "Pending";
   els.latestSleepHours.textContent = hours ? `${formatNumber(hours)}h` : "-";
   els.latestSleepBedtime.textContent = bedtime
     ? bedtime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-    : "-";
+    : displayDate
+      ? displayDate.toLocaleDateString()
+      : "-";
 }
 
 function renderSleepFriction() {
@@ -237,41 +240,45 @@ function renderDoseSleepChart() {
   }
 
   const width = 360;
-  const height = 220;
-  const chartLeft = 18;
-  const chartBottom = 184;
-  const chartTop = 24;
-  const chartWidth = width - 36;
+  const chartLeft = 26;
+  const chartRight = 334;
+  const chartBottom = 190;
+  const chartTop = 18;
+  const chartWidth = chartRight - chartLeft;
   const maxDose = Math.max(...points.map((point) => point.doseTotal), 1);
-  const maxSleep = Math.max(...points.map((point) => point.sleepHours || 0), 1);
-  const barWidth = Math.max(16, chartWidth / (points.length * 1.9));
+  const minSleep = Math.max(0, Math.min(...points.map((point) => point.sleepHours || 0)) - 0.5);
+  const maxSleep = Math.max(...points.map((point) => point.sleepHours || 0), 1) + 0.35;
+  const slotWidth = chartWidth / points.length;
+  const barWidth = Math.min(26, Math.max(18, slotWidth * 0.54));
 
   const bars = points
     .map((point, index) => {
-      const x = chartLeft + index * (chartWidth / points.length) + 6;
+      const x = chartLeft + index * slotWidth + (slotWidth - barWidth) / 2;
       const h = ((point.doseTotal || 0) / maxDose) * (chartBottom - chartTop);
       const y = chartBottom - h;
-      return `<rect x="${x}" y="${y}" width="${barWidth}" height="${Math.max(h, 2)}" rx="8" fill="rgba(31,156,255,0.45)" />`;
+      return `<rect x="${x}" y="${y}" width="${barWidth}" height="${Math.max(h, 4)}" rx="9" fill="rgba(18,110,235,0.72)" />`;
     })
     .join("");
 
   const linePoints = points
     .map((point, index) => {
-      const x = chartLeft + index * (chartWidth / points.length) + 6 + barWidth / 2;
-      const y = chartBottom - ((point.sleepHours || 0) / maxSleep) * (chartBottom - chartTop);
+      const x = chartLeft + index * slotWidth + slotWidth / 2;
+      const y = chartBottom - (((point.sleepHours || 0) - minSleep) / Math.max(maxSleep - minSleep, 0.5)) * (chartBottom - chartTop);
       return `${x},${y}`;
     })
     .join(" ");
 
   els.doseSleepChart.innerHTML = `
+    <line x1="${chartLeft}" y1="${chartTop}" x2="${chartRight}" y2="${chartTop}" stroke="rgba(33,79,142,0.08)" stroke-width="1" />
+    <line x1="${chartLeft}" y1="${(chartTop + chartBottom) / 2}" x2="${chartRight}" y2="${(chartTop + chartBottom) / 2}" stroke="rgba(33,79,142,0.08)" stroke-width="1" />
     <line x1="${chartLeft}" y1="${chartBottom}" x2="${width - chartLeft}" y2="${chartBottom}" stroke="rgba(33,79,142,0.22)" stroke-width="1.5" />
     ${bars}
-    <polyline points="${linePoints}" fill="none" stroke="#00f0df" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    <polyline points="${linePoints}" fill="none" stroke="#73efe7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></polyline>
     ${points
       .map((point, index) => {
-        const x = chartLeft + index * (chartWidth / points.length) + 6 + barWidth / 2;
-        const y = chartBottom - ((point.sleepHours || 0) / maxSleep) * (chartBottom - chartTop);
-        return `<circle cx="${x}" cy="${y}" r="4.5" fill="#00f0df" />`;
+        const x = chartLeft + index * slotWidth + slotWidth / 2;
+        const y = chartBottom - (((point.sleepHours || 0) - minSleep) / Math.max(maxSleep - minSleep, 0.5)) * (chartBottom - chartTop);
+        return `<circle cx="${x}" cy="${y}" r="5.5" fill="#73efe7" />`;
       })
       .join("")}
   `;

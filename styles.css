@@ -707,6 +707,10 @@ textarea {
   height: 220px;
 }
 
+#doseSleepChart {
+  height: 248px;
+}
+
 .trend-legend {
   margin-top: 0.75rem;
   color: var(--muted);
@@ -756,15 +760,21 @@ textarea {
 }
 
 .calendar-cell.light {
-  background: rgba(88, 114, 73, 0.16);
+  background: linear-gradient(180deg, rgba(135, 222, 170, 0.44), rgba(76, 181, 121, 0.24));
+  border: 1px solid rgba(71, 164, 108, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 20px rgba(66, 164, 108, 0.12);
 }
 
 .calendar-cell.medium {
-  background: rgba(160, 103, 26, 0.16);
+  background: linear-gradient(180deg, rgba(255, 211, 118, 0.44), rgba(239, 171, 52, 0.24));
+  border: 1px solid rgba(216, 144, 38, 0.32);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 20px rgba(216, 144, 38, 0.12);
 }
 
 .calendar-cell.heavy {
-  background: rgba(157, 58, 45, 0.16);
+  background: linear-gradient(180deg, rgba(255, 150, 138, 0.5), rgba(229, 90, 112, 0.28));
+  border: 1px solid rgba(208, 74, 99, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 20px rgba(208, 74, 99, 0.14);
 }
 
 .calendar-cell.empty {
@@ -849,7 +859,7 @@ textarea {
 .oura-table-head,
 .oura-table-row {
   display: grid;
-  grid-template-columns: 1.2fr 0.7fr 0.7fr;
+  grid-template-columns: 1.05fr 0.8fr 0.8fr;
   column-gap: 0.55rem;
   align-items: center;
 }
@@ -862,6 +872,11 @@ textarea {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  justify-items: center;
+}
+
+.oura-table-head span:first-child {
+  justify-self: start;
 }
 
 .oura-table-row {
@@ -887,9 +902,14 @@ textarea {
   color: #315f99;
 }
 
+.oura-table-day {
+  justify-self: start;
+}
+
 .oura-table-score,
 .oura-table-hours {
-  text-align: right;
+  justify-self: center;
+  text-align: center;
 }
 
 .entry-editor-list {
