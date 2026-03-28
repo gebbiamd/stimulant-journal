@@ -10,10 +10,10 @@
     <meta name="theme-color" content="#efe1c7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="./manifest.webmanifest?v=40" />
+    <link rel="manifest" href="./manifest.webmanifest?v=41" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=40" />
+    <link rel="stylesheet" href="./styles.css?v=41" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -203,9 +203,33 @@
     </main>
 
     <nav class="tab-bar" aria-label="Primary">
-      <a class="tab-link is-active" href="./index.html">Home</a>
-      <a class="tab-link" href="./summary.html">More Info</a>
-      <a class="tab-link" href="./settings.html">Settings</a>
+      <a class="tab-link is-active" href="./index.html" aria-current="page">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M4 10.75 12 4l8 6.75V20a1 1 0 0 1-1 1h-4.75v-6h-4.5v6H5a1 1 0 0 1-1-1z"></path>
+          </svg>
+        </span>
+        <span class="tab-label">Home</span>
+      </a>
+      <a class="tab-link" href="./summary.html">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 10v6"></path>
+            <circle cx="12" cy="7.2" r="1"></circle>
+          </svg>
+        </span>
+        <span class="tab-label">More Info</span>
+      </a>
+      <a class="tab-link" href="./settings.html">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M12 3.5 14 4l.8 2.05 2.1.85 1.65-1.15 1.4 1.4-1.15 1.65.85 2.1L20.5 12l-.5 2-2.05.8-.85 2.1 1.15 1.65-1.4 1.4-1.65-1.15-2.1.85L12 20.5l-2-.5-.8-2.05-2.1-.85-1.65 1.15-1.4-1.4 1.15-1.65-.85-2.1L3.5 12l.5-2 2.05-.8.85-2.1-1.15-1.65 1.4-1.4 1.65 1.15 2.1-.85z"></path>
+            <circle cx="12" cy="12" r="3.1"></circle>
+          </svg>
+        </span>
+        <span class="tab-label">Settings</span>
+      </a>
     </nav>
 
     <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
@@ -218,7 +242,7 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=40"></script>
-    <script src="./home.js?v=40"></script>
+    <script src="./journal-core.js?v=41"></script>
+    <script src="./home.js?v=41"></script>
   </body>
 </html>
