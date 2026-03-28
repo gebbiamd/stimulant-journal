@@ -8,15 +8,13 @@ if (consumeOuraRedirect(state)) {
 const els = {
   installButton: document.querySelector("#installButton"),
   doseForm: document.querySelector("#doseForm"),
-  noteForm: document.querySelector("#noteForm"),
   doseAmount: document.querySelector("#doseAmount"),
   doseTime: document.querySelector("#doseTime"),
   doseNote: document.querySelector("#doseNote"),
   doseMgHint: document.querySelector("#doseMgHint"),
-  noteTime: document.querySelector("#noteTime"),
-  journalNote: document.querySelector("#journalNote"),
   nowButton: document.querySelector("#nowButton"),
   doseUnitLabel: document.querySelector("#doseUnitLabel"),
+  headerCard: document.querySelector(".header-card"),
   thermoFill: document.querySelector("#thermoFill"),
   targetMarker: document.querySelector("#targetMarker"),
   scaleTop: document.querySelector("#scaleTop"),
@@ -81,6 +79,7 @@ function renderGauge() {
     : "None";
   els.todayGaugeBadge.textContent = gauge.label;
   els.todayGaugeBadge.className = `status-badge ${gauge.tone}`;
+  els.headerCard.className = `card header-card gauge-${gauge.tone}`;
   els.todayGaugeLabel.textContent = `${tabletLabel(totalTablets)} today • ${Math.round(gauge.ratio * 100)}% of your daily mg target`;
   els.gaugeReason.textContent = `${gauge.reason} Monthly tablets used: ${formatNumber(tabletUsage.used)} of ${formatNumber(tabletUsage.planned)}.`;
   els.monthTabletUsage.textContent = `${formatNumber(tabletUsage.used)} / ${formatNumber(tabletUsage.planned)}`;
@@ -235,26 +234,20 @@ els.nowButton.addEventListener("click", () => {
 els.doseForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const tabletCount = Number.parseFloat(els.doseAmount.value);
-  if (!Number.isFinite(tabletCount) || tabletCount <= 0) return;
+  const note = els.doseNote.value.trim();
+  const hasDose = Number.isFinite(tabletCount) && tabletCount > 0;
+  if (!hasDose && !note) return;
   const submitButton = els.doseForm.querySelector('button[type="submit"]');
   setBusy(submitButton, "Saving...", true);
-  saveDoseEntry(state, tabletCount, els.doseTime.value, els.doseNote.value);
+  if (hasDose) {
+    saveDoseEntry(state, tabletCount, els.doseTime.value, note);
+  } else {
+    saveNoteEntry(state, els.doseTime.value, note);
+  }
   els.doseForm.reset();
   setDateTimeInputNow(els.doseTime);
   render();
-  setNotice("Dose saved.", "success");
-  setBusy(submitButton, "Saving...", false);
-});
-els.noteForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  if (!els.journalNote.value.trim()) return;
-  const submitButton = els.noteForm.querySelector('button[type="submit"]');
-  setBusy(submitButton, "Saving...", true);
-  saveNoteEntry(state, els.noteTime.value, els.journalNote.value);
-  els.noteForm.reset();
-  setDateTimeInputNow(els.noteTime);
-  render();
-  setNotice("Journal note saved.", "success");
+  setNotice(hasDose ? "Dose entry saved." : "Note saved without a dose.", "success");
   setBusy(submitButton, "Saving...", false);
 });
 els.recentList.addEventListener("click", (event) => {
@@ -266,7 +259,6 @@ els.recentList.addEventListener("click", (event) => {
 });
 
 setDateTimeInputNow(els.doseTime);
-setDateTimeInputNow(els.noteTime);
 renderInstallPrompt(els.installButton);
 (async () => {
   try {

@@ -418,13 +418,13 @@ function getHomeGauge(state) {
   const target = Number(state.settings.dailyTarget) || defaultState.settings.dailyTarget;
   const ratio = target > 0 ? todayDose / target : 0;
 
-  if (ratio >= 1.1) {
-    return { tone: "danger", label: "Above target", ratio, reason: "Today is above your daily target." };
+  if (todayDose > 30) {
+    return { tone: "danger", label: "Over limit", ratio, reason: "Today is over 30 mg and should be treated as a high-use day." };
   }
-  if (ratio >= 0.75) {
-    return { tone: "warn", label: "Near target", ratio, reason: "Today is approaching your daily target." };
+  if (todayDose >= 20) {
+    return { tone: "warn", label: "High today", ratio, reason: "Today is in the 20-30 mg range." };
   }
-  return { tone: "good", label: "Within target", ratio, reason: "Today is still within your target range." };
+  return { tone: "good", label: "On track", ratio, reason: "Today is 15 mg or below." };
 }
 
 function saveDoseEntry(state, tabletCount, timestamp, note) {
