@@ -28,6 +28,12 @@ const els = {
   ouraSleepEmpty: document.querySelector("#ouraSleepEmpty"),
   ouraSleepList: document.querySelector("#ouraSleepList"),
   ouraDebugInfo: document.querySelector("#ouraDebugInfo"),
+  latestReadinessScore: document.querySelector("#latestReadinessScore"),
+  latestStressState: document.querySelector("#latestStressState"),
+  latestResilienceLevel: document.querySelector("#latestResilienceLevel"),
+  latestHeartRate: document.querySelector("#latestHeartRate"),
+  latestHrv: document.querySelector("#latestHrv"),
+  latestTemperatureDeviation: document.querySelector("#latestTemperatureDeviation"),
   latestSleepScore: document.querySelector("#latestSleepScore"),
   latestSleepHours: document.querySelector("#latestSleepHours"),
   latestSleepBedtime: document.querySelector("#latestSleepBedtime"),
@@ -337,6 +343,18 @@ function renderLatestSleepMetrics() {
       : "-";
 }
 
+function renderRecoveryMetrics() {
+  const recovery = getOuraRecoverySnapshot(state);
+  els.latestReadinessScore.textContent = recovery.readinessScore ?? "-";
+  els.latestStressState.textContent = recovery.stressSummary || "-";
+  els.latestResilienceLevel.textContent = recovery.resilienceLevel || "-";
+  els.latestHeartRate.textContent = Number.isFinite(recovery.latestHeartRate) ? `${formatNumber(recovery.latestHeartRate)} bpm` : "-";
+  els.latestHrv.textContent = Number.isFinite(recovery.latestHrv) ? `${formatNumber(recovery.latestHrv)} ms` : "-";
+  els.latestTemperatureDeviation.textContent = Number.isFinite(recovery.temperatureDeviation)
+    ? `${recovery.temperatureDeviation > 0 ? "+" : ""}${formatNumber(recovery.temperatureDeviation)}`
+    : "-";
+}
+
 function renderSleepFriction() {
   const friction = getSleepFrictionInsights(state, 14);
   const lateHours = friction.later.averageSleepHours;
@@ -520,6 +538,7 @@ els.syncOuraButton.addEventListener("click", async () => {
   try {
     await syncOuraSleep(state);
     renderLatestSleepMetrics();
+    renderRecoveryMetrics();
     renderSleepFriction();
     renderSleepPatterns();
     renderOuraSleep();
@@ -565,6 +584,7 @@ els.calendarGrid?.addEventListener("click", (event) => {
   renderRefillStatus();
   renderInventory();
   renderLatestSleepMetrics();
+  renderRecoveryMetrics();
   renderSleepFriction();
   renderSleepPatterns();
   renderOuraSleep();

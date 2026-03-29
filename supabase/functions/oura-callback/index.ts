@@ -40,7 +40,7 @@ Deno.serve(async (request) => {
     refresh_token: tokenPayload.refresh_token,
     token_type: tokenPayload.token_type,
     expires_at: expiresAt,
-    scope: tokenPayload.scope || "daily",
+    scope: tokenPayload.scope || "daily heartrate personal",
   }, { onConflict: "user_id" });
 
   if (error) {

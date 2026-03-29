@@ -40,6 +40,21 @@ async function fetchOuraJson(url: string, accessToken: string) {
   return { response, payload };
 }
 
+async function fetchOptionalOuraCollection(path: string, accessToken: string, query: URLSearchParams) {
+  try {
+    const { response, payload } = await fetchOuraJson(
+      `https://api.ouraring.com/v2/usercollection/${path}?${query.toString()}`,
+      accessToken
+    );
+    if (!response.ok) {
+      return { ok: false, data: [], error: payload };
+    }
+    return { ok: true, data: Array.isArray(payload?.data) ? payload.data : [], error: null };
+  } catch (error) {
+    return { ok: false, data: [], error };
+  }
+}
+
 async function refreshOuraToken(admin: ReturnType<typeof createClient>, connection: {
   user_id: string;
   refresh_token: string | null;
@@ -171,6 +186,10 @@ Deno.serve(async (request) => {
     `https://api.ouraring.com/v2/usercollection/daily_sleep?${query.toString()}`,
     activeConnection.access_token
   );
+  const readinessResult = await fetchOptionalOuraCollection("daily_readiness", activeConnection.access_token, query);
+  const stressResult = await fetchOptionalOuraCollection("daily_stress", activeConnection.access_token, query);
+  const resilienceResult = await fetchOptionalOuraCollection("daily_resilience", activeConnection.access_token, query);
+  const heartrateResult = await fetchOptionalOuraCollection("heartrate", activeConnection.access_token, query);
   const dailyItems = Array.isArray(dailyPayload?.data) ? dailyPayload.data : [];
   const dailyScoreByDay = new Map(
     dailyItems
@@ -210,6 +229,10 @@ Deno.serve(async (request) => {
   const mergedPayload = {
     ...payload,
     daily_data: dailyResponse.ok ? dailyItems : [],
+    readiness: readinessResult.data,
+    stress: stressResult.data,
+    resilience: resilienceResult.data,
+    heartrate: heartrateResult.data,
     data: Array.from(mergedByDay.values()),
   };
 

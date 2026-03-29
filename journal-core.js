@@ -35,6 +35,10 @@ const defaultState = {
       scope: "",
       lastSyncAt: "",
       sleep: [],
+      readiness: [],
+      stress: [],
+      resilience: [],
+      heartrate: [],
     },
   },
   auth: {
@@ -816,6 +820,10 @@ async function syncOuraSleep(state) {
     throw new Error(payload.error || payload.message || `Oura sync failed: ${response.status}`);
   }
   state.integrations.oura.sleep = Array.isArray(payload.data) ? payload.data : [];
+  state.integrations.oura.readiness = Array.isArray(payload.readiness) ? payload.readiness : [];
+  state.integrations.oura.stress = Array.isArray(payload.stress) ? payload.stress : [];
+  state.integrations.oura.resilience = Array.isArray(payload.resilience) ? payload.resilience : [];
+  state.integrations.oura.heartrate = Array.isArray(payload.heartrate) ? payload.heartrate : [];
   state.integrations.oura.lastSyncAt = new Date().toISOString();
   persistState(state);
   return state.integrations.oura.sleep;
@@ -823,6 +831,70 @@ async function syncOuraSleep(state) {
 
 function getRecentOuraSleep(state) {
   return Array.isArray(state.integrations?.oura?.sleep) ? state.integrations.oura.sleep : [];
+}
+
+function getRecentOuraReadiness(state) {
+  return Array.isArray(state.integrations?.oura?.readiness) ? state.integrations.oura.readiness : [];
+}
+
+function getRecentOuraStress(state) {
+  return Array.isArray(state.integrations?.oura?.stress) ? state.integrations.oura.stress : [];
+}
+
+function getRecentOuraResilience(state) {
+  return Array.isArray(state.integrations?.oura?.resilience) ? state.integrations.oura.resilience : [];
+}
+
+function getRecentOuraHeartrate(state) {
+  return Array.isArray(state.integrations?.oura?.heartrate) ? state.integrations.oura.heartrate : [];
+}
+
+function getLatestByDay(items) {
+  return items
+    .slice()
+    .sort((a, b) => String(b?.day || b?.timestamp || "").localeCompare(String(a?.day || a?.timestamp || "")))[0] || null;
+}
+
+function getLatestOuraReadiness(state) {
+  return getLatestByDay(getRecentOuraReadiness(state));
+}
+
+function getLatestOuraStress(state) {
+  return getLatestByDay(getRecentOuraStress(state));
+}
+
+function getLatestOuraResilience(state) {
+  return getLatestByDay(getRecentOuraResilience(state));
+}
+
+function getLatestOuraHeartrateSample(state) {
+  const items = getRecentOuraHeartrate(state).slice().sort((a, b) => String(b?.timestamp || "").localeCompare(String(a?.timestamp || "")));
+  return items[0] || null;
+}
+
+function getOuraRecoverySnapshot(state) {
+  const readiness = getLatestOuraReadiness(state);
+  const stress = getLatestOuraStress(state);
+  const resilience = getLatestOuraResilience(state);
+  const heartrate = getLatestOuraHeartrateSample(state);
+
+  return {
+    readinessScore: Number(readiness?.score || 0) || null,
+    readinessDay: readiness?.day || null,
+    temperatureDeviation: Number(
+      readiness?.temperature_deviation ??
+      readiness?.contributors?.body_temperature ??
+      readiness?.contributors?.temperature ??
+      NaN
+    ),
+    stressSummary: stress?.stress_high ? "High" : stress?.recovery_high ? "Recovered" : stress?.day || null,
+    stressDay: stress?.day || null,
+    resilienceLevel: resilience?.level || resilience?.resilience_level || null,
+    resilienceDay: resilience?.day || null,
+    latestHeartRate: Number(heartrate?.bpm || heartrate?.heart_rate || 0) || null,
+    latestHeartRateAt: heartrate?.timestamp || null,
+    latestHrv: Number(heartrate?.hrv || heartrate?.rmssd || 0) || null,
+  };
 }
 
 function mergeOuraSleepDay(existing, incoming) {
@@ -1183,6 +1255,15 @@ function buildAiJournalPayload(state) {
       sleepHours: item.total_sleep_duration ? Number(item.total_sleep_duration) / 3600 : null,
       score: Number(item.score || 0) || null,
     })),
+    ouraReadiness: getRecentOuraReadiness(state).slice(0, 14).map((item) => ({
+      day: item.day || null,
+      score: Number(item.score || 0) || null,
+      temperatureDeviation: Number(item.temperature_deviation || 0) || null,
+    })),
+    ouraStress: getRecentOuraStress(state).slice(0, 14),
+    ouraResilience: getRecentOuraResilience(state).slice(0, 14),
+    ouraHeartRate: getRecentOuraHeartrate(state).slice(0, 24),
+    ouraRecovery: getOuraRecoverySnapshot(state),
     ouraDerived: getOuraAiContext(state),
   };
 }

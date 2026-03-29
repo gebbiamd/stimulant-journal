@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=57" />
+    <link rel="manifest" href="./manifest.webmanifest?v=58" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=57" />
+    <link rel="stylesheet" href="./styles.css?v=58" />
     <title>Summary | Stimulant Journal</title>
   </head>
   <body data-page="summary">
@@ -133,6 +133,41 @@
       <section class="card">
         <div class="section-header">
           <div>
+            <p class="eyebrow">Recovery</p>
+            <h2>❤️ Readiness and stress</h2>
+          </div>
+        </div>
+        <div class="metric-list compact">
+          <div class="metric">
+            <span class="metric-label">Readiness</span>
+            <strong id="latestReadinessScore">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Stress</span>
+            <strong id="latestStressState">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Resilience</span>
+            <strong id="latestResilienceLevel">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Heart rate</span>
+            <strong id="latestHeartRate">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">HRV</span>
+            <strong id="latestHrv">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Temp deviation</span>
+            <strong id="latestTemperatureDeviation">-</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
             <p class="eyebrow">How Oura Is Used</p>
             <h2>🧠 Current integration</h2>
           </div>
@@ -140,10 +175,10 @@
         <div class="stack-form">
           <div class="stat-chip">
             <span>Current behavior</span>
-            <strong>Imports recent sleep records into the Summary page</strong>
+            <strong>Imports sleep, readiness, stress, resilience, and heart-rate signals</strong>
           </div>
           <p class="muted">
-            Right now Oura sleep is stored with your synced journal data and shown below the Oura section. It is not yet changing the dose gauge, drawing sleep overlays from real bedtimes, or generating automatic insights unless you also add the OpenAI relay later.
+            Oura data is now stored with your synced journal data and used for sleep views plus a compact recovery snapshot. The next strongest step is feeding readiness and stress into the dose recommendation logic on Home.
           </p>
         </div>
       </section>
@@ -262,7 +297,7 @@
     <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=57"></script>
-    <script src="./summary.js?v=57"></script>
+    <script src="./journal-core.js?v=58"></script>
+    <script src="./summary.js?v=58"></script>
   </body>
 </html>

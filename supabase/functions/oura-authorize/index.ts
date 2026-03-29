@@ -21,7 +21,7 @@ Deno.serve(async (request) => {
   authUrl.searchParams.set("response_type", "code");
   authUrl.searchParams.set("client_id", Deno.env.get("OURA_CLIENT_ID")!);
   authUrl.searchParams.set("redirect_uri", `${Deno.env.get("SUPABASE_URL")}/functions/v1/oura-callback`);
-  authUrl.searchParams.set("scope", "daily");
+  authUrl.searchParams.set("scope", "daily heartrate personal");
   authUrl.searchParams.set("state", data.user.id);
 
   return Response.redirect(authUrl.toString(), 302);
