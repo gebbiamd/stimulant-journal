@@ -40,6 +40,24 @@ async function fetchOuraJson(url: string, accessToken: string) {
   return { response, payload };
 }
 
+function getOuraErrorText(payload: unknown) {
+  if (!payload || typeof payload !== "object") return "";
+  const parts = [
+    (payload as Record<string, unknown>).error,
+    (payload as Record<string, unknown>).message,
+    (payload as Record<string, unknown>).error_description,
+  ]
+    .filter((value) => typeof value === "string")
+    .map((value) => String(value).toLowerCase());
+  return parts.join(" ");
+}
+
+function isOuraAuthFailure(response: Response, payload: unknown) {
+  if (response.status === 401) return true;
+  const text = getOuraErrorText(payload);
+  return Boolean(text) && /(invalid jwt|token|unauthoriz|forbidden|expired)/i.test(text);
+}
+
 async function fetchOptionalOuraCollection(path: string, accessToken: string, query: URLSearchParams) {
   try {
     const { response, payload } = await fetchOuraJson(
@@ -109,6 +127,31 @@ async function refreshOuraToken(admin: ReturnType<typeof createClient>, connecti
   return nextConnection;
 }
 
+async function fetchOuraJsonWithRefresh(
+  admin: ReturnType<typeof createClient>,
+  connection: {
+    user_id: string;
+    access_token: string;
+    refresh_token: string | null;
+    token_type?: string | null;
+    expires_at?: string | null;
+    scope?: string | null;
+    updated_at?: string | null;
+  },
+  url: string,
+) {
+  let activeConnection = connection;
+  let result = await fetchOuraJson(url, activeConnection.access_token);
+
+  if (!isOuraAuthFailure(result.response, result.payload)) {
+    return { ...result, connection: activeConnection };
+  }
+
+  activeConnection = await refreshOuraToken(admin, activeConnection);
+  result = await fetchOuraJson(url, activeConnection.access_token);
+  return { ...result, connection: activeConnection };
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -160,32 +203,32 @@ Deno.serve(async (request) => {
     end_date: endDate.toISOString().slice(0, 10),
   });
 
-  let { response, payload } = await fetchOuraJson(
-    `https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`,
-    activeConnection.access_token
-  );
-
-  if (response.status === 401) {
-    try {
-      activeConnection = await refreshOuraToken(admin, activeConnection);
-    } catch (error) {
-      return json({ error: error instanceof Error ? error.message : "Failed to refresh Oura token." }, 400);
-    }
-
-    ({ response, payload } = await fetchOuraJson(
+  let response;
+  let payload;
+  try {
+    const initialResult = await fetchOuraJsonWithRefresh(
+      admin,
+      activeConnection,
       `https://api.ouraring.com/v2/usercollection/sleep?${query.toString()}`,
-      activeConnection.access_token
-    ));
+    );
+    response = initialResult.response;
+    payload = initialResult.payload;
+    activeConnection = initialResult.connection;
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : "Failed to refresh Oura token." }, 400);
   }
 
   if (!response.ok) {
     return json(payload, response.status);
   }
 
-  const { response: dailyResponse, payload: dailyPayload } = await fetchOuraJson(
+  const dailySleepResult = await fetchOuraJsonWithRefresh(
+    admin,
+    activeConnection,
     `https://api.ouraring.com/v2/usercollection/daily_sleep?${query.toString()}`,
-    activeConnection.access_token
   );
+  activeConnection = dailySleepResult.connection;
+  const { response: dailyResponse, payload: dailyPayload } = dailySleepResult;
   const readinessResult = await fetchOptionalOuraCollection("daily_readiness", activeConnection.access_token, query);
   const stressResult = await fetchOptionalOuraCollection("daily_stress", activeConnection.access_token, query);
   const resilienceResult = await fetchOptionalOuraCollection("daily_resilience", activeConnection.access_token, query);
