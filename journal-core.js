@@ -163,7 +163,53 @@ async function getSupabaseSession() {
   const client = getSupabaseClient();
   const { data, error } = await client.auth.getSession();
   if (error) throw error;
-  return data.session || null;
+  let session = data.session || null;
+  if (!session) return null;
+
+  const expiresAtSeconds = Number(session.expires_at || 0);
+  if (expiresAtSeconds && expiresAtSeconds * 1000 <= Date.now() + 60_000) {
+    const { data: refreshData, error: refreshError } = await client.auth.refreshSession();
+    if (refreshError) throw refreshError;
+    session = refreshData.session || session;
+  }
+
+  return session;
+}
+
+async function fetchSupabaseFunctionWithSession(path, init = {}, options = {}) {
+  const client = getSupabaseClient();
+  let session = await getSupabaseSession();
+  if (!session?.access_token) {
+    throw new Error("Sign in with email first.");
+  }
+
+  const execute = async (token) => {
+    const headers = new Headers(init.headers || {});
+    headers.set("Authorization", `Bearer ${token}`);
+    return fetch(`${SUPABASE_URL}/functions/v1/${path}`, {
+      ...init,
+      headers,
+      signal: options.signal || init.signal,
+    });
+  };
+
+  let response = await execute(session.access_token);
+  if (response.status !== 401 && response.status !== 403) {
+    return response;
+  }
+
+  const retryText = await response.clone().text().catch(() => "");
+  if (!/jwt/i.test(retryText)) {
+    return response;
+  }
+
+  const { data: refreshData, error: refreshError } = await client.auth.refreshSession();
+  if (refreshError || !refreshData.session?.access_token) {
+    throw refreshError || new Error("Session refresh failed.");
+  }
+
+  response = await execute(refreshData.session.access_token);
+  return response;
 }
 
 async function loadRemoteStateInto(state) {
@@ -749,11 +795,8 @@ async function disconnectOuraRemote(state) {
     return;
   }
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/oura-disconnect`, {
+  const response = await fetchSupabaseFunctionWithSession("oura-disconnect", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-    },
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -773,10 +816,7 @@ async function getOuraConnectionStatus() {
   const timeoutId = window.setTimeout(() => controller.abort(), 8000);
   let response;
   try {
-    response = await fetch(`${SUPABASE_URL}/functions/v1/oura-status`, {
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
+    response = await fetchSupabaseFunctionWithSession("oura-status", {
       signal: controller.signal,
     });
   } catch (error) {
@@ -801,10 +841,7 @@ async function syncOuraSleep(state) {
   const timeoutId = window.setTimeout(() => controller.abort(), 15000);
   let response;
   try {
-    response = await fetch(`${SUPABASE_URL}/functions/v1/oura-sync`, {
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
+    response = await fetchSupabaseFunctionWithSession("oura-sync", {
       signal: controller.signal,
     });
   } catch (error) {
