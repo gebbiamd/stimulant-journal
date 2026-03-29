@@ -1,5 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const OURA_SCOPE = "email personal daily heartrate tag workout session spo2 ring_configuration stress heart_health";
+
 Deno.serve(async (request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -40,7 +42,7 @@ Deno.serve(async (request) => {
     refresh_token: tokenPayload.refresh_token,
     token_type: tokenPayload.token_type,
     expires_at: expiresAt,
-    scope: tokenPayload.scope || "daily heartrate personal",
+    scope: tokenPayload.scope || OURA_SCOPE,
   }, { onConflict: "user_id" });
 
   if (error) {

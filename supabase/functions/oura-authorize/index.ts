@@ -1,5 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const OURA_SCOPE = "email personal daily heartrate tag workout session spo2 ring_configuration stress heart_health";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -41,7 +43,7 @@ Deno.serve(async (request) => {
   authUrl.searchParams.set("response_type", "code");
   authUrl.searchParams.set("client_id", Deno.env.get("OURA_CLIENT_ID")!);
   authUrl.searchParams.set("redirect_uri", `${Deno.env.get("SUPABASE_URL")}/functions/v1/oura-callback`);
-  authUrl.searchParams.set("scope", "daily heartrate personal");
+  authUrl.searchParams.set("scope", OURA_SCOPE);
   authUrl.searchParams.set("state", data.user.id);
 
   if (authHeader) {
