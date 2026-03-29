@@ -1,9 +1,26 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Content-Type": "application/json",
+};
+
 Deno.serve(async (request) => {
-  const accessToken = new URL(request.url).searchParams.get("access_token");
+  if (request.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  const authHeader = request.headers.get("Authorization");
+  const accessToken =
+    authHeader?.replace(/^Bearer\s+/i, "").trim() ||
+    new URL(request.url).searchParams.get("access_token");
   if (!accessToken) {
-    return new Response("Missing access_token", { status: 400 });
+    return new Response(JSON.stringify({ error: "Missing access token" }), {
+      status: 400,
+      headers: corsHeaders,
+    });
   }
 
   const supabase = createClient(
@@ -14,7 +31,10 @@ Deno.serve(async (request) => {
 
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
-    return new Response("Could not identify user", { status: 401 });
+    return new Response(JSON.stringify({ error: "Could not identify user" }), {
+      status: 401,
+      headers: corsHeaders,
+    });
   }
 
   const authUrl = new URL("https://cloud.ouraring.com/oauth/authorize");
@@ -23,6 +43,13 @@ Deno.serve(async (request) => {
   authUrl.searchParams.set("redirect_uri", `${Deno.env.get("SUPABASE_URL")}/functions/v1/oura-callback`);
   authUrl.searchParams.set("scope", "daily heartrate personal");
   authUrl.searchParams.set("state", data.user.id);
+
+  if (authHeader) {
+    return new Response(JSON.stringify({ auth_url: authUrl.toString() }), {
+      status: 200,
+      headers: corsHeaders,
+    });
+  }
 
   return Response.redirect(authUrl.toString(), 302);
 });

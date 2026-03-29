@@ -773,14 +773,14 @@ function consumeOuraRedirect(state) {
 }
 
 function startOuraAuth(state) {
-  return getSupabaseSession().then((session) => {
-    if (!session?.access_token) {
-      throw new Error("Sign in with email first so the Oura connection can be linked to your account.");
-    }
-    const authUrl = new URL(`${SUPABASE_URL}/functions/v1/oura-authorize`);
-    authUrl.searchParams.set("access_token", session.access_token);
-    window.location.assign(authUrl.toString());
-  });
+  return fetchSupabaseFunctionWithSession("oura-authorize")
+    .then((response) => response.json().catch(() => ({})).then((payload) => ({ response, payload })))
+    .then(({ response, payload }) => {
+      if (!response.ok || !payload?.auth_url) {
+        throw new Error(payload?.error || payload?.message || `Oura connect failed: ${response.status}`);
+      }
+      window.location.assign(payload.auth_url);
+    });
 }
 
 function disconnectOura(state) {
