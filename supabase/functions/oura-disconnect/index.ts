@@ -19,19 +19,8 @@ Deno.serve(async (request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader) return json({ error: "Missing auth header" }, 401);
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: authHeader } } }
-  );
-
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) {
-    return json({ error: "Not signed in" }, 401);
-  }
+  const userId = Deno.env.get("SHORTCUT_USER_ID");
+  if (!userId) return json({ error: "Server not configured: missing SHORTCUT_USER_ID" }, 500);
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -41,7 +30,7 @@ Deno.serve(async (request) => {
   const { error } = await admin
     .from("oura_connections")
     .delete()
-    .eq("user_id", authData.user.id);
+    .eq("user_id", userId);
 
   if (error) {
     return json({ error: error.message }, 500);

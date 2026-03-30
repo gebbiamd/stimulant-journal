@@ -157,19 +157,8 @@ Deno.serve(async (request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader) return json({ error: "Missing auth header" }, 401);
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: authHeader } } }
-  );
-
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) {
-    return json({ error: "Not signed in" }, 401);
-  }
+  const userId = Deno.env.get("SHORTCUT_USER_ID");
+  if (!userId) return json({ error: "Server not configured: missing SHORTCUT_USER_ID" }, 500);
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -179,11 +168,11 @@ Deno.serve(async (request) => {
   const { data: connection, error: connectionError } = await admin
     .from("oura_connections")
     .select("*")
-    .eq("user_id", authData.user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (connectionError || !connection) {
-    return json({ error: "Oura is not connected for this account." }, 400);
+    return json({ error: "Oura is not connected. Go to Settings to connect your Oura ring." }, 400);
   }
 
   let activeConnection = connection;
@@ -269,6 +258,12 @@ Deno.serve(async (request) => {
     });
   }
 
+  const syncWarnings: string[] = [];
+  if (!readinessResult.ok) syncWarnings.push("readiness");
+  if (!stressResult.ok) syncWarnings.push("stress");
+  if (!resilienceResult.ok) syncWarnings.push("resilience");
+  if (!heartrateResult.ok) syncWarnings.push("heartrate");
+
   const mergedPayload = {
     ...payload,
     daily_data: dailyResponse.ok ? dailyItems : [],
@@ -277,6 +272,7 @@ Deno.serve(async (request) => {
     resilience: resilienceResult.data,
     heartrate: heartrateResult.data,
     data: Array.from(mergedByDay.values()),
+    sync_warnings: syncWarnings.length > 0 ? syncWarnings : undefined,
   };
 
   return json(mergedPayload, response.status);

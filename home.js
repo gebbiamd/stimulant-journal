@@ -351,9 +351,12 @@ els.syncOuraHomeButton?.addEventListener("click", async () => {
   setBusy(els.syncOuraHomeButton, "Syncing Oura...", true);
   setNotice("Syncing recent Oura sleep data...", "warning");
   try {
-    await syncOuraSleep(state);
+    const { warnings } = await syncOuraSleep(state);
     render();
-    setNotice("Oura sleep data synced.", "success");
+    const notice = warnings.length > 0
+      ? `Oura synced (${warnings.join(", ")} unavailable).`
+      : "Oura sleep data synced.";
+    setNotice(notice, warnings.length > 0 ? "warning" : "success");
   } catch (error) {
     setNotice(error.message, "error");
   } finally {
