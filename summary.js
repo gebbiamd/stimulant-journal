@@ -34,6 +34,12 @@ const els = {
   latestHeartRate: document.querySelector("#latestHeartRate"),
   latestHrv: document.querySelector("#latestHrv"),
   latestTemperatureDeviation: document.querySelector("#latestTemperatureDeviation"),
+  latestActivityScore: document.querySelector("#latestActivityScore"),
+  latestSteps: document.querySelector("#latestSteps"),
+  latestActiveCalories: document.querySelector("#latestActiveCalories"),
+  latestSpo2: document.querySelector("#latestSpo2"),
+  workoutEmpty: document.querySelector("#workoutEmpty"),
+  workoutList: document.querySelector("#workoutList"),
   latestSleepScore: document.querySelector("#latestSleepScore"),
   latestSleepHours: document.querySelector("#latestSleepHours"),
   latestSleepBedtime: document.querySelector("#latestSleepBedtime"),
@@ -353,6 +359,39 @@ function renderRecoveryMetrics() {
   els.latestTemperatureDeviation.textContent = Number.isFinite(recovery.temperatureDeviation)
     ? `${recovery.temperatureDeviation > 0 ? "+" : ""}${formatNumber(recovery.temperatureDeviation)}`
     : "-";
+  if (els.latestActivityScore) els.latestActivityScore.textContent = recovery.activityScore ?? "-";
+  if (els.latestSteps) els.latestSteps.textContent = Number.isFinite(recovery.steps) ? recovery.steps.toLocaleString() : "-";
+  if (els.latestActiveCalories) els.latestActiveCalories.textContent = Number.isFinite(recovery.activeCalories) ? `${Math.round(recovery.activeCalories)} kcal` : "-";
+  if (els.latestSpo2) els.latestSpo2.textContent = Number.isFinite(recovery.spo2Average) ? `${formatNumber(recovery.spo2Average)}%` : "-";
+}
+
+function renderWorkouts() {
+  const workouts = getRecentOuraWorkouts(state)
+    .slice()
+    .sort((a, b) => String(b?.day || b?.start_datetime || "").localeCompare(String(a?.day || a?.start_datetime || "")))
+    .slice(0, 10);
+  if (!els.workoutList) return;
+  if (!workouts.length) {
+    if (els.workoutEmpty) els.workoutEmpty.classList.remove("hidden");
+    els.workoutList.innerHTML = "";
+    return;
+  }
+  if (els.workoutEmpty) els.workoutEmpty.classList.add("hidden");
+  els.workoutList.innerHTML = "";
+  for (const workout of workouts) {
+    const item = document.createElement("article");
+    item.className = "history-item";
+    const duration = workout.duration ? `${Math.round(workout.duration / 60)} min` : "";
+    const calories = workout.calories ? `${Math.round(workout.calories)} kcal` : "";
+    const parts = [duration, calories, workout.intensity].filter(Boolean).join(" · ");
+    item.innerHTML = `
+      <div>
+        <strong class="history-dose">${workout.activity || "Workout"}</strong>
+        <p class="history-note muted">${workout.day || ""}${parts ? ` — ${parts}` : ""}</p>
+      </div>
+    `;
+    els.workoutList.appendChild(item);
+  }
 }
 
 function renderSleepFriction() {
@@ -539,6 +578,7 @@ els.syncOuraButton.addEventListener("click", async () => {
     const { warnings } = await syncOuraSleep(state);
     renderLatestSleepMetrics();
     renderRecoveryMetrics();
+    renderWorkouts();
     renderSleepFriction();
     renderSleepPatterns();
     renderOuraSleep();
@@ -588,6 +628,7 @@ els.calendarGrid?.addEventListener("click", (event) => {
   renderInventory();
   renderLatestSleepMetrics();
   renderRecoveryMetrics();
+  renderWorkouts();
   renderSleepFriction();
   renderSleepPatterns();
   renderOuraSleep();

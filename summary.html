@@ -162,25 +162,34 @@
             <span class="metric-label">Temp deviation</span>
             <strong id="latestTemperatureDeviation">-</strong>
           </div>
+          <div class="metric">
+            <span class="metric-label">Activity score</span>
+            <strong id="latestActivityScore">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Steps</span>
+            <strong id="latestSteps">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Active calories</span>
+            <strong id="latestActiveCalories">-</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">SpO2</span>
+            <strong id="latestSpo2">-</strong>
+          </div>
         </div>
       </section>
 
       <section class="card">
         <div class="section-header">
           <div>
-            <p class="eyebrow">How Oura Is Used</p>
-            <h2>🧠 Current integration</h2>
+            <p class="eyebrow">Activity</p>
+            <h2>🏃 Workouts &amp; movement</h2>
           </div>
         </div>
-        <div class="stack-form">
-          <div class="stat-chip">
-            <span>Current behavior</span>
-            <strong>Imports sleep, readiness, stress, resilience, and heart-rate signals</strong>
-          </div>
-          <p class="muted">
-            Oura data is now stored with your synced journal data and used for sleep views plus a compact recovery snapshot. The next strongest step is feeding readiness and stress into the dose recommendation logic on Home.
-          </p>
-        </div>
+        <div id="workoutEmpty" class="empty-state">Sync Oura to see recent workouts.</div>
+        <div id="workoutList" class="history-list"></div>
       </section>
 
       <section class="card">

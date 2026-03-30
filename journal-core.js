@@ -39,6 +39,9 @@ const defaultState = {
       stress: [],
       resilience: [],
       heartrate: [],
+      activity: [],
+      workouts: [],
+      spo2: [],
     },
   },
   auth: {
@@ -857,6 +860,9 @@ async function syncOuraSleep(state) {
   state.integrations.oura.stress = Array.isArray(payload.stress) ? payload.stress : [];
   state.integrations.oura.resilience = Array.isArray(payload.resilience) ? payload.resilience : [];
   state.integrations.oura.heartrate = Array.isArray(payload.heartrate) ? payload.heartrate : [];
+  state.integrations.oura.activity = Array.isArray(payload.activity) ? payload.activity : [];
+  state.integrations.oura.workouts = Array.isArray(payload.workouts) ? payload.workouts : [];
+  state.integrations.oura.spo2 = Array.isArray(payload.spo2) ? payload.spo2 : [];
   state.integrations.oura.lastSyncAt = new Date().toISOString();
   persistState(state);
   return { sleep: state.integrations.oura.sleep, warnings: payload.sync_warnings || [] };
@@ -880,6 +886,18 @@ function getRecentOuraResilience(state) {
 
 function getRecentOuraHeartrate(state) {
   return Array.isArray(state.integrations?.oura?.heartrate) ? state.integrations.oura.heartrate : [];
+}
+
+function getRecentOuraActivity(state) {
+  return Array.isArray(state.integrations?.oura?.activity) ? state.integrations.oura.activity : [];
+}
+
+function getRecentOuraWorkouts(state) {
+  return Array.isArray(state.integrations?.oura?.workouts) ? state.integrations.oura.workouts : [];
+}
+
+function getRecentOuraSpo2(state) {
+  return Array.isArray(state.integrations?.oura?.spo2) ? state.integrations.oura.spo2 : [];
 }
 
 function getLatestByDay(items) {
@@ -910,6 +928,8 @@ function getOuraRecoverySnapshot(state) {
   const stress = getLatestOuraStress(state);
   const resilience = getLatestOuraResilience(state);
   const heartrate = getLatestOuraHeartrateSample(state);
+  const activity = getLatestByDay(getRecentOuraActivity(state));
+  const spo2 = getLatestByDay(getRecentOuraSpo2(state));
 
   return {
     readinessScore: Number(readiness?.score || 0) || null,
@@ -926,7 +946,13 @@ function getOuraRecoverySnapshot(state) {
     resilienceDay: resilience?.day || null,
     latestHeartRate: Number(heartrate?.bpm || heartrate?.heart_rate || 0) || null,
     latestHeartRateAt: heartrate?.timestamp || null,
-    latestHrv: Number(heartrate?.hrv || heartrate?.rmssd || 0) || null,
+    latestHrv: Number(readiness?.contributors?.hrv_balance || heartrate?.hrv || heartrate?.rmssd || 0) || null,
+    activityScore: Number(activity?.score || 0) || null,
+    activityDay: activity?.day || null,
+    steps: Number(activity?.steps || 0) || null,
+    activeCalories: Number(activity?.active_calories || 0) || null,
+    spo2Average: Number(spo2?.spo2_percentage?.average || 0) || null,
+    spo2Day: spo2?.day || null,
   };
 }
 
@@ -1296,6 +1322,26 @@ function buildAiJournalPayload(state) {
     ouraStress: getRecentOuraStress(state).slice(0, 14),
     ouraResilience: getRecentOuraResilience(state).slice(0, 14),
     ouraHeartRate: getRecentOuraHeartrate(state).slice(0, 24),
+    ouraActivity: getRecentOuraActivity(state).slice(0, 14).map((item) => ({
+      day: item.day || null,
+      score: Number(item.score || 0) || null,
+      steps: Number(item.steps || 0) || null,
+      activeCalories: Number(item.active_calories || 0) || null,
+      totalCalories: Number(item.total_calories || 0) || null,
+    })),
+    ouraWorkouts: getRecentOuraWorkouts(state).slice(0, 14).map((item) => ({
+      day: item.day || null,
+      activity: item.activity || null,
+      duration: item.duration || null,
+      calories: Number(item.calories || 0) || null,
+      intensity: item.intensity || null,
+      startLocal: item.start_datetime ? formatLocalDateTimeForAi(item.start_datetime) : null,
+    })),
+    ouraSpo2: getRecentOuraSpo2(state).slice(0, 14).map((item) => ({
+      day: item.day || null,
+      average: item.spo2_percentage?.average || null,
+      minimum: item.spo2_percentage?.minimum || null,
+    })),
     ouraRecovery: getOuraRecoverySnapshot(state),
     ouraDerived: getOuraAiContext(state),
   };
