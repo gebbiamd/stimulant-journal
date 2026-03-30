@@ -2032,3 +2032,34 @@ button.calendar-cell {
   line-height: 1.3;
   margin-top: 1px;
 }
+
+/* Rx Bottle chip */
+.rx-bottle-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rx-bottle-layout {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.rx-bottle-svg {
+  flex-shrink: 0;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,0.15));
+}
+.rx-bottle-counts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rx-bottle-counts strong {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary, #1a1a2e);
+  line-height: 1;
+}
+.rx-bottle-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted, #888);
+}

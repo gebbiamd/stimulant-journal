@@ -33,6 +33,8 @@ const els = {
   gaugeReason: document.querySelector("#gaugeReason"),
   monthTabletUsage: document.querySelector("#monthTabletUsage"),
   monthTabletUsageFill: document.querySelector("#monthTabletUsageFill"),
+  rxBottleSvg: document.querySelector("#rxBottleSvg"),
+  rxBottleSub: document.querySelector("#rxBottleSub"),
   lastSleepHeadline: document.querySelector("#lastSleepHeadline"),
   lastSleepDetail: document.querySelector("#lastSleepDetail"),
   lastSleepChip: document.querySelector("#lastSleepHeadline")?.closest(".stat-chip"),
@@ -368,11 +370,168 @@ function renderRecoveryContext() {
   if (els.recoveryContextDetail) els.recoveryContextDetail.textContent = msg.detail;
 }
 
+function drawRxBottle(svg, pct, medName) {
+  if (!svg) return;
+
+  // Colour ramp: green → amber → red as supply depletes
+  // pct = fraction REMAINING (1.0 = full, 0 = empty)
+  function fillColor(p) {
+    if (p > 0.5) {
+      // green → amber  (1.0 → 0.5)
+      const t = (1 - p) * 2; // 0→1
+      const r = Math.round(45  + (224 - 45)  * t);
+      const g = Math.round(158 + (123 - 158) * t);
+      const b = Math.round(89  + (11  - 89)  * t);
+      return `rgb(${r},${g},${b})`;
+    } else {
+      // amber → red  (0.5 → 0)
+      const t = (0.5 - p) * 2; // 0→1
+      const r = Math.round(224 + (201 - 224) * t);
+      const g = Math.round(123 + (38  - 123) * t);
+      const b = Math.round(11  + (18  - 11)  * t);
+      return `rgb(${r},${g},${b})`;
+    }
+  }
+
+  function darken(p) {
+    if (p > 0.5) {
+      const t = (1 - p) * 2;
+      const r = Math.round(30  + (184 - 30)  * t);
+      const g = Math.round(120 + (93  - 120) * t);
+      const b = Math.round(60  + (8   - 60)  * t);
+      return `rgb(${r},${g},${b})`;
+    } else {
+      const t = (0.5 - p) * 2;
+      const r = Math.round(184 + (160 - 184) * t);
+      const g = Math.round(93  + (20  - 93)  * t);
+      const b = Math.round(8   + (10  - 8)   * t);
+      return `rgb(${r},${g},${b})`;
+    }
+  }
+
+  const FILL    = fillColor(pct);
+  const DARK    = darken(pct);
+  const GHOST   = "rgba(0,0,0,0.06)";
+  const GSTROKE = "rgba(0,0,0,0.12)";
+  const CAP1    = "#c8c8c8";
+  const CAP2    = "#a0a0a0";
+  const LABELBG = "rgba(255,255,255,0.6)";
+  const id      = svg.id || "rxb";
+
+  const bx = 10, bw = 70, rx = 7;
+  const neckX = 22, neckW = 46, neckH = 18;
+  const bodyY = 35, bodyH = 110;
+  const capH  = 22;
+  const innerY = bodyY + 2, innerH = bodyH - 4;
+  const fillH  = Math.round(innerH * Math.max(0, Math.min(1, pct)));
+  const fillY  = innerY + innerH - fillH;
+  const label  = (medName || "Rx").substring(0, 14);
+  const isLongLabel = label.length > 6;
+
+  svg.innerHTML = `
+    <defs>
+      <clipPath id="bc${id}">
+        <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}" rx="${rx}" ry="${rx}"/>
+      </clipPath>
+      <linearGradient id="bg${id}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%"   stop-color="${DARK}"/>
+        <stop offset="45%"  stop-color="${FILL}"/>
+        <stop offset="100%" stop-color="${DARK}"/>
+      </linearGradient>
+      <linearGradient id="fg${id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="${FILL}" stop-opacity="0.92"/>
+        <stop offset="100%" stop-color="${DARK}" stop-opacity="0.88"/>
+      </linearGradient>
+      <linearGradient id="cg${id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${CAP1}"/>
+        <stop offset="100%" stop-color="${CAP2}"/>
+      </linearGradient>
+      <linearGradient id="sh${id}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%"   stop-color="rgba(255,255,255,0.2)"/>
+        <stop offset="40%"  stop-color="rgba(255,255,255,0.04)"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,0.07)"/>
+      </linearGradient>
+    </defs>
+
+    <!-- ghost body -->
+    <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}"
+          rx="${rx}" ry="${rx}"
+          fill="${GHOST}" stroke="${GSTROKE}" stroke-width="1.5"/>
+
+    <!-- liquid fill -->
+    <g clip-path="url(#bc${id})">
+      ${fillH > 0 ? `
+        <rect x="${bx}" y="${fillY}" width="${bw}" height="${fillH + rx}"
+              fill="url(#fg${id})"/>
+        <ellipse cx="${bx + bw / 2}" cy="${fillY}" rx="${bw / 2 - 1}" ry="3.5"
+                 fill="${FILL}" opacity="0.65"/>
+      ` : ""}
+    </g>
+
+    <!-- bottle outline stroke -->
+    <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}"
+          rx="${rx}" ry="${rx}"
+          fill="none" stroke="url(#bg${id})" stroke-width="2.5"/>
+
+    <!-- label -->
+    <rect x="${bx + 6}" y="${bodyY + 16}" width="${bw - 12}" height="${isLongLabel ? 38 : 34}"
+          rx="4" fill="${LABELBG}" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+    <text x="${bx + bw / 2}" y="${bodyY + (isLongLabel ? 29 : 30)}"
+          text-anchor="middle"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
+          font-size="${isLongLabel ? 6 : 7.5}" font-weight="700"
+          fill="${DARK}">${label}</text>
+    ${isLongLabel ? "" : `
+    <text x="${bx + bw / 2}" y="${bodyY + 42}"
+          text-anchor="middle"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
+          font-size="5" fill="#aaa">MONTHLY SUPPLY</text>
+    `}
+
+    <!-- sheen -->
+    <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}"
+          rx="${rx}" ry="${rx}" fill="url(#sh${id})"/>
+
+    <!-- neck -->
+    <rect x="${neckX}" y="${bodyY - neckH}" width="${neckW}" height="${neckH + 4}"
+          rx="4" fill="url(#bg${id})" opacity="0.85"
+          stroke="${DARK}" stroke-width="1"/>
+
+    <!-- cap -->
+    <rect x="${neckX - 4}" y="${bodyY - neckH - capH + 2}" width="${neckW + 8}" height="${capH}"
+          rx="6" fill="url(#cg${id})" stroke="${CAP2}" stroke-width="1"/>
+    <line x1="${neckX - 2}"     y1="${bodyY - neckH - capH + 10}"
+          x2="${neckX + neckW + 2}" y2="${bodyY - neckH - capH + 10}"
+          stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+    <line x1="${neckX - 2}"     y1="${bodyY - neckH - capH + 15}"
+          x2="${neckX + neckW + 2}" y2="${bodyY - neckH - capH + 15}"
+          stroke="rgba(0,0,0,0.1)" stroke-width="0.8"/>
+  `;
+}
+
+function renderRxBottle() {
+  const usage   = getCurrentMonthTabletUsage(state);
+  const used    = usage.used    || 0;
+  const planned = usage.planned || 0;
+  const remaining = Math.max(0, planned - used);
+  const pct     = planned > 0 ? remaining / planned : 1;
+  const medName = (state.settings.medicationName || "Rx").trim();
+
+  drawRxBottle(els.rxBottleSvg, pct, medName);
+
+  if (els.rxBottleSub) {
+    els.rxBottleSub.textContent = planned > 0
+      ? `${used} used · ${remaining} left`
+      : "Set supply in Settings";
+  }
+}
+
 function render() {
   renderGauge();
   renderMiniTrend();
   renderRecent();
   renderRecoveryContext();
+  renderRxBottle();
 }
 
 els.nowButton.addEventListener("click", () => {

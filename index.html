@@ -10,10 +10,10 @@
     <meta name="theme-color" content="#efe1c7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="./manifest.webmanifest?v=60" />
+    <link rel="manifest" href="./manifest.webmanifest?v=61" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=60" />
+    <link rel="stylesheet" href="./styles.css?v=61" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -75,10 +75,17 @@
               <span>Last dose</span>
               <strong id="todayLastDose">None</strong>
             </div>
-            <div class="stat-chip stat-chip-progress">
-              <span>Tablets used this month</span>
-              <strong id="monthTabletUsage">0 / 0</strong>
-              <div class="mini-progress" aria-hidden="true">
+            <div class="stat-chip rx-bottle-chip">
+              <span>Monthly supply</span>
+              <div class="rx-bottle-layout">
+                <svg id="rxBottleSvg" class="rx-bottle-svg" width="72" height="128" viewBox="0 0 90 160"></svg>
+                <div class="rx-bottle-counts">
+                  <strong id="monthTabletUsage">0 / 0</strong>
+                  <span id="rxBottleSub" class="rx-bottle-sub">— used · — remaining</span>
+                </div>
+              </div>
+              <!-- keep hidden fill bar so existing JS doesn't break -->
+              <div class="mini-progress" aria-hidden="true" style="display:none">
                 <div id="monthTabletUsageFill" class="mini-progress-fill"></div>
               </div>
             </div>
@@ -258,7 +265,7 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=60"></script>
-    <script src="./home.js?v=60"></script>
+    <script src="./journal-core.js?v=61"></script>
+    <script src="./home.js?v=61"></script>
   </body>
 </html>
