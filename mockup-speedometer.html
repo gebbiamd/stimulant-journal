@@ -100,13 +100,13 @@
   <h2 class="card-title">🏎️ Pace gauge</h2>
   <div class="gauges-row">
     <div class="gauge-cell">
-      <svg id="gaugeMo" class="speedometer-svg" viewBox="0 0 200 175"></svg>
+      <svg id="gaugeMo" class="speedometer-svg" viewBox="-5 0 215 175"></svg>
       <p class="gauge-label">Monthly pace</p>
       <p class="gauge-sub" id="moSub">Mar · — days in</p>
       <span class="gauge-zone-chip" id="moChip">—</span>
     </div>
     <div class="gauge-cell">
-      <svg id="gauge7d" class="speedometer-svg" viewBox="0 0 200 175"></svg>
+      <svg id="gauge7d" class="speedometer-svg" viewBox="-5 0 215 175"></svg>
       <p class="gauge-label">Past 7 days</p>
       <p class="gauge-sub">Rolling average</p>
       <span class="gauge-zone-chip" id="wkChip">—</span>
@@ -131,19 +131,19 @@
 <p class="section-tag">Static Zone Examples</p>
 <div class="examples-grid">
   <div class="example-card">
-    <svg class="speedometer-svg static-ex" viewBox="0 0 200 175" data-val="14"></svg>
+    <svg class="speedometer-svg static-ex" viewBox="-5 0 215 175" data-val="14"></svg>
     <p class="example-label">On target · 14 mg/day</p>
   </div>
   <div class="example-card">
-    <svg class="speedometer-svg static-ex" viewBox="0 0 200 175" data-val="27"></svg>
+    <svg class="speedometer-svg static-ex" viewBox="-5 0 215 175" data-val="27"></svg>
     <p class="example-label">Moderate · 27 mg/day</p>
   </div>
   <div class="example-card">
-    <svg class="speedometer-svg static-ex" viewBox="0 0 200 175" data-val="33"></svg>
+    <svg class="speedometer-svg static-ex" viewBox="-5 0 215 175" data-val="33"></svg>
     <p class="example-label">High · 33 mg/day</p>
   </div>
   <div class="example-card">
-    <svg class="speedometer-svg static-ex" viewBox="0 0 200 175" data-val="40"></svg>
+    <svg class="speedometer-svg static-ex" viewBox="-5 0 215 175" data-val="40"></svg>
     <p class="example-label">Over limit · 40 mg/day</p>
   </div>
 </div>
@@ -183,10 +183,16 @@ function drawSpeedometer(svgEl, value) {
   const [sx, sy] = pt(START_DEG);
   const [ex, ey] = pt(START_DEG - SWEEP); // = pt(-45)
 
-  // ── 2. Zone coloured arcs (faint context) ──
+  // ── 2. Background track — full arc with natural round end caps ──
+  // The last zone's color shows in zone 4 and provides the end caps. Zones 1–3 overdraw it.
+  h += `<path d="M ${sx} ${sy} A ${R} ${R} 0 1 1 ${ex} ${ey}"
+    fill="none" stroke="${ZONES[ZONES.length - 1].color}" stroke-width="${TW}" stroke-linecap="round" opacity="0.22"/>`;
+
+  // Zone coloured arcs for zones 1–3 (butt caps, no boundary bleed)
   let prevDeg = START_DEG;
   let [ppx, ppy] = pt(START_DEG);
-  for (const z of ZONES) {
+  for (let i = 0; i < ZONES.length - 1; i++) {
+    const z = ZONES[i];
     const ea = valToAngle(z.limit);
     const [epx, epy] = pt(ea);
     const span = Math.abs(prevDeg - ea);
