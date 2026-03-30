@@ -19,11 +19,7 @@ const els = {
   syncOuraHomeButton: document.querySelector("#syncOuraHomeButton"),
   doseUnitLabel: document.querySelector("#doseUnitLabel"),
   headerCard: document.querySelector(".header-card"),
-  thermoFill: document.querySelector("#thermoFill"),
-  targetMarker: document.querySelector("#targetMarker"),
-  scaleTop: document.querySelector("#scaleTop"),
-  scaleMid: document.querySelector("#scaleMid"),
-  scaleBase: document.querySelector("#scaleBase"),
+  tabletTrack: document.querySelector("#tabletTrack"),
   todayTotal: document.querySelector("#todayTotal"),
   todayUnit: document.querySelector("#todayUnit"),
   todayEntries: document.querySelector("#todayEntries"),
@@ -169,6 +165,87 @@ function setBusy(button, busyLabel, isBusy) {
   button.classList.remove("is-busy");
 }
 
+// ── Tablet SVG constants ─────────────────────────────────────────────
+const T_PAD = 10, T_OW = 58, T_OH = 34;
+const T_SW  = T_OW + T_PAD * 2, T_SH = T_OH + T_PAD * 2;
+const T_CX  = T_SW / 2, T_CY = T_SH / 2;
+const T_RX  = T_OW / 2 - 1, T_RY = T_OH / 2 - 1;
+
+function drawTabletSVG(fill, over) {
+  const uid = Math.random().toString(36).slice(2, 8);
+  const isRed = over && fill > 0;
+
+  const B_LIGHT = "#a8ddf0", B_BASE = "#5ab0d0", B_DARK = "#3a8aaa", B_SPEC = "rgba(58,138,170,0.15)";
+  const R_LIGHT = "#f7a0a0", R_BASE = "#d43535", R_DARK = "#a82020", R_SPEC = "rgba(168,32,32,0.12)";
+  const LIGHT = isRed ? R_LIGHT : B_LIGHT;
+  const BASE  = isRed ? R_BASE  : B_BASE;
+  const DARK  = isRed ? R_DARK  : B_DARK;
+  const SPEC  = isRed ? R_SPEC  : B_SPEC;
+  const SCOL  = isRed ? "#8a1515" : "#2e7a96";
+  const EF    = "rgba(0,0,0,0.06)", ES = "rgba(0,0,0,0.13)";
+
+  let s = `<defs>
+    <clipPath id="ov${uid}"><ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}"/></clipPath>
+    <radialGradient id="mg${uid}" cx="50%" cy="38%" r="62%">
+      <stop offset="0%"   stop-color="${LIGHT}"/>
+      <stop offset="55%"  stop-color="${BASE}"/>
+      <stop offset="100%" stop-color="${DARK}"/>
+    </radialGradient>
+    ${isRed ? `<filter id="gl${uid}" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="1.8 0 0 0 0.1  0 0 0 0 0  0 0 0 0 0  0 0 0 0.9 0" result="cb"/>
+      <feMerge><feMergeNode in="cb"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>` : ""}
+  </defs>`;
+
+  // ghost shell
+  s += `<ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}" fill="${EF}" stroke="${ES}" stroke-width="1.5"/>`;
+
+  if (fill === 1) {
+    s += `<ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}"
+            fill="url(#mg${uid})" ${isRed ? `filter="url(#gl${uid})"` : ""}/>
+          <ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}" fill="${SPEC}" clip-path="url(#ov${uid})"/>
+          <line x1="${T_CX}" y1="${T_CY - T_RY + 4}" x2="${T_CX}" y2="${T_CY + T_RY - 4}"
+                stroke="${SCOL}" stroke-width="1.8" opacity="0.5" clip-path="url(#ov${uid})"/>
+          <line x1="${T_CX + 0.9}" y1="${T_CY - T_RY + 4}" x2="${T_CX + 0.9}" y2="${T_CY + T_RY - 4}"
+                stroke="rgba(255,255,255,0.3)" stroke-width="0.9" clip-path="url(#ov${uid})"/>
+          <ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}" fill="none" stroke="${DARK}" stroke-width="1.1" opacity="0.45"/>`;
+  } else if (fill === 0.5) {
+    s += `<g ${isRed ? `filter="url(#gl${uid})"` : ""}>
+            <g clip-path="url(#ov${uid})">
+              <rect x="${T_PAD}" y="${T_PAD}" width="${T_OW / 2}" height="${T_OH}" fill="url(#mg${uid})"/>
+              <rect x="${T_PAD}" y="${T_PAD}" width="${T_OW / 2}" height="${T_OH}" fill="${SPEC}"/>
+            </g>
+          </g>
+          <line x1="${T_CX}" y1="${T_CY - T_RY + 3}" x2="${T_CX}" y2="${T_CY + T_RY - 3}"
+                stroke="${SCOL}" stroke-width="1.8" opacity="0.45" clip-path="url(#ov${uid})"/>
+          <line x1="${T_CX + 0.9}" y1="${T_CY - T_RY + 3}" x2="${T_CX + 0.9}" y2="${T_CY + T_RY - 3}"
+                stroke="rgba(255,255,255,0.28)" stroke-width="0.9" clip-path="url(#ov${uid})"/>
+          <ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}" fill="none" stroke="${ES}" stroke-width="1.2"/>`;
+  }
+
+  return `<svg width="${T_SW}" height="${T_SH}" viewBox="0 0 ${T_SW} ${T_SH}" style="display:block;overflow:visible">${s}</svg>`;
+}
+
+function renderTabletTrack(container, taken, dailyLimit) {
+  if (!container) return;
+  container.innerHTML = "";
+  const slots = Math.max(dailyLimit, Math.ceil(taken));
+  for (let i = 0; i < slots; i++) {
+    const rem  = taken - i;
+    const fill = rem >= 1 ? 1 : rem >= 0.5 ? 0.5 : 0;
+    const over = i >= dailyLimit && fill > 0;
+    const div  = document.createElement("div");
+    div.style.display = "flex";
+    div.innerHTML = drawTabletSVG(fill, over);
+    container.appendChild(div);
+  }
+  // toggle warning state on parent card
+  const card = container.closest(".card");
+  if (card) card.classList.toggle("gauge-over", taken > dailyLimit);
+}
+
 function renderGauge() {
   const todayEntries = getTodayDoseEntries(state);
   const total = todayEntries.reduce((sum, entry) => sum + Number(entry.amount), 0);
@@ -181,25 +258,26 @@ function renderGauge() {
   const visualRatio = total / visualMax;
   const suggestedRatio = total / suggestedCap;
 
+  const dailyLimit = state.settings.dailyTabletLimit || 3;
+  const over = totalTablets > dailyLimit;
+  const excess = +(totalTablets - dailyLimit).toFixed(1);
+
+  renderTabletTrack(els.tabletTrack, totalTablets, dailyLimit);
+
   els.todayTotal.textContent = formatNumber(total);
   els.todayUnit.textContent = unitLabel(state);
   els.todayEntries.textContent = `${todayEntries.length}`;
   els.todayLastDose.textContent = lastDose
     ? lastDose.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
     : "None";
-  els.todayGaugeBadge.textContent = gauge.label;
-  els.todayGaugeBadge.className = `status-badge ${gauge.tone}`;
-  els.headerCard.className = `card header-card gauge-${gauge.tone}`;
-  els.todayGaugeLabel.textContent = `${tabletLabel(totalTablets)} today • ${Math.round(suggestedRatio * 100)}% of the 30 mg suggested cap`;
+  els.todayGaugeBadge.textContent = over ? `⚠️ +${excess} over` : gauge.label;
+  els.todayGaugeBadge.className = `status-badge ${over ? "warning" : gauge.tone}`;
+  els.headerCard.className = `card header-card gauge-${over ? "over" : gauge.tone}`;
+  els.todayGaugeLabel.textContent = over
+    ? `${excess} tablet${excess !== 1 ? "s" : ""} over daily limit`
+    : `${tabletLabel(totalTablets)} today • ${Math.round(suggestedRatio * 100)}% of the ${suggestedCap} mg cap`;
   els.gaugeReason.textContent = `${gauge.reason} Monthly tablets used: ${formatNumber(tabletUsage.used)} of ${formatNumber(tabletUsage.planned)}.`;
   els.monthTabletUsage.textContent = `${formatNumber(tabletUsage.used)} / ${formatNumber(tabletUsage.planned)}`;
-  els.monthTabletUsageFill.style.width = `${tabletUsage.planned > 0 ? Math.min((tabletUsage.used / tabletUsage.planned) * 100, 100) : 0}%`;
-  els.thermoFill.style.height = `${Math.min(visualRatio * 100, 100)}%`;
-  els.thermoFill.className = `thermo-fill ${gauge.tone}`;
-  els.targetMarker.style.bottom = `${(suggestedCap / visualMax) * 100}%`;
-  els.scaleTop.textContent = `${formatNumber(visualMax)} ${unitLabel(state)}`;
-  els.scaleMid.textContent = `${formatNumber(visualMax / 2)} ${unitLabel(state)}`;
-  els.scaleBase.textContent = `0 ${unitLabel(state)}`;
   els.doseUnitLabel.textContent = "tabs";
   els.doseMgHint.textContent = "";
 

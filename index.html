@@ -10,10 +10,10 @@
     <meta name="theme-color" content="#efe1c7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="./manifest.webmanifest?v=62" />
+    <link rel="manifest" href="./manifest.webmanifest?v=63" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=62" />
+    <link rel="stylesheet" href="./styles.css?v=63" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -48,22 +48,12 @@
           </div>
         </div>
         <div class="header-layout">
-          <div class="thermo-panel">
-            <div class="thermo-shell">
-              <div class="thermo-scale">
-                <span id="scaleTop">100%</span>
-                <span id="scaleMid">50%</span>
-                <span id="scaleBase">0%</span>
-              </div>
-              <div class="thermo-track">
-                <div id="thermoFill" class="thermo-fill"></div>
-                <div id="targetMarker" class="target-marker"></div>
-              </div>
-            </div>
-            <div class="thermo-readout">
+          <div class="tablet-gauge-panel">
+            <div id="tabletTrack" class="tablet-track-home"></div>
+            <div class="tablet-readout">
               <strong id="todayTotal">0</strong>
               <span id="todayUnit">mg</span>
-              <p id="todayGaugeLabel" class="muted">0% of your daily target</p>
+              <p id="todayGaugeLabel" class="muted">0 tablets today</p>
             </div>
           </div>
           <div class="header-side">
@@ -265,7 +255,7 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=62"></script>
-    <script src="./home.js?v=62"></script>
+    <script src="./journal-core.js?v=63"></script>
+    <script src="./home.js?v=63"></script>
   </body>
 </html>
