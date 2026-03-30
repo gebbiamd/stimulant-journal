@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#efe1c7" />
-    <link rel="manifest" href="./manifest.webmanifest?v=59" />
+    <link rel="manifest" href="./manifest.webmanifest?v=60" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=59" />
+    <link rel="stylesheet" href="./styles.css?v=60" />
     <title>Summary | Stimulant Journal</title>
   </head>
   <body data-page="summary">
@@ -134,51 +134,10 @@
         <div class="section-header">
           <div>
             <p class="eyebrow">Recovery</p>
-            <h2>❤️ Readiness and stress</h2>
+            <h2>❤️ Readiness &amp; recovery</h2>
           </div>
         </div>
-        <div class="metric-list compact">
-          <div class="metric">
-            <span class="metric-label">Readiness</span>
-            <strong id="latestReadinessScore">-</strong>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Stress</span>
-            <strong id="latestStressState">-</strong>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Resilience</span>
-            <strong id="latestResilienceLevel">-</strong>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Heart rate</span>
-            <strong id="latestHeartRate">-</strong>
-          </div>
-          <div class="metric">
-            <span class="metric-label">HRV</span>
-            <strong id="latestHrv">-</strong>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Temp deviation</span>
-            <strong id="latestTemperatureDeviation">-</strong>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Activity score</span>
-            <strong id="latestActivityScore">-</strong>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Steps</span>
-            <strong id="latestSteps">-</strong>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Active calories</span>
-            <strong id="latestActiveCalories">-</strong>
-          </div>
-          <div class="metric">
-            <span class="metric-label">SpO2</span>
-            <strong id="latestSpo2">-</strong>
-          </div>
-        </div>
+        <div id="recoveryGrid" class="recovery-grid"></div>
       </section>
 
       <section class="card">
@@ -356,7 +315,7 @@
     <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=59"></script>
-    <script src="./summary.js?v=59"></script>
+    <script src="./journal-core.js?v=60"></script>
+    <script src="./summary.js?v=60"></script>
   </body>
 </html>

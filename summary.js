@@ -28,16 +28,7 @@ const els = {
   ouraSleepEmpty: document.querySelector("#ouraSleepEmpty"),
   ouraSleepList: document.querySelector("#ouraSleepList"),
   ouraDebugInfo: document.querySelector("#ouraDebugInfo"),
-  latestReadinessScore: document.querySelector("#latestReadinessScore"),
-  latestStressState: document.querySelector("#latestStressState"),
-  latestResilienceLevel: document.querySelector("#latestResilienceLevel"),
-  latestHeartRate: document.querySelector("#latestHeartRate"),
-  latestHrv: document.querySelector("#latestHrv"),
-  latestTemperatureDeviation: document.querySelector("#latestTemperatureDeviation"),
-  latestActivityScore: document.querySelector("#latestActivityScore"),
-  latestSteps: document.querySelector("#latestSteps"),
-  latestActiveCalories: document.querySelector("#latestActiveCalories"),
-  latestSpo2: document.querySelector("#latestSpo2"),
+  recoveryGrid: document.querySelector("#recoveryGrid"),
   sleepStagesEmpty: document.querySelector("#sleepStagesEmpty"),
   sleepStagesContent: document.querySelector("#sleepStagesContent"),
   sleepStageBar: document.querySelector("#sleepStageBar"),
@@ -365,72 +356,87 @@ function renderLatestSleepMetrics() {
 }
 
 function renderRecoveryMetrics() {
-  const recovery = getOuraRecoverySnapshot(state);
+  if (!els.recoveryGrid) return;
+  const r = getOuraRecoverySnapshot(state);
+  const interp = getRecoveryInterpretations(state);
 
-  // Readiness score with color
-  els.latestReadinessScore.textContent = recovery.readinessScore ?? "-";
-  applyScoreColor(els.latestReadinessScore.closest(".metric"), recovery.readinessScore);
-
-  // Stress state with color
-  els.latestStressState.textContent = recovery.stressSummary || "-";
-  const stressEl = els.latestStressState.closest(".metric");
-  if (stressEl) {
-    stressEl.className = stressEl.className.replace(/\bmetric--(good|ok|poor)\b/g, "").trim();
-    if (recovery.stressSummary === "High") stressEl.classList.add("metric--poor");
-    else if (recovery.stressSummary === "Recovered") stressEl.classList.add("metric--good");
+  function toneFor(score, good = 85, ok = 70) {
+    if (!Number.isFinite(score)) return "";
+    if (score >= good) return "tone-good";
+    if (score >= ok) return "tone-ok";
+    return "tone-poor";
   }
 
-  // Resilience
-  els.latestResilienceLevel.textContent = recovery.resilienceLevel || "-";
+  const tiles = [
+    {
+      label: "Readiness",
+      value: Number.isFinite(r.readinessScore) ? String(r.readinessScore) : "—",
+      interp: interp.readiness || "",
+      tone: toneFor(r.readinessScore),
+    },
+    {
+      label: "HRV balance",
+      value: Number.isFinite(r.latestHrv) ? String(Math.round(r.latestHrv)) : "—",
+      interp: interp.hrv || "",
+      tone: toneFor(r.latestHrv),
+    },
+    {
+      label: "Stress",
+      value: r.stressSummary || "—",
+      interp: interp.stress || "",
+      tone: r.stressSummary === "High" ? "tone-poor" : r.stressSummary === "Recovered" ? "tone-good" : "",
+    },
+    {
+      label: "Resilience",
+      value: r.resilienceLevel || "—",
+      interp: "",
+      tone: "",
+    },
+    {
+      label: "Heart rate",
+      value: Number.isFinite(r.latestHeartRate) ? `${Math.round(r.latestHeartRate)} bpm` : "—",
+      interp: interp.heartRate || "",
+      tone: r.latestHeartRate <= 60 ? "tone-good" : r.latestHeartRate <= 72 ? "" : "tone-ok",
+    },
+    {
+      label: "Temp",
+      value: Number.isFinite(r.temperatureDeviation) ? `${r.temperatureDeviation > 0 ? "+" : ""}${r.temperatureDeviation.toFixed(1)}°` : "—",
+      interp: interp.temp || "",
+      tone: (() => {
+        if (!Number.isFinite(r.temperatureDeviation)) return "";
+        const abs = Math.abs(r.temperatureDeviation);
+        if (abs <= 0.2) return "tone-good";
+        if (abs <= 0.5) return "tone-ok";
+        return "tone-poor";
+      })(),
+    },
+    {
+      label: "Activity",
+      value: Number.isFinite(r.activityScore) ? String(r.activityScore) : "—",
+      interp: interp.activity || "",
+      tone: toneFor(r.activityScore),
+    },
+    {
+      label: "Steps",
+      value: Number.isFinite(r.steps) ? r.steps.toLocaleString() : "—",
+      interp: interp.steps || "",
+      tone: r.steps >= 10000 ? "tone-good" : r.steps >= 6000 ? "tone-ok" : Number.isFinite(r.steps) ? "tone-poor" : "",
+    },
+    {
+      label: "SpO2",
+      value: Number.isFinite(r.spo2Average) ? `${r.spo2Average.toFixed(1)}%` : "—",
+      interp: interp.spo2 || "",
+      tone: r.spo2Average >= 96 ? "tone-good" : r.spo2Average >= 94 ? "tone-ok" : Number.isFinite(r.spo2Average) ? "tone-poor" : "",
+    },
+  ];
 
-  // Heart rate
-  els.latestHeartRate.textContent = Number.isFinite(recovery.latestHeartRate) ? `${formatNumber(recovery.latestHeartRate)} bpm` : "-";
-
-  // HRV with color
-  els.latestHrv.textContent = Number.isFinite(recovery.latestHrv) ? `${formatNumber(recovery.latestHrv)} ms` : "-";
-  applyScoreColor(els.latestHrv.closest(".metric"), recovery.latestHrv);
-
-  // Temperature deviation
-  els.latestTemperatureDeviation.textContent = Number.isFinite(recovery.temperatureDeviation)
-    ? `${recovery.temperatureDeviation > 0 ? "+" : ""}${formatNumber(recovery.temperatureDeviation)}`
-    : "-";
-  const tempEl = els.latestTemperatureDeviation.closest(".metric");
-  if (tempEl) {
-    tempEl.className = tempEl.className.replace(/\bmetric--(good|ok|poor)\b/g, "").trim();
-    if (Number.isFinite(recovery.temperatureDeviation)) {
-      const absTemp = Math.abs(recovery.temperatureDeviation);
-      if (absTemp <= 0.3) tempEl.classList.add("metric--good");
-      else if (absTemp <= 0.6) tempEl.classList.add("metric--ok");
-      else tempEl.classList.add("metric--poor");
-    }
-  }
-
-  // Activity score with color
-  if (els.latestActivityScore) {
-    els.latestActivityScore.textContent = recovery.activityScore ?? "-";
-    applyScoreColor(els.latestActivityScore.closest(".metric"), recovery.activityScore);
-  }
-
-  // Steps
-  if (els.latestSteps) els.latestSteps.textContent = Number.isFinite(recovery.steps) ? recovery.steps.toLocaleString() : "-";
-
-  // Active calories
-  if (els.latestActiveCalories) els.latestActiveCalories.textContent = Number.isFinite(recovery.activeCalories) ? `${Math.round(recovery.activeCalories)} kcal` : "-";
-
-  // SpO2 with color
-  if (els.latestSpo2) {
-    const spo2 = recovery.spo2Average;
-    els.latestSpo2.textContent = Number.isFinite(spo2) ? `${formatNumber(spo2)}%` : "-";
-    const spo2El = els.latestSpo2.closest(".metric");
-    if (spo2El) {
-      spo2El.className = spo2El.className.replace(/\bmetric--(good|ok|poor)\b/g, "").trim();
-      if (Number.isFinite(spo2)) {
-        if (spo2 >= 96) spo2El.classList.add("metric--good");
-        else if (spo2 >= 94) spo2El.classList.add("metric--ok");
-        else spo2El.classList.add("metric--poor");
-      }
-    }
-  }
+  els.recoveryGrid.innerHTML = tiles.map((t) => `
+    <div class="recovery-tile ${t.tone}">
+      <span class="recovery-tile-label">${t.label}</span>
+      <span class="recovery-tile-value">${t.value}</span>
+      ${t.interp ? `<span class="recovery-tile-interp">${t.interp}</span>` : ""}
+    </div>
+  `).join("");
 }
 
 function renderWorkouts() {

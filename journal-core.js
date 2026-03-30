@@ -1070,6 +1070,102 @@ function applyScoreColor(el, score, thresholds) {
   if (cls) el.classList.add(cls);
 }
 
+function getRecoveryInterpretations(state) {
+  const snap = getOuraRecoverySnapshot(state);
+  const out = {};
+
+  // Readiness
+  if (Number.isFinite(snap.readinessScore)) {
+    const s = snap.readinessScore;
+    out.readiness =
+      s >= 85 ? "Body is primed today" :
+      s >= 70 ? "Decent baseline today" :
+      s >= 60 ? "Body needs more rest" :
+      "High recovery debt today";
+  }
+
+  // HRV balance contributor (0-100 scale)
+  if (Number.isFinite(snap.latestHrv)) {
+    const h = snap.latestHrv;
+    out.hrv =
+      h >= 80 ? "Strong autonomic tone" :
+      h >= 60 ? "HRV within normal range" :
+      h >= 40 ? "Mild autonomic strain" :
+      "HRV suppressed — body working hard";
+  }
+
+  // Stress
+  if (snap.stressSummary) {
+    out.stress =
+      snap.stressSummary === "High" ? "Elevated physiological stress" :
+      snap.stressSummary === "Recovered" ? "Body in recovery mode" :
+      "Stress levels look balanced";
+  }
+
+  // Resilience
+  if (snap.resilienceLevel) {
+    const l = snap.resilienceLevel.toLowerCase();
+    out.resilience =
+      l === "exceptional" ? "Excellent stress recovery capacity" :
+      l === "strong" ? "Good capacity to handle load" :
+      l === "adequate" ? "Moderate resilience buffer" :
+      "Resilience is lower than usual";
+  }
+
+  // Resting heart rate
+  if (Number.isFinite(snap.latestHeartRate)) {
+    const hr = snap.latestHeartRate;
+    out.heartRate =
+      hr <= 55 ? "Very low resting HR — well recovered" :
+      hr <= 65 ? "Resting HR looks healthy" :
+      hr <= 75 ? "Slightly elevated resting HR" :
+      "Elevated resting HR — monitor recovery";
+  }
+
+  // Skin temperature deviation
+  if (Number.isFinite(snap.temperatureDeviation)) {
+    const t = snap.temperatureDeviation;
+    out.temp =
+      Math.abs(t) < 0.3 ? "Body temp is baseline normal" :
+      t >= 0.8 ? "Elevated temp — possible illness or fatigue" :
+      t >= 0.3 ? "Slightly warmer than baseline" :
+      t <= -0.5 ? "Cooler than baseline — watch for illness" :
+      "Temp slightly below baseline";
+  }
+
+  // Activity score
+  if (Number.isFinite(snap.activityScore)) {
+    const a = snap.activityScore;
+    out.activity =
+      a >= 85 ? "Activity target hit — great movement" :
+      a >= 70 ? "Good activity levels today" :
+      a >= 50 ? "Moderate movement — room to add more" :
+      "Low activity today";
+  }
+
+  // Steps
+  if (Number.isFinite(snap.steps)) {
+    const s = snap.steps;
+    out.steps =
+      s >= 10000 ? "Step goal crushed" :
+      s >= 7500 ? "Solid step count" :
+      s >= 5000 ? "Moderate steps" :
+      "Low step count today";
+  }
+
+  // SpO2
+  if (Number.isFinite(snap.spo2Average)) {
+    const o = snap.spo2Average;
+    out.spo2 =
+      o >= 97 ? "Blood oxygen excellent" :
+      o >= 95 ? "Blood oxygen normal" :
+      o >= 93 ? "Slightly low SpO2 — rest recommended" :
+      "Low SpO2 — check sleep quality";
+  }
+
+  return out;
+}
+
 function getSleepStages(sleepItem) {
   if (!sleepItem) return null;
   const deep = Number(sleepItem.deep_sleep_duration || 0);
