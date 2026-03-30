@@ -425,8 +425,8 @@ function drawRxBottle(svg, pct, medName) {
   const innerY = bodyY + 2, innerH = bodyH - 4;
   const fillH  = Math.round(innerH * Math.max(0, Math.min(1, pct)));
   const fillY  = innerY + innerH - fillH;
-  const label  = (medName || "Rx").substring(0, 14);
-  const isLongLabel = label.length > 6;
+  const label  = (medName || "").substring(0, 12).toUpperCase();
+  const isLongLabel = label.length > 0;
 
   svg.innerHTML = `
     <defs>
@@ -474,19 +474,18 @@ function drawRxBottle(svg, pct, medName) {
           fill="none" stroke="url(#bg${id})" stroke-width="2.5"/>
 
     <!-- label -->
-    <rect x="${bx + 6}" y="${bodyY + 16}" width="${bw - 12}" height="${isLongLabel ? 38 : 34}"
+    <rect x="${bx + 6}" y="${bodyY + 14}" width="${bw - 12}" height="38"
           rx="4" fill="${LABELBG}" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
-    <text x="${bx + bw / 2}" y="${bodyY + (isLongLabel ? 29 : 30)}"
+    <text x="${bx + bw / 2}" y="${bodyY + 27}"
           text-anchor="middle"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
-          font-size="${isLongLabel ? 6 : 7.5}" font-weight="700"
-          fill="${DARK}">${label}</text>
-    ${isLongLabel ? "" : `
-    <text x="${bx + bw / 2}" y="${bodyY + 42}"
+          font-size="8.5" font-weight="800" letter-spacing="0.5"
+          fill="${DARK}">Rx</text>
+    <text x="${bx + bw / 2}" y="${bodyY + 38}"
           text-anchor="middle"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
-          font-size="5" fill="#aaa">MONTHLY SUPPLY</text>
-    `}
+          font-size="${isLongLabel ? 5.2 : 4.8}" font-weight="600"
+          fill="#aaa">${isLongLabel ? label : "MONTHLY SUPPLY"}</text>
 
     <!-- sheen -->
     <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}"
