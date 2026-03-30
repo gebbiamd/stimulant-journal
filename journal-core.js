@@ -956,6 +956,41 @@ function getOuraRecoverySnapshot(state) {
   };
 }
 
+function scoreColor(score, thresholds = { good: 85, ok: 70 }) {
+  if (!Number.isFinite(score)) return "";
+  if (score >= thresholds.good) return "metric--good";
+  if (score >= thresholds.ok) return "metric--ok";
+  return "metric--poor";
+}
+
+function applyScoreColor(el, score, thresholds) {
+  if (!el) return;
+  el.className = el.className.replace(/\bmetric--(good|ok|poor)\b/g, "").trim();
+  const cls = scoreColor(score, thresholds);
+  if (cls) el.classList.add(cls);
+}
+
+function getSleepStages(sleepItem) {
+  if (!sleepItem) return null;
+  const deep = Number(sleepItem.deep_sleep_duration || 0);
+  const rem = Number(sleepItem.rem_sleep_duration || 0);
+  const light = Number(sleepItem.light_sleep_duration || 0);
+  const awake = Number(sleepItem.awake_time || 0);
+  const total = deep + rem + light + awake;
+  if (!total) return null;
+  return {
+    deep, rem, light, awake, total,
+    deepPct: Math.round(deep / total * 100),
+    remPct: Math.round(rem / total * 100),
+    lightPct: Math.round(light / total * 100),
+    awakePct: Math.round(awake / total * 100),
+    deepH: deep / 3600,
+    remH: rem / 3600,
+    lightH: light / 3600,
+    awakeH: awake / 3600,
+  };
+}
+
 function mergeOuraSleepDay(existing, incoming) {
   const existingDuration = Number(existing?.total_sleep_duration || 0);
   const incomingDuration = Number(incoming?.total_sleep_duration || 0);

@@ -38,6 +38,18 @@ const els = {
   latestSteps: document.querySelector("#latestSteps"),
   latestActiveCalories: document.querySelector("#latestActiveCalories"),
   latestSpo2: document.querySelector("#latestSpo2"),
+  sleepStagesEmpty: document.querySelector("#sleepStagesEmpty"),
+  sleepStagesContent: document.querySelector("#sleepStagesContent"),
+  sleepStageBar: document.querySelector("#sleepStageBar"),
+  stageDeep: document.querySelector("#stageDeep"),
+  stageRem: document.querySelector("#stageRem"),
+  stageLight: document.querySelector("#stageLight"),
+  stageAwake: document.querySelector("#stageAwake"),
+  latestTimeInBed: document.querySelector("#latestTimeInBed"),
+  latestSleepEfficiency: document.querySelector("#latestSleepEfficiency"),
+  trendSparklines: document.querySelector("#trendSparklines"),
+  readinessContributors: document.querySelector("#readinessContributors"),
+  readinessContributorsEmpty: document.querySelector("#readinessContributorsEmpty"),
   workoutEmpty: document.querySelector("#workoutEmpty"),
   workoutList: document.querySelector("#workoutList"),
   latestSleepScore: document.querySelector("#latestSleepScore"),
@@ -340,8 +352,11 @@ function renderLatestSleepMetrics() {
   const bedtime = latestSleep.bedtime_start ? new Date(latestSleep.bedtime_start) : null;
   const displayDate = getOuraDisplayDate(latestSleep);
   const hours = latestSleep.total_sleep_duration ? Number(latestSleep.total_sleep_duration) / 3600 : null;
-  els.latestSleepScore.textContent = latestSleep.score ?? "Pending";
+  const score = latestSleep.score ?? null;
+  els.latestSleepScore.textContent = score ?? "Pending";
+  applyScoreColor(els.latestSleepScore.closest(".metric"), score);
   els.latestSleepHours.textContent = hours ? `${formatNumber(hours)}h` : "-";
+  applyScoreColor(els.latestSleepHours.closest(".metric"), hours ? hours / 8 * 100 : null, { good: 87, ok: 75 });
   els.latestSleepBedtime.textContent = bedtime
     ? bedtime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
     : displayDate
@@ -351,18 +366,71 @@ function renderLatestSleepMetrics() {
 
 function renderRecoveryMetrics() {
   const recovery = getOuraRecoverySnapshot(state);
+
+  // Readiness score with color
   els.latestReadinessScore.textContent = recovery.readinessScore ?? "-";
+  applyScoreColor(els.latestReadinessScore.closest(".metric"), recovery.readinessScore);
+
+  // Stress state with color
   els.latestStressState.textContent = recovery.stressSummary || "-";
+  const stressEl = els.latestStressState.closest(".metric");
+  if (stressEl) {
+    stressEl.className = stressEl.className.replace(/\bmetric--(good|ok|poor)\b/g, "").trim();
+    if (recovery.stressSummary === "High") stressEl.classList.add("metric--poor");
+    else if (recovery.stressSummary === "Recovered") stressEl.classList.add("metric--good");
+  }
+
+  // Resilience
   els.latestResilienceLevel.textContent = recovery.resilienceLevel || "-";
+
+  // Heart rate
   els.latestHeartRate.textContent = Number.isFinite(recovery.latestHeartRate) ? `${formatNumber(recovery.latestHeartRate)} bpm` : "-";
+
+  // HRV with color
   els.latestHrv.textContent = Number.isFinite(recovery.latestHrv) ? `${formatNumber(recovery.latestHrv)} ms` : "-";
+  applyScoreColor(els.latestHrv.closest(".metric"), recovery.latestHrv);
+
+  // Temperature deviation
   els.latestTemperatureDeviation.textContent = Number.isFinite(recovery.temperatureDeviation)
     ? `${recovery.temperatureDeviation > 0 ? "+" : ""}${formatNumber(recovery.temperatureDeviation)}`
     : "-";
-  if (els.latestActivityScore) els.latestActivityScore.textContent = recovery.activityScore ?? "-";
+  const tempEl = els.latestTemperatureDeviation.closest(".metric");
+  if (tempEl) {
+    tempEl.className = tempEl.className.replace(/\bmetric--(good|ok|poor)\b/g, "").trim();
+    if (Number.isFinite(recovery.temperatureDeviation)) {
+      const absTemp = Math.abs(recovery.temperatureDeviation);
+      if (absTemp <= 0.3) tempEl.classList.add("metric--good");
+      else if (absTemp <= 0.6) tempEl.classList.add("metric--ok");
+      else tempEl.classList.add("metric--poor");
+    }
+  }
+
+  // Activity score with color
+  if (els.latestActivityScore) {
+    els.latestActivityScore.textContent = recovery.activityScore ?? "-";
+    applyScoreColor(els.latestActivityScore.closest(".metric"), recovery.activityScore);
+  }
+
+  // Steps
   if (els.latestSteps) els.latestSteps.textContent = Number.isFinite(recovery.steps) ? recovery.steps.toLocaleString() : "-";
+
+  // Active calories
   if (els.latestActiveCalories) els.latestActiveCalories.textContent = Number.isFinite(recovery.activeCalories) ? `${Math.round(recovery.activeCalories)} kcal` : "-";
-  if (els.latestSpo2) els.latestSpo2.textContent = Number.isFinite(recovery.spo2Average) ? `${formatNumber(recovery.spo2Average)}%` : "-";
+
+  // SpO2 with color
+  if (els.latestSpo2) {
+    const spo2 = recovery.spo2Average;
+    els.latestSpo2.textContent = Number.isFinite(spo2) ? `${formatNumber(spo2)}%` : "-";
+    const spo2El = els.latestSpo2.closest(".metric");
+    if (spo2El) {
+      spo2El.className = spo2El.className.replace(/\bmetric--(good|ok|poor)\b/g, "").trim();
+      if (Number.isFinite(spo2)) {
+        if (spo2 >= 96) spo2El.classList.add("metric--good");
+        else if (spo2 >= 94) spo2El.classList.add("metric--ok");
+        else spo2El.classList.add("metric--poor");
+      }
+    }
+  }
 }
 
 function renderWorkouts() {
@@ -443,14 +511,36 @@ function renderSleepPatterns() {
 
 function renderOuraSleep() {
   const sleep = getSortedOuraSleep(state).slice(0, 10);
-  els.ouraSleepList.innerHTML = `
+  const isEmpty = sleep.length === 0;
+  els.ouraSleepList.innerHTML = isEmpty ? "" : `
     <div class="oura-table-head" aria-hidden="true">
       <span>Day</span>
       <span>Score</span>
-      <span>Hours</span>
+      <span>Sleep</span>
+      <span>Deep</span>
+      <span>REM</span>
+      <span>In Bed</span>
     </div>
+    ${sleep.map(item => {
+      const hours = item.total_sleep_duration ? Number(item.total_sleep_duration) / 3600 : null;
+      const tib = item.time_in_bed ? Number(item.time_in_bed) / 3600 : null;
+      const deep = item.deep_sleep_duration ? Number(item.deep_sleep_duration) / 3600 : null;
+      const rem = item.rem_sleep_duration ? Number(item.rem_sleep_duration) / 3600 : null;
+      const score = Number(item.score || 0) || null;
+      const scoreCls = score >= 85 ? "good" : score >= 70 ? "ok" : score ? "poor" : "";
+      const displayDate = getOuraDisplayDate(item);
+      const dayLabel = displayDate ? displayDate.toLocaleDateString([], { month: "numeric", day: "numeric" }) : (item.day || "-");
+      return `<div class="oura-table-row">
+        <span>${dayLabel}</span>
+        <span>${score ? `<span class="score-chip ${scoreCls}">${score}</span>` : "-"}</span>
+        <span>${hours ? `${formatNumber(hours)}h` : "-"}</span>
+        <span>${deep ? `${formatNumber(deep)}h` : "-"}</span>
+        <span>${rem ? `${formatNumber(rem)}h` : "-"}</span>
+        <span>${tib ? `${formatNumber(tib)}h` : "-"}</span>
+      </div>`;
+    }).join("")}
   `;
-  els.ouraSleepEmpty.classList.toggle("hidden", sleep.length > 0);
+  if (els.ouraSleepEmpty) els.ouraSleepEmpty.classList.toggle("hidden", !isEmpty);
   if (els.ouraDebugInfo) {
     const newestDay = sleep[0]?.day || null;
     els.ouraDebugInfo.textContent = newestDay
@@ -463,20 +553,149 @@ function renderOuraSleep() {
       : "recently";
     setNotice(`Oura sleep records loaded. Last synced ${lastSync}.`, "success");
   }
-  for (const item of sleep) {
-    const entry = document.createElement("div");
-    entry.className = "oura-table-row";
-    const displayDate = getOuraDisplayDate(item);
-    const durationHours = item.total_sleep_duration ? item.total_sleep_duration / 3600 : null;
-    const scoreLabel = item.score ?? "Pending";
-    const hoursLabel = durationHours ? `${formatNumber(durationHours)}h` : "-";
-    entry.innerHTML = `
-      <span class="oura-table-day">${displayDate ? displayDate.toLocaleDateString() : "Recent sleep"}</span>
-      <strong class="oura-table-score">${scoreLabel}</strong>
-      <span class="oura-table-hours">${hoursLabel}</span>
-    `;
-    els.ouraSleepList.appendChild(entry);
+}
+
+function renderSleepStages() {
+  const latest = getLatestOuraSleep(state);
+  const stages = latest ? getSleepStages(latest) : null;
+
+  if (!stages) {
+    if (els.sleepStagesEmpty) els.sleepStagesEmpty.classList.remove("hidden");
+    if (els.sleepStagesContent) els.sleepStagesContent.classList.add("hidden");
+    return;
   }
+  if (els.sleepStagesEmpty) els.sleepStagesEmpty.classList.add("hidden");
+  if (els.sleepStagesContent) els.sleepStagesContent.classList.remove("hidden");
+
+  // Stage bar
+  if (els.sleepStageBar) {
+    els.sleepStageBar.innerHTML = `
+      <div class="stage-deep" style="flex:${stages.deepPct}"></div>
+      <div class="stage-rem" style="flex:${stages.remPct}"></div>
+      <div class="stage-light" style="flex:${stages.lightPct}"></div>
+      <div class="stage-awake" style="flex:${stages.awakePct}"></div>
+    `;
+  }
+
+  const fmt = (h) => h > 0 ? `${Math.floor(h)}h ${Math.round((h % 1) * 60)}m` : "0m";
+  if (els.stageDeep) els.stageDeep.textContent = `${fmt(stages.deepH)} (${stages.deepPct}%)`;
+  if (els.stageRem) els.stageRem.textContent = `${fmt(stages.remH)} (${stages.remPct}%)`;
+  if (els.stageLight) els.stageLight.textContent = `${fmt(stages.lightH)} (${stages.lightPct}%)`;
+  if (els.stageAwake) els.stageAwake.textContent = `${fmt(stages.awakeH)} (${stages.awakePct}%)`;
+
+  // Time in bed and efficiency
+  if (els.latestTimeInBed) {
+    const tib = latest.time_in_bed ? Number(latest.time_in_bed) / 3600 : null;
+    els.latestTimeInBed.textContent = tib ? `${formatNumber(tib)}h` : "-";
+  }
+  if (els.latestSleepEfficiency && latest.time_in_bed && latest.total_sleep_duration) {
+    const eff = Math.round(Number(latest.total_sleep_duration) / Number(latest.time_in_bed) * 100);
+    els.latestSleepEfficiency.textContent = `${eff}%`;
+    applyScoreColor(els.latestSleepEfficiency.closest(".metric"), eff, { good: 90, ok: 80 });
+  }
+}
+
+function renderTrendSparklines() {
+  if (!els.trendSparklines) return;
+
+  const readiness = getRecentOuraReadiness(state).slice(0, 14).reverse();
+  const activity = getRecentOuraActivity(state).slice(0, 14).reverse();
+  const spo2 = getRecentOuraSpo2(state).slice(0, 14).reverse();
+
+  if (!readiness.length && !activity.length && !spo2.length) {
+    els.trendSparklines.textContent = "Sync Oura to see trends.";
+    els.trendSparklines.classList.add("empty-state");
+    return;
+  }
+  els.trendSparklines.classList.remove("empty-state");
+
+  function buildSparkline(items, valueKey, color, label, unit = "", min = 0, max = 100) {
+    const values = items.map(i => {
+      const v = valueKey(i);
+      return Number.isFinite(v) ? v : null;
+    }).filter(v => v !== null);
+    if (!values.length) return "";
+
+    const latest = values[values.length - 1];
+    const dataMin = Math.min(...values, min);
+    const dataMax = Math.max(...values, max);
+    const range = dataMax - dataMin || 1;
+    const W = 120, H = 30, pad = 2;
+
+    const pts = values.map((v, i) => {
+      const x = pad + (i / Math.max(values.length - 1, 1)) * (W - pad * 2);
+      const y = pad + (1 - (v - dataMin) / range) * (H - pad * 2);
+      return `${x},${y}`;
+    }).join(" ");
+
+    const latestFormatted = Number.isFinite(latest) ? `${Math.round(latest)}${unit}` : "-";
+
+    return `<div class="sparkline-row">
+      <span class="sparkline-label">${label}</span>
+      <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+        <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+        ${values.length > 0 ? `<circle cx="${pad + (W - pad*2)}" cy="${pad + (1 - (latest - dataMin) / range) * (H - pad*2)}" r="2.5" fill="${color}"/>` : ""}
+      </svg>
+      <span class="sparkline-value">${latestFormatted}</span>
+    </div>`;
+  }
+
+  let html = "";
+  if (readiness.length) html += buildSparkline(readiness, i => Number(i.score || 0) || null, "#3b6fd4", "Readiness", "", 50, 100);
+  if (activity.length) html += buildSparkline(activity, i => Number(i.score || 0) || null, "#2d9e6b", "Activity", "", 50, 100);
+  if (spo2.length) html += buildSparkline(spo2, i => i.spo2_percentage?.average || null, "#8b5cf6", "SpO2", "%", 90, 100);
+
+  // HRV from readiness contributors
+  const hrvData = getRecentOuraReadiness(state).slice(0, 14).reverse();
+  if (hrvData.some(i => i.contributors?.hrv_balance)) {
+    html += buildSparkline(hrvData, i => Number(i.contributors?.hrv_balance || 0) || null, "#f59e0b", "HRV balance", "", 50, 100);
+  }
+
+  els.trendSparklines.innerHTML = html || "<span class='muted'>No trend data yet.</span>";
+}
+
+function renderReadinessContributors() {
+  if (!els.readinessContributors) return;
+  const readiness = getLatestOuraReadiness(state);
+  const contributors = readiness?.contributors;
+
+  if (!contributors || !Object.keys(contributors).length) {
+    if (els.readinessContributorsEmpty) els.readinessContributorsEmpty.classList.remove("hidden");
+    els.readinessContributors.innerHTML = "";
+    return;
+  }
+  if (els.readinessContributorsEmpty) els.readinessContributorsEmpty.classList.add("hidden");
+
+  const labels = {
+    hrv_balance: "HRV balance",
+    resting_heart_rate: "Resting heart rate",
+    body_temperature: "Body temperature",
+    activity_balance: "Activity balance",
+    previous_day_activity: "Prev. day activity",
+    previous_night_sleep: "Prev. night sleep",
+    recovery_index: "Recovery index",
+    sleep_latency: "Sleep latency",
+    sleep_quality: "Sleep quality",
+  };
+
+  const rows = Object.entries(labels)
+    .map(([key, label]) => {
+      const val = Number(contributors[key] ?? NaN);
+      if (!Number.isFinite(val)) return null;
+      const cls = val >= 80 ? "good" : val >= 60 ? "ok" : "poor";
+      return `<div class="contributor-row">
+        <span class="contributor-name">${label}</span>
+        <div class="contributor-bar-bg">
+          <div class="contributor-bar-fill ${cls}" style="width:${val}%"></div>
+        </div>
+        <span class="contributor-score">${Math.round(val)}</span>
+      </div>`;
+    })
+    .filter(Boolean);
+
+  els.readinessContributors.innerHTML = rows.length
+    ? rows.join("")
+    : "<span class='muted'>No contributor data available.</span>";
 }
 
 function renderDoseSleepChart() {
@@ -577,7 +796,10 @@ els.syncOuraButton.addEventListener("click", async () => {
   try {
     const { warnings } = await syncOuraSleep(state);
     renderLatestSleepMetrics();
+    renderSleepStages();
     renderRecoveryMetrics();
+    renderReadinessContributors();
+    renderTrendSparklines();
     renderWorkouts();
     renderSleepFriction();
     renderSleepPatterns();
@@ -627,7 +849,10 @@ els.calendarGrid?.addEventListener("click", (event) => {
   renderRefillStatus();
   renderInventory();
   renderLatestSleepMetrics();
+  renderSleepStages();
   renderRecoveryMetrics();
+  renderReadinessContributors();
+  renderTrendSparklines();
   renderWorkouts();
   renderSleepFriction();
   renderSleepPatterns();

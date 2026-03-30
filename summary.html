@@ -184,6 +184,27 @@
       <section class="card">
         <div class="section-header">
           <div>
+            <p class="eyebrow">Readiness Detail</p>
+            <h2>🔍 What's driving your score</h2>
+          </div>
+        </div>
+        <div id="readinessContributorsEmpty" class="empty-state hidden">Sync Oura to see readiness breakdown.</div>
+        <div id="readinessContributors" class="contributor-list"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">14-Day Trends</p>
+            <h2>📉 Recovery over time</h2>
+          </div>
+        </div>
+        <div id="trendSparklines" class="empty-state">Sync Oura to see trends.</div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
             <p class="eyebrow">Activity</p>
             <h2>🏃 Workouts &amp; movement</h2>
           </div>
@@ -211,6 +232,35 @@
           <div class="metric">
             <span class="metric-label">Bedtime</span>
             <strong id="latestSleepBedtime">-</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Sleep Stages</p>
+            <h2>🌊 Last night's breakdown</h2>
+          </div>
+        </div>
+        <div id="sleepStagesEmpty" class="empty-state hidden">Sync Oura to see sleep stage data.</div>
+        <div id="sleepStagesContent">
+          <div class="sleep-stage-bar" id="sleepStageBar"></div>
+          <div class="sleep-stage-legend">
+            <span><span class="dot" style="background:#3b6fd4"></span>Deep <strong id="stageDeep">-</strong></span>
+            <span><span class="dot" style="background:#8b5cf6"></span>REM <strong id="stageRem">-</strong></span>
+            <span><span class="dot" style="background:#60a5fa"></span>Light <strong id="stageLight">-</strong></span>
+            <span><span class="dot" style="background:#d1d5db"></span>Awake <strong id="stageAwake">-</strong></span>
+          </div>
+          <div class="metric-list compact" style="margin-top:8px">
+            <div class="metric">
+              <span class="metric-label">Time in bed</span>
+              <strong id="latestTimeInBed">-</strong>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Sleep efficiency</span>
+              <strong id="latestSleepEfficiency">-</strong>
+            </div>
           </div>
         </div>
       </section>
