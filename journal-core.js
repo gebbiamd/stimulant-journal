@@ -940,7 +940,7 @@ function getOuraRecoverySnapshot(state) {
       readiness?.contributors?.temperature ??
       NaN
     ),
-    stressSummary: stress?.stress_high ? "High" : stress?.recovery_high ? "Recovered" : stress?.day || null,
+    stressSummary: stress?.stress_high ? "High" : stress?.recovery_high ? "Recovered" : stress?.day ? "Normal" : null,
     stressDay: stress?.day || null,
     resilienceLevel: resilience?.level || resilience?.resilience_level || null,
     resilienceDay: resilience?.day || null,
@@ -954,6 +954,70 @@ function getOuraRecoverySnapshot(state) {
     spo2Average: Number(spo2?.spo2_percentage?.average || 0) || null,
     spo2Day: spo2?.day || null,
   };
+}
+
+function getRecoveryInterpretations(state) {
+  const r = getOuraRecoverySnapshot(state);
+  const interp = {};
+
+  // Readiness
+  if (Number.isFinite(r.readinessScore)) {
+    if (r.readinessScore >= 85) interp.readiness = "Well recovered";
+    else if (r.readinessScore >= 75) interp.readiness = "Good shape";
+    else if (r.readinessScore >= 60) interp.readiness = "Moderate — pace yourself";
+    else interp.readiness = "Low — take it easy";
+  }
+
+  // HRV
+  if (Number.isFinite(r.latestHrv)) {
+    if (r.latestHrv >= 80) interp.hrv = "Strong balance";
+    else if (r.latestHrv >= 60) interp.hrv = "Within range";
+    else interp.hrv = "Below baseline";
+  }
+
+  // Stress
+  if (r.stressSummary === "High") interp.stress = "Nervous system active";
+  else if (r.stressSummary === "Recovered") interp.stress = "Well regulated";
+  else if (r.stressSummary === "Normal") interp.stress = "Balanced";
+
+  // Activity
+  if (Number.isFinite(r.activityScore)) {
+    if (r.activityScore >= 85) interp.activity = "Active day";
+    else if (r.activityScore >= 60) interp.activity = "Moderate movement";
+    else interp.activity = "Low activity";
+  }
+
+  // SpO2
+  if (Number.isFinite(r.spo2Average)) {
+    if (r.spo2Average >= 96) interp.spo2 = "Normal range";
+    else if (r.spo2Average >= 94) interp.spo2 = "Slightly low";
+    else interp.spo2 = "Below normal — worth noting";
+  }
+
+  // Temperature
+  if (Number.isFinite(r.temperatureDeviation)) {
+    const abs = Math.abs(r.temperatureDeviation);
+    if (abs <= 0.2) interp.temp = "At baseline";
+    else if (abs <= 0.5) interp.temp = "Slight deviation";
+    else interp.temp = r.temperatureDeviation > 0 ? "Elevated — monitor" : "Below baseline";
+  }
+
+  // Heart rate
+  if (Number.isFinite(r.latestHeartRate)) {
+    if (r.latestHeartRate <= 60) interp.heartRate = "Resting well";
+    else if (r.latestHeartRate <= 70) interp.heartRate = "Normal range";
+    else interp.heartRate = "Elevated";
+  }
+
+  // Steps
+  if (Number.isFinite(r.steps)) {
+    if (r.steps >= 10000) interp.steps = "Goal reached";
+    else if (r.steps >= 7000) interp.steps = "Active day";
+    else if (r.steps >= 4000) interp.steps = "Moderate";
+    else interp.steps = "Light movement";
+  }
+
+  return interp;
 }
 
 function mergeOuraSleepDay(existing, incoming) {

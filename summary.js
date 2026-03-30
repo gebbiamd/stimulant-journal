@@ -28,16 +28,7 @@ const els = {
   ouraSleepEmpty: document.querySelector("#ouraSleepEmpty"),
   ouraSleepList: document.querySelector("#ouraSleepList"),
   ouraDebugInfo: document.querySelector("#ouraDebugInfo"),
-  latestReadinessScore: document.querySelector("#latestReadinessScore"),
-  latestStressState: document.querySelector("#latestStressState"),
-  latestResilienceLevel: document.querySelector("#latestResilienceLevel"),
-  latestHeartRate: document.querySelector("#latestHeartRate"),
-  latestHrv: document.querySelector("#latestHrv"),
-  latestTemperatureDeviation: document.querySelector("#latestTemperatureDeviation"),
-  latestActivityScore: document.querySelector("#latestActivityScore"),
-  latestSteps: document.querySelector("#latestSteps"),
-  latestActiveCalories: document.querySelector("#latestActiveCalories"),
-  latestSpo2: document.querySelector("#latestSpo2"),
+  recoveryGrid: document.querySelector("#recoveryGrid"),
   workoutEmpty: document.querySelector("#workoutEmpty"),
   workoutList: document.querySelector("#workoutList"),
   latestSleepScore: document.querySelector("#latestSleepScore"),
@@ -350,19 +341,87 @@ function renderLatestSleepMetrics() {
 }
 
 function renderRecoveryMetrics() {
-  const recovery = getOuraRecoverySnapshot(state);
-  els.latestReadinessScore.textContent = recovery.readinessScore ?? "-";
-  els.latestStressState.textContent = recovery.stressSummary || "-";
-  els.latestResilienceLevel.textContent = recovery.resilienceLevel || "-";
-  els.latestHeartRate.textContent = Number.isFinite(recovery.latestHeartRate) ? `${formatNumber(recovery.latestHeartRate)} bpm` : "-";
-  els.latestHrv.textContent = Number.isFinite(recovery.latestHrv) ? `${formatNumber(recovery.latestHrv)} ms` : "-";
-  els.latestTemperatureDeviation.textContent = Number.isFinite(recovery.temperatureDeviation)
-    ? `${recovery.temperatureDeviation > 0 ? "+" : ""}${formatNumber(recovery.temperatureDeviation)}`
-    : "-";
-  if (els.latestActivityScore) els.latestActivityScore.textContent = recovery.activityScore ?? "-";
-  if (els.latestSteps) els.latestSteps.textContent = Number.isFinite(recovery.steps) ? recovery.steps.toLocaleString() : "-";
-  if (els.latestActiveCalories) els.latestActiveCalories.textContent = Number.isFinite(recovery.activeCalories) ? `${Math.round(recovery.activeCalories)} kcal` : "-";
-  if (els.latestSpo2) els.latestSpo2.textContent = Number.isFinite(recovery.spo2Average) ? `${formatNumber(recovery.spo2Average)}%` : "-";
+  if (!els.recoveryGrid) return;
+  const r = getOuraRecoverySnapshot(state);
+  const interp = getRecoveryInterpretations(state);
+
+  function toneFor(score, good = 85, ok = 70) {
+    if (!Number.isFinite(score)) return "";
+    if (score >= good) return "tone-good";
+    if (score >= ok) return "tone-ok";
+    return "tone-poor";
+  }
+
+  const tiles = [
+    {
+      label: "Readiness",
+      value: Number.isFinite(r.readinessScore) ? String(r.readinessScore) : "—",
+      interp: interp.readiness || "",
+      tone: toneFor(r.readinessScore),
+    },
+    {
+      label: "HRV balance",
+      value: Number.isFinite(r.latestHrv) ? String(Math.round(r.latestHrv)) : "—",
+      interp: interp.hrv || "",
+      tone: toneFor(r.latestHrv),
+    },
+    {
+      label: "Stress",
+      value: r.stressSummary || "—",
+      interp: interp.stress || "",
+      tone: r.stressSummary === "High" ? "tone-poor" : r.stressSummary === "Recovered" ? "tone-good" : "",
+    },
+    {
+      label: "Resilience",
+      value: r.resilienceLevel || "—",
+      interp: "",
+      tone: "",
+    },
+    {
+      label: "Heart rate",
+      value: Number.isFinite(r.latestHeartRate) ? `${Math.round(r.latestHeartRate)} bpm` : "—",
+      interp: interp.heartRate || "",
+      tone: r.latestHeartRate <= 60 ? "tone-good" : r.latestHeartRate <= 70 ? "" : "tone-ok",
+    },
+    {
+      label: "Temp",
+      value: Number.isFinite(r.temperatureDeviation) ? `${r.temperatureDeviation > 0 ? "+" : ""}${r.temperatureDeviation.toFixed(1)}°` : "—",
+      interp: interp.temp || "",
+      tone: (() => {
+        const abs = Math.abs(r.temperatureDeviation || 0);
+        if (!Number.isFinite(r.temperatureDeviation)) return "";
+        if (abs <= 0.2) return "tone-good";
+        if (abs <= 0.5) return "tone-ok";
+        return "tone-poor";
+      })(),
+    },
+    {
+      label: "Activity",
+      value: Number.isFinite(r.activityScore) ? String(r.activityScore) : "—",
+      interp: interp.activity || "",
+      tone: toneFor(r.activityScore),
+    },
+    {
+      label: "Steps",
+      value: Number.isFinite(r.steps) ? r.steps.toLocaleString() : "—",
+      interp: interp.steps || "",
+      tone: r.steps >= 10000 ? "tone-good" : r.steps >= 6000 ? "tone-ok" : Number.isFinite(r.steps) ? "tone-poor" : "",
+    },
+    {
+      label: "SpO2",
+      value: Number.isFinite(r.spo2Average) ? `${r.spo2Average.toFixed(1)}%` : "—",
+      interp: interp.spo2 || "",
+      tone: r.spo2Average >= 96 ? "tone-good" : r.spo2Average >= 94 ? "tone-ok" : Number.isFinite(r.spo2Average) ? "tone-poor" : "",
+    },
+  ];
+
+  els.recoveryGrid.innerHTML = tiles.map(t => `
+    <div class="recovery-tile ${t.tone}">
+      <span class="recovery-tile-label">${t.label}</span>
+      <span class="recovery-tile-value">${t.value}</span>
+      ${t.interp ? `<span class="recovery-tile-interp">${t.interp}</span>` : ""}
+    </div>
+  `).join("");
 }
 
 function renderWorkouts() {
