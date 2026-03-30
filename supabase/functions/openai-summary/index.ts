@@ -41,10 +41,13 @@ Deno.serve(async (request) => {
   }
 
   const baseInstructions = [
-    "You are helping with a private stimulant journal that includes Oura sleep data and derived sleep/dose features.",
+    "You are helping with a private stimulant journal that includes Oura sleep, activity, and recovery data.",
     "Treat localDateTime, localTime, bedtimeStartLocal, and bedtimeEndLocal fields as the source of truth for timing.",
     "Do not infer local dose timing from UTC ISO strings.",
     "Use the derived Oura context when available instead of only restating raw records.",
+    "When ouraActivity is present, incorporate steps, activity score, and active calories into your analysis.",
+    "When ouraWorkouts is present, note exercise sessions and consider how they relate to dose days and sleep quality.",
+    "When ouraSpo2 is present, flag any nights with low average blood oxygen (below 95%) as worth noting.",
     "Use emoji heavily when it improves scanability, especially for positive, neutral, and cautionary bullet points.",
     "Do not give medical advice. Do not recommend dose changes. Do not invent facts that are not in the payload.",
   ];

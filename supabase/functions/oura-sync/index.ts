@@ -222,6 +222,9 @@ Deno.serve(async (request) => {
   const stressResult = await fetchOptionalOuraCollection("daily_stress", activeConnection.access_token, query);
   const resilienceResult = await fetchOptionalOuraCollection("daily_resilience", activeConnection.access_token, query);
   const heartrateResult = await fetchOptionalOuraCollection("heartrate", activeConnection.access_token, query);
+  const activityResult = await fetchOptionalOuraCollection("daily_activity", activeConnection.access_token, query);
+  const workoutsResult = await fetchOptionalOuraCollection("workout", activeConnection.access_token, query);
+  const spo2Result = await fetchOptionalOuraCollection("daily_spo2", activeConnection.access_token, query);
   const dailyItems = Array.isArray(dailyPayload?.data) ? dailyPayload.data : [];
   const dailyScoreByDay = new Map(
     dailyItems
@@ -263,6 +266,9 @@ Deno.serve(async (request) => {
   if (!stressResult.ok) syncWarnings.push("stress");
   if (!resilienceResult.ok) syncWarnings.push("resilience");
   if (!heartrateResult.ok) syncWarnings.push("heartrate");
+  if (!activityResult.ok) syncWarnings.push("activity");
+  if (!workoutsResult.ok) syncWarnings.push("workouts");
+  if (!spo2Result.ok) syncWarnings.push("spo2");
 
   const mergedPayload = {
     ...payload,
@@ -271,6 +277,9 @@ Deno.serve(async (request) => {
     stress: stressResult.data,
     resilience: resilienceResult.data,
     heartrate: heartrateResult.data,
+    activity: activityResult.data,
+    workouts: workoutsResult.data,
+    spo2: spo2Result.data,
     data: Array.from(mergedByDay.values()),
     sync_warnings: syncWarnings.length > 0 ? syncWarnings : undefined,
   };
