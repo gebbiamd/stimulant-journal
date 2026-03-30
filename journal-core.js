@@ -940,7 +940,7 @@ function getOuraRecoverySnapshot(state) {
       readiness?.contributors?.temperature ??
       NaN
     ),
-    stressSummary: stress?.stress_high ? "High" : stress?.recovery_high ? "Recovered" : stress?.day || null,
+    stressSummary: stress?.stress_high ? "High" : stress?.recovery_high ? "Recovered" : stress?.day ? "Normal" : null,
     stressDay: stress?.day || null,
     resilienceLevel: resilience?.level || resilience?.resilience_level || null,
     resilienceDay: resilience?.day || null,
