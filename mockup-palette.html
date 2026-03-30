@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UI Palette Mockup</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Themeable CSS vars ── */
+    :root {
+      --bg:          #efe1c7;
+      --card-bg:     rgba(255,255,255,0.58);
+      --card-border: rgba(255,255,255,0.72);
+      --tab-bg:      rgba(239,225,199,0.90);
+      --tab-pip:     rgba(255,255,255,0.78);
+      --tab-shadow:  0 1px 8px rgba(0,0,0,0.10);
+      --text:        #1a1a2e;
+      --text-mid:    #4a4a6a;
+      --muted:       #8e8ea8;
+      --section-tag: #8e8ea8;
+      --shadow:      0 2px 20px rgba(80,60,20,0.10);
+      --blue:        #3b6fd4;
+      --green:       #2d9e6b;
+      --amber:       #d4900a;
+      --red:         #c94040;
+      --purple:      #8b5cf6;
+      --teal:        #0ea5a0;
+      --radius:      20px;
+      --font-disp:   "Avenir Next Condensed","Franklin Gothic Medium",sans-serif;
+      --font-body:   "Avenir Next","Segoe UI",sans-serif;
+      --orb-opacity: 0.38;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: var(--font-body);
+      color: var(--text);
+      padding: 24px 16px 80px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 20px; max-width: 420px; margin: 0 auto;
+      transition: background 0.5s;
+    }
+
+    /* orb background */
+    .bg-orbs {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+      transition: background 0.5s;
+    }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(80px);
+      opacity: var(--orb-opacity);
+      transition: background 0.5s, opacity 0.5s;
+    }
+    .orb-1 { width: 320px; height: 320px; background: #c97a45; top: -80px; right: -60px; }
+    .orb-2 { width: 260px; height: 260px; background: #c4848a; bottom: 60px; left: -70px; }
+
+    body > * { position: relative; z-index: 1; width: 100%; }
+
+    /* ── Section label ── */
+    .section-tag {
+      font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--section-tag); font-weight: 700; text-align: center;
+      transition: color 0.4s;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      padding: 18px 20px 16px;
+      transition: background 0.4s, border-color 0.4s;
+    }
+
+    /* ── Eyebrow + heading ── */
+    .eyebrow {
+      font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--muted); font-weight: 600; margin-bottom: 2px;
+    }
+    h1 { font-family: var(--font-disp); font-size: 1.7rem; font-weight: 800; line-height: 1.05; }
+    h2 { font-family: var(--font-disp); font-size: 1.25rem; font-weight: 700; line-height: 1.1; }
+    h3 { font-size: 0.95rem; font-weight: 700; }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-flex; align-items: center; padding: 3px 10px;
+      border-radius: 999px; font-size: 0.7rem; font-weight: 700;
+    }
+    .badge-green  { background: rgba(45,158,107,0.15); color: var(--green); }
+    .badge-amber  { background: rgba(212,144,10,0.15); color: var(--amber); }
+    .badge-red    { background: rgba(201,64,64,0.15);  color: var(--red); }
+    .badge-blue   { background: rgba(59,111,212,0.13); color: var(--blue); }
+    .badge-purple { background: rgba(139,92,246,0.13); color: var(--purple); }
+
+    /* ── Gauge card ── */
+    .gauge-card { padding: 18px 20px 14px; }
+    .gauge-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .tablet-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .readout { display: flex; align-items: baseline; gap: 6px; }
+    .readout-num { font-family: var(--font-disp); font-size: 3rem; font-weight: 800; line-height: 1; color: var(--text); }
+    .readout-unit { font-size: 0.9rem; color: var(--muted); }
+    .readout-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── Chip grid ── */
+    .chip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .chip {
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 14px;
+      padding: 12px 14px 10px;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .chip-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .chip-value { font-size: 1.1rem; font-weight: 800; color: var(--text); line-height: 1.1; }
+    .chip-sub   { font-size: 0.68rem; color: var(--muted); }
+    .chip-value.green  { color: var(--green); }
+    .chip-value.amber  { color: var(--amber); }
+    .chip-value.red    { color: var(--red); }
+    .chip-value.blue   { color: var(--blue); }
+    .chip-value.purple { color: var(--purple); }
+
+    /* ── Recovery grid ── */
+    .recovery-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .rec-tile {
+      background: rgba(255,255,255,0.45);
+      border-radius: 10px; padding: 9px 10px 7px;
+      border-left: 3px solid rgba(0,0,0,0.08);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .rec-tile.g { border-left-color: var(--green); }
+    .rec-tile.a { border-left-color: var(--amber); }
+    .rec-tile.r { border-left-color: var(--red); }
+    .rec-label  { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .rec-value  { font-size: 1rem; font-weight: 800; line-height: 1.1; }
+    .rec-tile.g .rec-value { color: var(--green); }
+    .rec-tile.a .rec-value { color: var(--amber); }
+    .rec-tile.r .rec-value { color: var(--red); }
+    .rec-interp { font-size: 0.62rem; color: var(--muted); line-height: 1.3; }
+
+    /* ── Palette swatches ── */
+    .swatch-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .swatch {
+      flex: 1; min-width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: flex-end; padding: 4px 6px;
+      font-size: 0.58rem; font-weight: 700; color: rgba(255,255,255,0.85);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+
+    /* ── Rx bottle inline ── */
+    .bottle-row { display: flex; align-items: center; gap: 14px; }
+    .bottle-meta strong { font-size: 1.2rem; font-weight: 800; }
+    .bottle-meta span   { font-size: 0.72rem; color: var(--muted); display: block; margin-top: 2px; }
+
+    /* ── Trend sparkline placeholder ── */
+    .spark-row { display: flex; gap: 6px; align-items: flex-end; height: 36px; }
+    .spark-bar {
+      flex: 1; border-radius: 4px 4px 0 0;
+      background: linear-gradient(180deg, var(--blue) 0%, rgba(59,111,212,0.35) 100%);
+      opacity: 0.8;
+    }
+    .spark-bar.today { background: linear-gradient(180deg, var(--green), rgba(45,158,107,0.4)); opacity: 1; }
+
+    /* ── Tab bar ── */
+    .tab-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--tab-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid var(--card-border);
+      display: flex; align-items: center;
+      padding: 6px 8px 20px; gap: 4px;
+      transition: background 0.4s;
+    }
+    .tab {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      color: var(--muted); cursor: pointer; transition: color 0.2s;
+    }
+    .tab-pip {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 6px 14px 5px; border-radius: 999px;
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.02em;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s, padding 0.2s;
+    }
+    .tab.active { color: var(--text); }
+    .tab.active .tab-pip {
+      background: var(--tab-pip);
+      box-shadow: var(--tab-shadow);
+    }
+
+    /* ── Sleep stages bar ── */
+    .stage-bar { height: 10px; border-radius: 999px; display: flex; overflow: hidden; gap: 2px; }
+    .stage-seg { border-radius: 999px; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), #2450a8);
+      color: #fff; border: none; border-radius: 14px;
+      padding: 12px 20px; font-size: 0.88rem; font-weight: 700;
+      width: 100%; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(59,111,212,0.35);
+    }
+    .btn-ghost {
+      background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 14px; padding: 10px 16px; font-size: 0.82rem; font-weight: 600;
+      color: var(--text-mid); cursor: pointer; width: 100%;
+    }
+
+    /* ── Orb palette buttons ── */
+    .orb-btn {
+      flex: 1; min-width: 72px; padding: 10px 6px; border-radius: 12px; border: none;
+      cursor: pointer; font-size: 0.7rem; font-weight: 700; color: #fff;
+      line-height: 1.4; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .orb-btn:active { transform: scale(0.96); }
+    .orb-btn small { font-weight: 400; opacity: 0.88; display: block; font-size: 0.62rem; }
+
+    /* ── Tab style switcher buttons ── */
+    .tab-style-btn {
+      flex: 1; padding: 8px 10px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.1);
+      cursor: pointer; font-size: 0.72rem; font-weight: 600; background: rgba(255,255,255,0.5);
+      color: var(--muted); transition: all 0.15s;
+    }
+    .tab-style-btn.active-style {
+      background: var(--text); color: #fff; border-color: var(--text);
+    }
+
+    /* ── Tab style: wide (default) ── */
+    .tab-bar.style-wide .tab-pip {
+      padding: 6px 20px 5px; border-radius: 999px; min-width: 90px; justify-content: center;
+    }
+    .tab-bar.style-wide .tab.active .tab-pip {
+      background: rgba(255,255,255,0.78);
+      box-shadow: 0 1px 8px rgba(0,0,0,0.1);
+    }
+
+    /* ── Tab style: tinted pill ── */
+    .tab-bar.style-tinted .tab-pip {
+      padding: 6px 18px 5px; border-radius: 999px; min-width: 90px; justify-content: center;
+    }
+    .tab-bar.style-tinted .tab.active { color: #3b6fd4; }
+    .tab-bar.style-tinted .tab.active .tab-pip {
+      background: rgba(59,111,212,0.12);
+      box-shadow: 0 1px 6px rgba(59,111,212,0.15);
+    }
+
+    /* ── Tab style: icon-only pill ── */
+    .tab-bar.style-pill-icon .tab-pip {
+      padding: 7px 16px 6px; border-radius: 999px; flex-direction: row; gap: 5px;
+    }
+    .tab-bar.style-pill-icon .tab-pip span { display: none; }
+    .tab-bar.style-pill-icon .tab.active .tab-pip span { display: block; }
+    .tab-bar.style-pill-icon .tab.active .tab-pip {
+      background: rgba(255,255,255,0.78);
+      box-shadow: 0 1px 8px rgba(0,0,0,0.1);
+      padding: 7px 18px 6px;
+    }
+    .tab-bar.style-pill-icon .tab.active .tab-pip span {
+      font-size: 0.62rem; font-weight: 700;
+    }
+
+    /* ── Tab style: floating card ── */
+    .tab-bar.style-floating {
+      background: rgba(239,225,199,0.7);
+      padding: 8px 16px 20px;
+    }
+    .tab-bar.style-floating .tab-pip {
+      padding: 8px 16px 6px; border-radius: 14px; min-width: 86px; justify-content: center;
+    }
+    .tab-bar.style-floating .tab.active .tab-pip {
+      background: rgba(255,255,255,0.9);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    }
+
+    /* ── Overage card state ── */
+    .gauge-card.over {
+      background: rgba(255,230,230,0.65);
+      border-color: rgba(201,64,64,0.25);
+      box-shadow: 0 2px 20px rgba(201,64,64,0.12);
+    }
+    .gauge-card.over .eyebrow { color: rgba(180,50,50,0.6); }
+  </style>
+</head>
+<body>
+
+<!-- background -->
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+</div>
+
+<!-- ── PALETTE STRIP ── -->
+<p class="section-tag">Color palette</p>
+<div class="card" style="padding:16px 18px">
+  <div class="swatch-row">
+    <div class="swatch" style="background:#3b6fd4">Blue</div>
+    <div class="swatch" style="background:#2d9e6b">Green</div>
+    <div class="swatch" style="background:#d4900a">Amber</div>
+    <div class="swatch" style="background:#c94040">Red</div>
+    <div class="swatch" style="background:#8b5cf6">Purple</div>
+    <div class="swatch" style="background:#0ea5a0">Teal</div>
+  </div>
+  <div class="swatch-row" style="margin-top:8px">
+    <div class="swatch" style="background:#efe1c7; color:var(--muted)">Cream</div>
+    <div class="swatch" style="background:rgba(255,255,255,0.58); color:var(--muted); border:1px solid rgba(0,0,0,0.08)">Card</div>
+    <div class="swatch" style="background:#1a1a2e">Text</div>
+    <div class="swatch" style="background:#8e8ea8">Muted</div>
+    <div class="swatch" style="background:#7ec8e3">Pill</div>
+    <div class="swatch" style="background:#e07b35">Rx</div>
+  </div>
+</div>
+
+<!-- ── DOSE GAUGE (normal) ── -->
+<p class="section-tag">Home — dose gauge (normal)</p>
+<div class="card gauge-card">
+  <div class="gauge-header">
+    <div>
+      <p class="eyebrow">Dose Gauge</p>
+      <h2>💊 Today's dose</h2>
+    </div>
+    <span class="badge badge-green">On track</span>
+  </div>
+  <div class="tablet-row" id="tabletRowNormal"></div>
+  <div class="readout">
+    <span class="readout-num">20</span>
+    <span class="readout-unit">mg</span>
+  </div>
+  <p class="readout-label">2 tablets today · 67% of 30 mg cap</p>
+</div>
+
+<!-- ── DOSE GAUGE (overage) ── -->
+<p class="section-tag">Home — dose gauge (over limit)</p>
+<div class="card gauge-card over">
+  <div class="gauge-header">
+    <div>
+      <p class="eyebrow">Dose Gauge</p>
+      <h2>💊 Today's dose</h2>
+    </div>
+    <span class="badge badge-red">⚠️ +1 over</span>
+  </div>
+  <div class="tablet-row" id="tabletRowOver"></div>
+  <div class="readout">
+    <span class="readout-num" style="color:var(--red)">40</span>
+    <span class="readout-unit">mg</span>
+  </div>
+  <p class="readout-label" style="color:var(--red);font-weight:600">1 tablet over daily limit</p>
+</div>
+
+<!-- ── STAT CHIPS ── -->
+<p class="section-tag">Home — info chips</p>
+<div class="card" style="padding:14px 16px">
+  <div class="chip-grid">
+    <div class="chip">
+      <span class="chip-label">Last dose</span>
+      <span class="chip-value">9:30 AM</span>
+      <span class="chip-sub">3h 20m ago</span>
+    </div>
+    <div class="chip">
+      <span class="chip-label">Time since last</span>
+      <span class="chip-value blue">3h 20m</span>
+      <span class="chip-sub">Next window ~12:30</span>
+    </div>
+    <div class="chip" style="grid-column:1/-1">
+      <span class="chip-label">Monthly supply</span>
+      <div class="bottle-row">
+        <svg id="bottleSmall" width="52" height="92" viewBox="0 0 90 160" style="flex-shrink:0;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.15))"></svg>
+        <div class="bottle-meta">
+          <strong>18 / 30</strong>
+          <span>12 used · 18 remaining</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── RECOVERY GRID ── -->
+<p class="section-tag">More Info — recovery grid</p>
+<div class="card">
+  <p class="eyebrow">Recovery</p>
+  <h2 style="margin-bottom:12px">❤️ Readiness &amp; recovery</h2>
+  <div class="recovery-grid">
+    <div class="rec-tile g"><span class="rec-label">Readiness</span><span class="rec-value">84</span><span class="rec-interp">Body is primed</span></div>
+    <div class="rec-tile g"><span class="rec-label">HRV</span><span class="rec-value">82</span><span class="rec-interp">Strong tone</span></div>
+    <div class="rec-tile a"><span class="rec-label">Stress</span><span class="rec-value">Normal</span><span class="rec-interp">Balanced today</span></div>
+    <div class="rec-tile g"><span class="rec-label">Resilience</span><span class="rec-value">Strong</span><span class="rec-interp">Good capacity</span></div>
+    <div class="rec-tile g"><span class="rec-label">Heart rate</span><span class="rec-value">58 bpm</span><span class="rec-interp">Healthy resting</span></div>
+    <div class="rec-tile g"><span class="rec-label">Temp</span><span class="rec-value">+0.1°</span><span class="rec-interp">Baseline normal</span></div>
+    <div class="rec-tile g"><span class="rec-label">Activity</span><span class="rec-value">88</span><span class="rec-interp">Goal hit</span></div>
+    <div class="rec-tile a"><span class="rec-label">Steps</span><span class="rec-value">6,240</span><span class="rec-interp">Moderate steps</span></div>
+    <div class="rec-tile g"><span class="rec-label">SpO2</span><span class="rec-value">97.4%</span><span class="rec-interp">Excellent O2</span></div>
+  </div>
+</div>
+
+<!-- ── SLEEP CARD ── -->
+<p class="section-tag">More Info — sleep</p>
+<div class="card">
+  <p class="eyebrow">Oura Insight</p>
+  <h2 style="margin-bottom:12px">🌙 Latest sleep</h2>
+  <div class="chip-grid" style="margin-bottom:12px">
+    <div class="chip">
+      <span class="chip-label">Sleep score</span>
+      <span class="chip-value green">82</span>
+    </div>
+    <div class="chip">
+      <span class="chip-label">Hours slept</span>
+      <span class="chip-value">7h 18m</span>
+    </div>
+    <div class="chip">
+      <span class="chip-label">Bedtime</span>
+      <span class="chip-value">11:04 PM</span>
+    </div>
+    <div class="chip">
+      <span class="chip-label">Efficiency</span>
+      <span class="chip-value green">91%</span>
+    </div>
+  </div>
+  <div style="margin-bottom:8px">
+    <p class="eyebrow" style="margin-bottom:5px">Sleep stages</p>
+    <div class="stage-bar">
+      <div class="stage-seg" style="width:18%;background:#3b6fd4"></div>
+      <div class="stage-seg" style="width:22%;background:#8b5cf6"></div>
+      <div class="stage-seg" style="width:52%;background:#60a5fa"></div>
+      <div class="stage-seg" style="width:8%;background:#d1d5db"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:5px;flex-wrap:wrap">
+      <span style="font-size:0.65rem;color:var(--muted)"><span style="color:#3b6fd4">●</span> Deep 1h 19m</span>
+      <span style="font-size:0.65rem;color:var(--muted)"><span style="color:#8b5cf6">●</span> REM 1h 36m</span>
+      <span style="font-size:0.65rem;color:var(--muted)"><span style="color:#60a5fa">●</span> Light 3h 47m</span>
+      <span style="font-size:0.65rem;color:var(--muted)"><span style="color:#d1d5db">●</span> Awake 36m</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── 30-DAY TREND ── -->
+<p class="section-tag">More Info — 30-day trend</p>
+<div class="card">
+  <p class="eyebrow">Usage Curve</p>
+  <h2 style="margin-bottom:12px">📈 Last 30 days</h2>
+  <div class="spark-row">
+    <div class="spark-bar" style="height:55%"></div><div class="spark-bar" style="height:70%"></div>
+    <div class="spark-bar" style="height:0%"></div><div class="spark-bar" style="height:85%"></div>
+    <div class="spark-bar" style="height:60%"></div><div class="spark-bar" style="height:70%"></div>
+    <div class="spark-bar" style="height:0%"></div><div class="spark-bar" style="height:55%"></div>
+    <div class="spark-bar" style="height:85%"></div><div class="spark-bar" style="height:70%"></div>
+    <div class="spark-bar" style="height:65%"></div><div class="spark-bar" style="height:0%"></div>
+    <div class="spark-bar" style="height:80%"></div><div class="spark-bar" style="height:75%"></div>
+    <div class="spark-bar" style="height:0%"></div><div class="spark-bar" style="height:70%"></div>
+    <div class="spark-bar" style="height:55%"></div><div class="spark-bar" style="height:60%"></div>
+    <div class="spark-bar" style="height:85%"></div><div class="spark-bar" style="height:0%"></div>
+    <div class="spark-bar" style="height:70%"></div><div class="spark-bar" style="height:75%"></div>
+    <div class="spark-bar" style="height:80%"></div><div class="spark-bar" style="height:0%"></div>
+    <div class="spark-bar" style="height:65%"></div><div class="spark-bar" style="height:55%"></div>
+    <div class="spark-bar" style="height:70%"></div><div class="spark-bar" style="height:75%"></div>
+    <div class="spark-bar" style="height:0%"></div><div class="spark-bar today" style="height:50%"></div>
+  </div>
+</div>
+
+<!-- ── BUTTONS ── -->
+<p class="section-tag">Buttons</p>
+<div class="card" style="display:flex;flex-direction:column;gap:10px">
+  <button class="btn-primary">Save Entry</button>
+  <button class="btn-ghost">Sync Oura</button>
+</div>
+
+<!-- ── BADGES ── -->
+<p class="section-tag">Status badges</p>
+<div class="card" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+  <span class="badge badge-green">On track</span>
+  <span class="badge badge-green">Connected</span>
+  <span class="badge badge-amber">Moderate</span>
+  <span class="badge badge-red">⚠️ Over limit</span>
+  <span class="badge badge-blue">Synced</span>
+  <span class="badge badge-purple">REM</span>
+</div>
+
+<!-- ── BACKGROUND PALETTE OPTIONS ── -->
+<p class="section-tag">Background orb options — click to preview</p>
+<div class="card" style="display:flex;flex-direction:column;gap:12px">
+
+  <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">🌿 Warm & Earthy</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="orb-btn" onclick="applyTheme('terracotta')" style="background:linear-gradient(135deg,#c97a45,#c4848a)">Terracotta<br><small>+ Dusty Rose</small></button>
+    <button class="orb-btn" onclick="applyTheme('copper')" style="background:linear-gradient(135deg,#b87333,#a0926a)">Copper<br><small>+ Sand</small></button>
+    <button class="orb-btn" onclick="applyTheme('warmtan')" style="background:linear-gradient(135deg,#c4956a,#8aaa7a)">Warm Tan<br><small>+ Sage</small></button>
+    <button class="orb-btn" onclick="applyTheme('mauve')" style="background:linear-gradient(135deg,#d4a0c0,#c49060)">Mauve<br><small>+ Caramel</small></button>
+  </div>
+
+  <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">🌌 Space & Galaxy</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="orb-btn" onclick="applyTheme('nebula')" style="background:linear-gradient(135deg,#7060c8,#c050a0)">Nebula<br><small>Purple + Magenta</small></button>
+    <button class="orb-btn" onclick="applyTheme('deepspace')" style="background:linear-gradient(135deg,#3040a0,#7040b8)">Deep Space<br><small>Indigo + Violet</small></button>
+    <button class="orb-btn" onclick="applyTheme('aurora')" style="background:linear-gradient(135deg,#0a7a9a,#6030b8)">Aurora<br><small>Teal + Violet</small></button>
+    <button class="orb-btn" onclick="applyTheme('supernova')" style="background:linear-gradient(135deg,#8050d0,#d04040)">Supernova<br><small>Violet + Red</small></button>
+  </div>
+
+  <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">🌅 Sunset & Dusk</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="orb-btn" onclick="applyTheme('dusk')" style="background:linear-gradient(135deg,#d46040,#9050a0)">Dusk<br><small>Ember + Violet</small></button>
+    <button class="orb-btn" onclick="applyTheme('sunset')" style="background:linear-gradient(135deg,#e08030,#d04080)">Sunset<br><small>Orange + Pink</small></button>
+    <button class="orb-btn" onclick="applyTheme('goldenhour')" style="background:linear-gradient(135deg,#c0a030,#40a090)">Golden Hour<br><small>Gold + Teal</small></button>
+    <button class="orb-btn" onclick="applyTheme('twilight')" style="background:linear-gradient(135deg,#a03060,#e07040)">Twilight<br><small>Rose + Amber</small></button>
+  </div>
+
+  <div id="orbLabel" style="font-size:0.72rem;color:var(--muted);text-align:center;font-style:italic">Currently showing: Terracotta + Dusty Rose</div>
+</div>
+
+<!-- ── TAB BAR STYLE OPTIONS ── -->
+<p class="section-tag">Tab bar style — click to switch</p>
+<div class="card" style="display:flex;gap:8px;flex-wrap:wrap">
+  <button class="tab-style-btn" onclick="setTabStyle('wide')" id="tsWide">Wide pill</button>
+  <button class="tab-style-btn" onclick="setTabStyle('tinted')" id="tsTinted">Tinted pill</button>
+  <button class="tab-style-btn active-style" onclick="setTabStyle('pill-icon')" id="tsPillIcon">Icon only pill</button>
+  <button class="tab-style-btn" onclick="setTabStyle('floating')" id="tsFloating">Floating card</button>
+</div>
+<div style="height:80px"></div><!-- spacer so tab bar preview is visible -->
+<div class="tab-bar style-pill-icon" id="tabBar">
+  <div class="tab active" onclick="setActive(0)">
+    <div class="tab-pip">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 10.75 12 4l8 6.75V20a1 1 0 0 1-1 1h-4.75v-6h-4.5v6H5a1 1 0 0 1-1-1z"/>
+      </svg>
+      <span>Home</span>
+    </div>
+  </div>
+  <div class="tab" onclick="setActive(1)">
+    <div class="tab-pip">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 10v6"/>
+        <circle cx="12" cy="7.2" r="1" fill="currentColor" stroke="none"/>
+      </svg>
+      <span>More Info</span>
+    </div>
+  </div>
+  <div class="tab" onclick="setActive(2)">
+    <div class="tab-pip">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3.5 14 4l.8 2.05 2.1.85 1.65-1.15 1.4 1.4-1.15 1.65.85 2.1L20.5 12l-.5 2-2.05.8-.85 2.1 1.15 1.65-1.4 1.4-1.65-1.15-2.1.85L12 20.5l-2-.5-.8-2.05-2.1-.85-1.65 1.15-1.4-1.4 1.15-1.65-.85-2.1L3.5 12l.5-2 2.05-.8.85-2.1-1.15-1.65 1.4-1.4 1.65 1.15 2.1-.85z"/>
+        <circle cx="12" cy="12" r="3.1"/>
+      </svg>
+      <span>Settings</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Tablet SVG (same as app) ──────────────────────────────────────────
+const PAD=10,OW=58,OH=34,SW=OW+PAD*2,SH=OH+PAD*2,CX=SW/2,CY=SH/2,RX=OW/2-1,RY=OH/2-1;
+function tabletSVG(fill,over){
+  const uid=Math.random().toString(36).slice(2,8);
+  const isRed=over&&fill>0;
+  const BL="#a8ddf0",BB="#5ab0d0",BD="#3a8aaa",BS="rgba(58,138,170,0.15)";
+  const RL="#f7a0a0",RB="#d43535",RD="#a82020",RS="rgba(168,32,32,0.12)";
+  const L=isRed?RL:BL,B=isRed?RB:BB,D=isRed?RD:BD,SP=isRed?RS:BS,SC=isRed?"#8a1515":"#2e7a96";
+  const EF="rgba(0,0,0,0.06)",ES="rgba(0,0,0,0.13)";
+  let s=`<defs>
+    <clipPath id="ov${uid}"><ellipse cx="${CX}" cy="${CY}" rx="${RX}" ry="${RY}"/></clipPath>
+    <radialGradient id="mg${uid}" cx="50%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="${L}"/><stop offset="55%" stop-color="${B}"/><stop offset="100%" stop-color="${D}"/>
+    </radialGradient>
+    ${isRed?`<filter id="gl${uid}" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1.8 0 0 0 0.1 0 0 0 0 0 0 0 0 0 0 0 0 0 0.9 0" result="cb"/>
+      <feMerge><feMergeNode in="cb"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>`:""}
+  </defs>`;
+  s+=`<ellipse cx="${CX}" cy="${CY}" rx="${RX}" ry="${RY}" fill="${EF}" stroke="${ES}" stroke-width="1.5"/>`;
+  if(fill===1){
+    s+=`<ellipse cx="${CX}" cy="${CY}" rx="${RX}" ry="${RY}" fill="url(#mg${uid})" ${isRed?`filter="url(#gl${uid})"`:""}/>
+        <ellipse cx="${CX}" cy="${CY}" rx="${RX}" ry="${RY}" fill="${SP}" clip-path="url(#ov${uid})"/>
+        <line x1="${CX}" y1="${CY-RY+4}" x2="${CX}" y2="${CY+RY-4}" stroke="${SC}" stroke-width="1.8" opacity="0.5" clip-path="url(#ov${uid})"/>
+        <line x1="${CX+.9}" y1="${CY-RY+4}" x2="${CX+.9}" y2="${CY+RY-4}" stroke="rgba(255,255,255,0.3)" stroke-width="0.9" clip-path="url(#ov${uid})"/>
+        <ellipse cx="${CX}" cy="${CY}" rx="${RX}" ry="${RY}" fill="none" stroke="${D}" stroke-width="1.1" opacity="0.45"/>`;
+  } else if(fill===0.5){
+    s+=`<g ${isRed?`filter="url(#gl${uid})"`:""}><g clip-path="url(#ov${uid})">
+          <rect x="${PAD}" y="${PAD}" width="${OW/2}" height="${OH}" fill="url(#mg${uid})"/>
+          <rect x="${PAD}" y="${PAD}" width="${OW/2}" height="${OH}" fill="${SP}"/>
+        </g></g>
+        <line x1="${CX}" y1="${CY-RY+3}" x2="${CX}" y2="${CY+RY-3}" stroke="${SC}" stroke-width="1.8" opacity="0.45" clip-path="url(#ov${uid})"/>
+        <ellipse cx="${CX}" cy="${CY}" rx="${RX}" ry="${RY}" fill="none" stroke="${ES}" stroke-width="1.2"/>`;
+  }
+  return `<svg width="${SW}" height="${SH}" viewBox="0 0 ${SW} ${SH}" style="display:block;overflow:visible">${s}</svg>`;
+}
+function renderRow(id,taken,limit){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const slots=Math.max(limit,Math.ceil(taken));
+  for(let i=0;i<slots;i++){
+    const rem=taken-i;
+    const fill=rem>=1?1:rem>=0.5?0.5:0;
+    const over=i>=limit&&fill>0;
+    const d=document.createElement("div");
+    d.style.display="flex";
+    d.innerHTML=tabletSVG(fill,over);
+    el.appendChild(d);
+  }
+}
+renderRow("tabletRowNormal",2,3);
+renderRow("tabletRowOver",4,3);
+
+// ── Full theme engine ────────────────────────────────────────────────
+const themes = {
+  // Warm & Earthy (light)
+  terracotta: { bg:'#efe1c7', o1:'#c97a45', o2:'#c4848a', dark:false, label:'Terracotta + Dusty Rose' },
+  copper:     { bg:'#ede0ca', o1:'#b87333', o2:'#a0926a', dark:false, label:'Copper + Sand' },
+  warmtan:    { bg:'#eee2cc', o1:'#c4956a', o2:'#8aaa7a', dark:false, label:'Warm Tan + Sage' },
+  mauve:      { bg:'#edddd6', o1:'#d4a0c0', o2:'#c49060', dark:false, label:'Mauve + Caramel' },
+  // Space & Galaxy (dark)
+  nebula:     { bg:'#100a1e', o1:'#7060c8', o2:'#c050a0', dark:true,  label:'Nebula — Purple + Magenta' },
+  deepspace:  { bg:'#08091a', o1:'#3040a0', o2:'#7040b8', dark:true,  label:'Deep Space — Indigo + Violet' },
+  aurora:     { bg:'#040e18', o1:'#0a7a9a', o2:'#6030b8', dark:true,  label:'Aurora — Teal + Violet' },
+  supernova:  { bg:'#140818', o1:'#8050d0', o2:'#d04040', dark:true,  label:'Supernova — Violet + Red' },
+  // Sunset & Dusk (light-warm)
+  dusk:       { bg:'#f0e0d8', o1:'#d46040', o2:'#9050a0', dark:false, label:'Dusk — Ember + Violet' },
+  sunset:     { bg:'#f5ddd5', o1:'#e08030', o2:'#d04080', dark:false, label:'Sunset — Orange + Pink' },
+  goldenhour: { bg:'#f0e8cc', o1:'#c0a030', o2:'#40a090', dark:false, label:'Golden Hour — Gold + Teal' },
+  twilight:   { bg:'#f0d8e0', o1:'#a03060', o2:'#e07040', dark:false, label:'Twilight — Rose + Amber' },
+};
+
+function applyTheme(key) {
+  const t = themes[key];
+  if (!t) return;
+  const root = document.documentElement;
+  const body = document.body;
+
+  // Background
+  body.style.background = t.bg;
+  document.querySelector('.orb-1').style.background = t.o1;
+  document.querySelector('.orb-2').style.background = t.o2;
+
+  if (t.dark) {
+    root.style.setProperty('--bg',          t.bg);
+    root.style.setProperty('--card-bg',     'rgba(255,255,255,0.07)');
+    root.style.setProperty('--card-border', 'rgba(255,255,255,0.12)');
+    root.style.setProperty('--tab-bg',      'rgba(10,8,24,0.88)');
+    root.style.setProperty('--tab-pip',     'rgba(255,255,255,0.14)');
+    root.style.setProperty('--tab-shadow',  '0 1px 8px rgba(0,0,0,0.4)');
+    root.style.setProperty('--text',        '#f0eeff');
+    root.style.setProperty('--text-mid',    '#b0a8d0');
+    root.style.setProperty('--muted',       '#6a6090');
+    root.style.setProperty('--section-tag', '#5a5080');
+    root.style.setProperty('--shadow',      '0 2px 24px rgba(0,0,0,0.45)');
+    root.style.setProperty('--orb-opacity', '0.55');
+    body.classList.add('dark');
+  } else {
+    root.style.setProperty('--bg',          t.bg);
+    root.style.setProperty('--card-bg',     'rgba(255,255,255,0.58)');
+    root.style.setProperty('--card-border', 'rgba(255,255,255,0.72)');
+    root.style.setProperty('--tab-bg',      hexToTabBg(t.bg));
+    root.style.setProperty('--tab-pip',     'rgba(255,255,255,0.78)');
+    root.style.setProperty('--tab-shadow',  '0 1px 8px rgba(0,0,0,0.10)');
+    root.style.setProperty('--text',        '#1a1a2e');
+    root.style.setProperty('--text-mid',    '#4a4a6a');
+    root.style.setProperty('--muted',       '#8e8ea8');
+    root.style.setProperty('--section-tag', '#8e8ea8');
+    root.style.setProperty('--shadow',      '0 2px 20px rgba(80,60,20,0.10)');
+    root.style.setProperty('--orb-opacity', '0.38');
+    body.classList.remove('dark');
+  }
+
+  document.getElementById('orbLabel').textContent = 'Currently showing: ' + t.label;
+}
+
+// Derive slightly darkened tab bar bg from base bg
+function hexToTabBg(hex) {
+  return hex.replace(/^#/, '') === '' ? 'rgba(239,225,199,0.9)'
+    : `${hex}ee`;
+}
+
+// Tab active
+function setActive(idx){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+}
+
+// Tab style switcher
+const styleMap={wide:'style-wide',tinted:'style-tinted','pill-icon':'style-pill-icon',floating:'style-floating'};
+function setTabStyle(s){
+  const bar=document.getElementById('tabBar');
+  Object.values(styleMap).forEach(c=>bar.classList.remove(c));
+  bar.classList.add(styleMap[s]);
+  document.querySelectorAll('.tab-style-btn').forEach(b=>b.classList.remove('active-style'));
+  const ids={wide:'tsWide',tinted:'tsTinted','pill-icon':'tsPillIcon',floating:'tsFloating'};
+  document.getElementById(ids[s])?.classList.add('active-style');
+}
+
+// Init
+applyTheme('terracotta');
+setTabStyle('pill-icon');
+
+// ── Rx bottle ──────────────────────────────────────────────────────
+function drawBottle(svg,pct,medName){
+  if(!svg)return;
+  function fc(p){if(p>.5){const t=(1-p)*2;return`rgb(${Math.round(45+(224-45)*t)},${Math.round(158+(123-158)*t)},${Math.round(89+(11-89)*t)})`}else{const t=(.5-p)*2;return`rgb(${Math.round(224+(201-224)*t)},${Math.round(123+(38-123)*t)},${Math.round(11+(18-11)*t)})`}}
+  function dk(p){if(p>.5){const t=(1-p)*2;return`rgb(${Math.round(30+(184-30)*t)},${Math.round(120+(93-120)*t)},${Math.round(60+(8-60)*t)})`}else{const t=(.5-p)*2;return`rgb(${Math.round(184+(160-184)*t)},${Math.round(93+(20-93)*t)},${Math.round(8+(10-8)*t)})`}}
+  const FILL=fc(pct),DARK=dk(pct),id=svg.id||"b";
+  const bx=10,bw=70,rx=7,nX=22,nW=46,nH=18,bY=35,bH=110,cH=22;
+  const iY=bY+2,iH=bH-4,fH=Math.round(iH*Math.max(0,Math.min(1,pct))),fY=iY+iH-fH;
+  const lbl=(medName||"").substring(0,12).toUpperCase();
+  svg.innerHTML=`<defs>
+    <clipPath id="bc${id}"><rect x="${bx}" y="${bY}" width="${bw}" height="${bH}" rx="${rx}"/></clipPath>
+    <radialGradient id="bg${id}" cx="50%" cy="38%" r="60%"><stop offset="0%" stop-color="${FILL}"/><stop offset="100%" stop-color="${DARK}"/></radialGradient>
+    <linearGradient id="fg${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${FILL}" stop-opacity=".92"/><stop offset="100%" stop-color="${DARK}" stop-opacity=".88"/></linearGradient>
+    <linearGradient id="cg${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c8c8c8"/><stop offset="100%" stop-color="#a0a0a0"/></linearGradient>
+    <linearGradient id="sh${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="rgba(255,255,255,0.2)"/><stop offset="40%" stop-color="rgba(255,255,255,0.04)"/><stop offset="100%" stop-color="rgba(0,0,0,0.07)"/></linearGradient>
+  </defs>
+  <rect x="${bx}" y="${bY}" width="${bw}" height="${bH}" rx="${rx}" fill="rgba(0,0,0,0.06)" stroke="rgba(0,0,0,0.12)" stroke-width="1.5"/>
+  <g clip-path="url(#bc${id})">${fH>0?`<rect x="${bx}" y="${fY}" width="${bw}" height="${fH+rx}" fill="url(#fg${id})"/><ellipse cx="${bx+bw/2}" cy="${fY}" rx="${bw/2-1}" ry="3.5" fill="${FILL}" opacity=".65"/>`:""}
+  </g>
+  <rect x="${bx}" y="${bY}" width="${bw}" height="${bH}" rx="${rx}" fill="none" stroke="url(#bg${id})" stroke-width="2.5"/>
+  <rect x="${bx+6}" y="${bY+14}" width="${bw-12}" height="38" rx="4" fill="rgba(255,255,255,0.6)" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+  <text x="${bx+bw/2}" y="${bY+27}" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="8.5" font-weight="800" fill="${DARK}">Rx</text>
+  <text x="${bx+bw/2}" y="${bY+38}" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="${lbl.length>0?5.2:4.8}" font-weight="600" fill="#aaa">${lbl||"MONTHLY SUPPLY"}</text>
+  <rect x="${bx}" y="${bY}" width="${bw}" height="${bH}" rx="${rx}" fill="url(#sh${id})"/>
+  <rect x="${nX}" y="${bY-nH}" width="${nW}" height="${nH+4}" rx="4" fill="url(#bg${id})" opacity=".85" stroke="${DARK}" stroke-width="1"/>
+  <rect x="${nX-4}" y="${bY-nH-cH+2}" width="${nW+8}" height="${cH}" rx="6" fill="url(#cg${id})" stroke="#a0a0a0" stroke-width="1"/>`;
+}
+drawBottle(document.getElementById("bottleSmall"), 0.6, "Adderall");
+</script>
+</body>
+</html>

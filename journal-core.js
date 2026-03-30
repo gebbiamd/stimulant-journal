@@ -956,68 +956,235 @@ function getOuraRecoverySnapshot(state) {
   };
 }
 
-function getRecoveryInterpretations(state) {
-  const r = getOuraRecoverySnapshot(state);
-  const interp = {};
+function getRecoveryContextMessage(state) {
+  const recovery = getOuraRecoverySnapshot(state);
+  const latestSleep = getLatestOuraSleep(state);
 
-  // Readiness
-  if (Number.isFinite(r.readinessScore)) {
-    if (r.readinessScore >= 85) interp.readiness = "Well recovered";
-    else if (r.readinessScore >= 75) interp.readiness = "Good shape";
-    else if (r.readinessScore >= 60) interp.readiness = "Moderate — pace yourself";
-    else interp.readiness = "Low — take it easy";
+  // No data at all
+  const hasAnyData = recovery.readinessScore || recovery.latestHrv || latestSleep;
+  if (!hasAnyData) return null;
+
+  const readiness = recovery.readinessScore;
+  const hrv = recovery.latestHrv;
+  const tempDev = recovery.temperatureDeviation;
+  const stress = recovery.stressSummary;
+  const sleepHours = latestSleep?.total_sleep_duration ? Number(latestSleep.total_sleep_duration) / 3600 : null;
+  const sleepScore = latestSleep?.score ? Number(latestSleep.score) : null;
+  const spo2 = recovery.spo2Average;
+
+  // Possible illness signal
+  if (Number.isFinite(tempDev) && tempDev >= 0.8) {
+    return {
+      tone: "warning",
+      headline: "Temperature elevated",
+      detail: `Your body temp is ${tempDev > 0 ? "+" : ""}${tempDev.toFixed(1)}° from baseline. Your body may be fighting something — worth being mindful of how you feel today.`,
+    };
   }
 
-  // HRV
-  if (Number.isFinite(r.latestHrv)) {
-    if (r.latestHrv >= 80) interp.hrv = "Strong balance";
-    else if (r.latestHrv >= 60) interp.hrv = "Within range";
-    else interp.hrv = "Below baseline";
+  // Low SpO2
+  if (Number.isFinite(spo2) && spo2 < 94) {
+    return {
+      tone: "warning",
+      headline: "Low blood oxygen last night",
+      detail: `SpO2 averaged ${spo2.toFixed(1)}% — below the typical healthy range. Sleep quality may have been affected more than the score suggests.`,
+    };
+  }
+
+  // Very low readiness
+  if (Number.isFinite(readiness) && readiness < 60) {
+    return {
+      tone: "caution",
+      headline: "Recovery is low today",
+      detail: `Readiness score is ${readiness}. Stimulants may feel more intense or wear off differently. Earlier timing for your last dose could help tonight's sleep.`,
+    };
+  }
+
+  // High stress
+  if (stress === "High") {
+    return {
+      tone: "caution",
+      headline: "Stress signal detected",
+      detail: "Oura flagged elevated stress. Your nervous system is already working hard — be mindful of how you feel as the day progresses.",
+    };
+  }
+
+  // Poor sleep
+  if (Number.isFinite(sleepHours) && sleepHours < 6) {
+    return {
+      tone: "caution",
+      headline: "Short sleep last night",
+      detail: `Only ${sleepHours.toFixed(1)}h of sleep. You may feel like you need more today — try to stick close to your usual pattern and prioritize an early last dose.`,
+    };
+  }
+
+  // Low sleep score (but not short)
+  if (Number.isFinite(sleepScore) && sleepScore < 65) {
+    return {
+      tone: "caution",
+      headline: "Sleep quality was low",
+      detail: `Sleep score was ${sleepScore}. Quality rest matters for how stimulants feel — your response today may be less predictable.`,
+    };
+  }
+
+  // Moderate readiness
+  if (Number.isFinite(readiness) && readiness >= 60 && readiness < 75) {
+    return {
+      tone: "neutral",
+      headline: "Moderate recovery",
+      detail: `Readiness is ${readiness} — not fully recovered but not a red flag. A typical day is likely fine; just keep an eye on how you feel.`,
+    };
+  }
+
+  // Good recovery
+  if (Number.isFinite(readiness) && readiness >= 75) {
+    return {
+      tone: "good",
+      headline: "Well recovered today",
+      detail: `Readiness is ${readiness}${stress === "Recovered" ? " and stress is low" : ""}. Stimulant response is likely to be typical today.`,
+    };
+  }
+
+  // Sleep only (no readiness)
+  if (Number.isFinite(sleepHours) && sleepHours >= 7 && Number.isFinite(sleepScore) && sleepScore >= 75) {
+    return {
+      tone: "good",
+      headline: "Good sleep last night",
+      detail: `${sleepHours.toFixed(1)}h with a score of ${sleepScore}. Starting the day well rested.`,
+    };
+  }
+
+  return null;
+}
+
+function scoreColor(score, thresholds = { good: 85, ok: 70 }) {
+  if (!Number.isFinite(score)) return "";
+  if (score >= thresholds.good) return "metric--good";
+  if (score >= thresholds.ok) return "metric--ok";
+  return "metric--poor";
+}
+
+function applyScoreColor(el, score, thresholds) {
+  if (!el) return;
+  el.className = el.className.replace(/\bmetric--(good|ok|poor)\b/g, "").trim();
+  const cls = scoreColor(score, thresholds);
+  if (cls) el.classList.add(cls);
+}
+
+function getRecoveryInterpretations(state) {
+  const snap = getOuraRecoverySnapshot(state);
+  const out = {};
+
+  // Readiness
+  if (Number.isFinite(snap.readinessScore)) {
+    const s = snap.readinessScore;
+    out.readiness =
+      s >= 85 ? "Body is primed today" :
+      s >= 70 ? "Decent baseline today" :
+      s >= 60 ? "Body needs more rest" :
+      "High recovery debt today";
+  }
+
+  // HRV balance contributor (0-100 scale)
+  if (Number.isFinite(snap.latestHrv)) {
+    const h = snap.latestHrv;
+    out.hrv =
+      h >= 80 ? "Strong autonomic tone" :
+      h >= 60 ? "HRV within normal range" :
+      h >= 40 ? "Mild autonomic strain" :
+      "HRV suppressed — body working hard";
   }
 
   // Stress
-  if (r.stressSummary === "High") interp.stress = "Nervous system active";
-  else if (r.stressSummary === "Recovered") interp.stress = "Well regulated";
-  else if (r.stressSummary === "Normal") interp.stress = "Balanced";
-
-  // Activity
-  if (Number.isFinite(r.activityScore)) {
-    if (r.activityScore >= 85) interp.activity = "Active day";
-    else if (r.activityScore >= 60) interp.activity = "Moderate movement";
-    else interp.activity = "Low activity";
+  if (snap.stressSummary) {
+    out.stress =
+      snap.stressSummary === "High" ? "Elevated physiological stress" :
+      snap.stressSummary === "Recovered" ? "Body in recovery mode" :
+      "Stress levels look balanced";
   }
 
-  // SpO2
-  if (Number.isFinite(r.spo2Average)) {
-    if (r.spo2Average >= 96) interp.spo2 = "Normal range";
-    else if (r.spo2Average >= 94) interp.spo2 = "Slightly low";
-    else interp.spo2 = "Below normal — worth noting";
+  // Resilience
+  if (snap.resilienceLevel) {
+    const l = snap.resilienceLevel.toLowerCase();
+    out.resilience =
+      l === "exceptional" ? "Excellent stress recovery capacity" :
+      l === "strong" ? "Good capacity to handle load" :
+      l === "adequate" ? "Moderate resilience buffer" :
+      "Resilience is lower than usual";
   }
 
-  // Temperature
-  if (Number.isFinite(r.temperatureDeviation)) {
-    const abs = Math.abs(r.temperatureDeviation);
-    if (abs <= 0.2) interp.temp = "At baseline";
-    else if (abs <= 0.5) interp.temp = "Slight deviation";
-    else interp.temp = r.temperatureDeviation > 0 ? "Elevated — monitor" : "Below baseline";
+  // Resting heart rate
+  if (Number.isFinite(snap.latestHeartRate)) {
+    const hr = snap.latestHeartRate;
+    out.heartRate =
+      hr <= 55 ? "Very low resting HR — well recovered" :
+      hr <= 65 ? "Resting HR looks healthy" :
+      hr <= 75 ? "Slightly elevated resting HR" :
+      "Elevated resting HR — monitor recovery";
   }
 
-  // Heart rate
-  if (Number.isFinite(r.latestHeartRate)) {
-    if (r.latestHeartRate <= 60) interp.heartRate = "Resting well";
-    else if (r.latestHeartRate <= 70) interp.heartRate = "Normal range";
-    else interp.heartRate = "Elevated";
+  // Skin temperature deviation
+  if (Number.isFinite(snap.temperatureDeviation)) {
+    const t = snap.temperatureDeviation;
+    out.temp =
+      Math.abs(t) < 0.3 ? "Body temp is baseline normal" :
+      t >= 0.8 ? "Elevated temp — possible illness or fatigue" :
+      t >= 0.3 ? "Slightly warmer than baseline" :
+      t <= -0.5 ? "Cooler than baseline — watch for illness" :
+      "Temp slightly below baseline";
+  }
+
+  // Activity score
+  if (Number.isFinite(snap.activityScore)) {
+    const a = snap.activityScore;
+    out.activity =
+      a >= 85 ? "Activity target hit — great movement" :
+      a >= 70 ? "Good activity levels today" :
+      a >= 50 ? "Moderate movement — room to add more" :
+      "Low activity today";
   }
 
   // Steps
-  if (Number.isFinite(r.steps)) {
-    if (r.steps >= 10000) interp.steps = "Goal reached";
-    else if (r.steps >= 7000) interp.steps = "Active day";
-    else if (r.steps >= 4000) interp.steps = "Moderate";
-    else interp.steps = "Light movement";
+  if (Number.isFinite(snap.steps)) {
+    const s = snap.steps;
+    out.steps =
+      s >= 10000 ? "Step goal crushed" :
+      s >= 7500 ? "Solid step count" :
+      s >= 5000 ? "Moderate steps" :
+      "Low step count today";
   }
 
-  return interp;
+  // SpO2
+  if (Number.isFinite(snap.spo2Average)) {
+    const o = snap.spo2Average;
+    out.spo2 =
+      o >= 97 ? "Blood oxygen excellent" :
+      o >= 95 ? "Blood oxygen normal" :
+      o >= 93 ? "Slightly low SpO2 — rest recommended" :
+      "Low SpO2 — check sleep quality";
+  }
+
+  return out;
+}
+
+function getSleepStages(sleepItem) {
+  if (!sleepItem) return null;
+  const deep = Number(sleepItem.deep_sleep_duration || 0);
+  const rem = Number(sleepItem.rem_sleep_duration || 0);
+  const light = Number(sleepItem.light_sleep_duration || 0);
+  const awake = Number(sleepItem.awake_time || 0);
+  const total = deep + rem + light + awake;
+  if (!total) return null;
+  return {
+    deep, rem, light, awake, total,
+    deepPct: Math.round(deep / total * 100),
+    remPct: Math.round(rem / total * 100),
+    lightPct: Math.round(light / total * 100),
+    awakePct: Math.round(awake / total * 100),
+    deepH: deep / 3600,
+    remH: rem / 3600,
+    lightH: light / 3600,
+    awakeH: awake / 3600,
+  };
 }
 
 function mergeOuraSleepDay(existing, incoming) {

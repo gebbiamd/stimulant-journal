@@ -19,11 +19,7 @@ const els = {
   syncOuraHomeButton: document.querySelector("#syncOuraHomeButton"),
   doseUnitLabel: document.querySelector("#doseUnitLabel"),
   headerCard: document.querySelector(".header-card"),
-  thermoFill: document.querySelector("#thermoFill"),
-  targetMarker: document.querySelector("#targetMarker"),
-  scaleTop: document.querySelector("#scaleTop"),
-  scaleMid: document.querySelector("#scaleMid"),
-  scaleBase: document.querySelector("#scaleBase"),
+  tabletTrack: document.querySelector("#tabletTrack"),
   todayTotal: document.querySelector("#todayTotal"),
   todayUnit: document.querySelector("#todayUnit"),
   todayEntries: document.querySelector("#todayEntries"),
@@ -33,8 +29,15 @@ const els = {
   gaugeReason: document.querySelector("#gaugeReason"),
   monthTabletUsage: document.querySelector("#monthTabletUsage"),
   monthTabletUsageFill: document.querySelector("#monthTabletUsageFill"),
+  rxBottleSvg: document.querySelector("#rxBottleSvg"),
+  rxBottleSub: document.querySelector("#rxBottleSub"),
   lastSleepHeadline: document.querySelector("#lastSleepHeadline"),
   lastSleepDetail: document.querySelector("#lastSleepDetail"),
+  lastSleepChip: document.querySelector("#lastSleepHeadline")?.closest(".stat-chip"),
+  recoveryContextChip: document.querySelector("#recoveryContextChip"),
+  recoveryContextLabel: document.querySelector("#recoveryContextLabel"),
+  recoveryContextHeadline: document.querySelector("#recoveryContextHeadline"),
+  recoveryContextDetail: document.querySelector("#recoveryContextDetail"),
   doseRecommendationHeadline: document.querySelector("#doseRecommendationHeadline"),
   doseRecommendationDetail: document.querySelector("#doseRecommendationDetail"),
   miniTrendChart: document.querySelector("#miniTrendChart"),
@@ -162,6 +165,87 @@ function setBusy(button, busyLabel, isBusy) {
   button.classList.remove("is-busy");
 }
 
+// ── Tablet SVG constants ─────────────────────────────────────────────
+const T_PAD = 10, T_OW = 58, T_OH = 34;
+const T_SW  = T_OW + T_PAD * 2, T_SH = T_OH + T_PAD * 2;
+const T_CX  = T_SW / 2, T_CY = T_SH / 2;
+const T_RX  = T_OW / 2 - 1, T_RY = T_OH / 2 - 1;
+
+function drawTabletSVG(fill, over) {
+  const uid = Math.random().toString(36).slice(2, 8);
+  const isRed = over && fill > 0;
+
+  const B_LIGHT = "#a8ddf0", B_BASE = "#5ab0d0", B_DARK = "#3a8aaa", B_SPEC = "rgba(58,138,170,0.15)";
+  const R_LIGHT = "#f7a0a0", R_BASE = "#d43535", R_DARK = "#a82020", R_SPEC = "rgba(168,32,32,0.12)";
+  const LIGHT = isRed ? R_LIGHT : B_LIGHT;
+  const BASE  = isRed ? R_BASE  : B_BASE;
+  const DARK  = isRed ? R_DARK  : B_DARK;
+  const SPEC  = isRed ? R_SPEC  : B_SPEC;
+  const SCOL  = isRed ? "#8a1515" : "#2e7a96";
+  const EF    = "rgba(0,0,0,0.06)", ES = "rgba(0,0,0,0.13)";
+
+  let s = `<defs>
+    <clipPath id="ov${uid}"><ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}"/></clipPath>
+    <radialGradient id="mg${uid}" cx="50%" cy="38%" r="62%">
+      <stop offset="0%"   stop-color="${LIGHT}"/>
+      <stop offset="55%"  stop-color="${BASE}"/>
+      <stop offset="100%" stop-color="${DARK}"/>
+    </radialGradient>
+    ${isRed ? `<filter id="gl${uid}" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="1.8 0 0 0 0.1  0 0 0 0 0  0 0 0 0 0  0 0 0 0.9 0" result="cb"/>
+      <feMerge><feMergeNode in="cb"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>` : ""}
+  </defs>`;
+
+  // ghost shell
+  s += `<ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}" fill="${EF}" stroke="${ES}" stroke-width="1.5"/>`;
+
+  if (fill === 1) {
+    s += `<ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}"
+            fill="url(#mg${uid})" ${isRed ? `filter="url(#gl${uid})"` : ""}/>
+          <ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}" fill="${SPEC}" clip-path="url(#ov${uid})"/>
+          <line x1="${T_CX}" y1="${T_CY - T_RY + 4}" x2="${T_CX}" y2="${T_CY + T_RY - 4}"
+                stroke="${SCOL}" stroke-width="1.8" opacity="0.5" clip-path="url(#ov${uid})"/>
+          <line x1="${T_CX + 0.9}" y1="${T_CY - T_RY + 4}" x2="${T_CX + 0.9}" y2="${T_CY + T_RY - 4}"
+                stroke="rgba(255,255,255,0.3)" stroke-width="0.9" clip-path="url(#ov${uid})"/>
+          <ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}" fill="none" stroke="${DARK}" stroke-width="1.1" opacity="0.45"/>`;
+  } else if (fill === 0.5) {
+    s += `<g ${isRed ? `filter="url(#gl${uid})"` : ""}>
+            <g clip-path="url(#ov${uid})">
+              <rect x="${T_PAD}" y="${T_PAD}" width="${T_OW / 2}" height="${T_OH}" fill="url(#mg${uid})"/>
+              <rect x="${T_PAD}" y="${T_PAD}" width="${T_OW / 2}" height="${T_OH}" fill="${SPEC}"/>
+            </g>
+          </g>
+          <line x1="${T_CX}" y1="${T_CY - T_RY + 3}" x2="${T_CX}" y2="${T_CY + T_RY - 3}"
+                stroke="${SCOL}" stroke-width="1.8" opacity="0.45" clip-path="url(#ov${uid})"/>
+          <line x1="${T_CX + 0.9}" y1="${T_CY - T_RY + 3}" x2="${T_CX + 0.9}" y2="${T_CY + T_RY - 3}"
+                stroke="rgba(255,255,255,0.28)" stroke-width="0.9" clip-path="url(#ov${uid})"/>
+          <ellipse cx="${T_CX}" cy="${T_CY}" rx="${T_RX}" ry="${T_RY}" fill="none" stroke="${ES}" stroke-width="1.2"/>`;
+  }
+
+  return `<svg width="${T_SW}" height="${T_SH}" viewBox="0 0 ${T_SW} ${T_SH}" style="display:block;overflow:visible">${s}</svg>`;
+}
+
+function renderTabletTrack(container, taken, dailyLimit) {
+  if (!container) return;
+  container.innerHTML = "";
+  const slots = Math.max(dailyLimit, Math.ceil(taken));
+  for (let i = 0; i < slots; i++) {
+    const rem  = taken - i;
+    const fill = rem >= 1 ? 1 : rem >= 0.5 ? 0.5 : 0;
+    const over = i >= dailyLimit && fill > 0;
+    const div  = document.createElement("div");
+    div.style.display = "flex";
+    div.innerHTML = drawTabletSVG(fill, over);
+    container.appendChild(div);
+  }
+  // toggle warning state on parent card
+  const card = container.closest(".card");
+  if (card) card.classList.toggle("gauge-over", taken > dailyLimit);
+}
+
 function renderGauge() {
   const todayEntries = getTodayDoseEntries(state);
   const total = todayEntries.reduce((sum, entry) => sum + Number(entry.amount), 0);
@@ -174,25 +258,26 @@ function renderGauge() {
   const visualRatio = total / visualMax;
   const suggestedRatio = total / suggestedCap;
 
+  const dailyLimit = state.settings.dailyTabletLimit || 3;
+  const over = totalTablets > dailyLimit;
+  const excess = +(totalTablets - dailyLimit).toFixed(1);
+
+  renderTabletTrack(els.tabletTrack, totalTablets, dailyLimit);
+
   els.todayTotal.textContent = formatNumber(total);
   els.todayUnit.textContent = unitLabel(state);
   els.todayEntries.textContent = `${todayEntries.length}`;
   els.todayLastDose.textContent = lastDose
     ? lastDose.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
     : "None";
-  els.todayGaugeBadge.textContent = gauge.label;
-  els.todayGaugeBadge.className = `status-badge ${gauge.tone}`;
-  els.headerCard.className = `card header-card gauge-${gauge.tone}`;
-  els.todayGaugeLabel.textContent = `${tabletLabel(totalTablets)} today • ${Math.round(suggestedRatio * 100)}% of the 30 mg suggested cap`;
+  els.todayGaugeBadge.textContent = over ? `⚠️ +${excess} over` : gauge.label;
+  els.todayGaugeBadge.className = `status-badge ${over ? "warning" : gauge.tone}`;
+  els.headerCard.className = `card header-card gauge-${over ? "over" : gauge.tone}`;
+  els.todayGaugeLabel.textContent = over
+    ? `${excess} tablet${excess !== 1 ? "s" : ""} over daily limit`
+    : `${tabletLabel(totalTablets)} today • ${Math.round(suggestedRatio * 100)}% of the ${suggestedCap} mg cap`;
   els.gaugeReason.textContent = `${gauge.reason} Monthly tablets used: ${formatNumber(tabletUsage.used)} of ${formatNumber(tabletUsage.planned)}.`;
   els.monthTabletUsage.textContent = `${formatNumber(tabletUsage.used)} / ${formatNumber(tabletUsage.planned)}`;
-  els.monthTabletUsageFill.style.width = `${tabletUsage.planned > 0 ? Math.min((tabletUsage.used / tabletUsage.planned) * 100, 100) : 0}%`;
-  els.thermoFill.style.height = `${Math.min(visualRatio * 100, 100)}%`;
-  els.thermoFill.className = `thermo-fill ${gauge.tone}`;
-  els.targetMarker.style.bottom = `${(suggestedCap / visualMax) * 100}%`;
-  els.scaleTop.textContent = `${formatNumber(visualMax)} ${unitLabel(state)}`;
-  els.scaleMid.textContent = `${formatNumber(visualMax / 2)} ${unitLabel(state)}`;
-  els.scaleBase.textContent = `0 ${unitLabel(state)}`;
   els.doseUnitLabel.textContent = "tabs";
   els.doseMgHint.textContent = "";
 
@@ -216,9 +301,15 @@ function renderGauge() {
         ? `Bedtime ${bedtime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
         : "Latest synced Oura sleep";
     }
+    if (els.lastSleepChip) {
+      applyScoreColor(els.lastSleepChip, Number(latestSleep.score) || null, { good: 85, ok: 70 });
+    }
   } else {
     els.lastSleepHeadline.textContent = "No Oura sleep yet";
     els.lastSleepDetail.textContent = "Connect and sync Oura in More Details.";
+    if (els.lastSleepChip) {
+      applyScoreColor(els.lastSleepChip, null, { good: 85, ok: 70 });
+    }
   }
 }
 
@@ -337,10 +428,187 @@ function renderRecent() {
   }
 }
 
+function renderRecoveryContext() {
+  const chip = els.recoveryContextChip;
+  if (!chip) return;
+  const msg = getRecoveryContextMessage(state);
+  if (!msg) {
+    chip.classList.add("hidden");
+    return;
+  }
+  chip.classList.remove("hidden");
+  // Clear old tone classes
+  chip.className = chip.className.replace(/\btone-\w+\b/g, "").trim();
+  chip.classList.add(`tone-${msg.tone}`);
+  if (els.recoveryContextLabel) {
+    const labels = { good: "Body signal ✅", neutral: "Body signal 💙", caution: "Body signal ⚠️", warning: "Body signal 🌡️" };
+    els.recoveryContextLabel.textContent = labels[msg.tone] || "Body signal";
+  }
+  if (els.recoveryContextHeadline) els.recoveryContextHeadline.textContent = msg.headline;
+  if (els.recoveryContextDetail) els.recoveryContextDetail.textContent = msg.detail;
+}
+
+function drawRxBottle(svg, pct, medName) {
+  if (!svg) return;
+
+  // Colour ramp: green → amber → red as supply depletes
+  // pct = fraction REMAINING (1.0 = full, 0 = empty)
+  function fillColor(p) {
+    if (p > 0.5) {
+      // green → amber  (1.0 → 0.5)
+      const t = (1 - p) * 2; // 0→1
+      const r = Math.round(45  + (224 - 45)  * t);
+      const g = Math.round(158 + (123 - 158) * t);
+      const b = Math.round(89  + (11  - 89)  * t);
+      return `rgb(${r},${g},${b})`;
+    } else {
+      // amber → red  (0.5 → 0)
+      const t = (0.5 - p) * 2; // 0→1
+      const r = Math.round(224 + (201 - 224) * t);
+      const g = Math.round(123 + (38  - 123) * t);
+      const b = Math.round(11  + (18  - 11)  * t);
+      return `rgb(${r},${g},${b})`;
+    }
+  }
+
+  function darken(p) {
+    if (p > 0.5) {
+      const t = (1 - p) * 2;
+      const r = Math.round(30  + (184 - 30)  * t);
+      const g = Math.round(120 + (93  - 120) * t);
+      const b = Math.round(60  + (8   - 60)  * t);
+      return `rgb(${r},${g},${b})`;
+    } else {
+      const t = (0.5 - p) * 2;
+      const r = Math.round(184 + (160 - 184) * t);
+      const g = Math.round(93  + (20  - 93)  * t);
+      const b = Math.round(8   + (10  - 8)   * t);
+      return `rgb(${r},${g},${b})`;
+    }
+  }
+
+  const FILL    = fillColor(pct);
+  const DARK    = darken(pct);
+  const GHOST   = "rgba(0,0,0,0.06)";
+  const GSTROKE = "rgba(0,0,0,0.12)";
+  const CAP1    = "#c8c8c8";
+  const CAP2    = "#a0a0a0";
+  const LABELBG = "rgba(255,255,255,0.6)";
+  const id      = svg.id || "rxb";
+
+  const bx = 10, bw = 70, rx = 7;
+  const neckX = 22, neckW = 46, neckH = 18;
+  const bodyY = 35, bodyH = 110;
+  const capH  = 22;
+  const innerY = bodyY + 2, innerH = bodyH - 4;
+  const fillH  = Math.round(innerH * Math.max(0, Math.min(1, pct)));
+  const fillY  = innerY + innerH - fillH;
+  const label  = (medName || "").substring(0, 12).toUpperCase();
+  const isLongLabel = label.length > 0;
+
+  svg.innerHTML = `
+    <defs>
+      <clipPath id="bc${id}">
+        <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}" rx="${rx}" ry="${rx}"/>
+      </clipPath>
+      <linearGradient id="bg${id}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%"   stop-color="${DARK}"/>
+        <stop offset="45%"  stop-color="${FILL}"/>
+        <stop offset="100%" stop-color="${DARK}"/>
+      </linearGradient>
+      <linearGradient id="fg${id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="${FILL}" stop-opacity="0.92"/>
+        <stop offset="100%" stop-color="${DARK}" stop-opacity="0.88"/>
+      </linearGradient>
+      <linearGradient id="cg${id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${CAP1}"/>
+        <stop offset="100%" stop-color="${CAP2}"/>
+      </linearGradient>
+      <linearGradient id="sh${id}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%"   stop-color="rgba(255,255,255,0.2)"/>
+        <stop offset="40%"  stop-color="rgba(255,255,255,0.04)"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,0.07)"/>
+      </linearGradient>
+    </defs>
+
+    <!-- ghost body -->
+    <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}"
+          rx="${rx}" ry="${rx}"
+          fill="${GHOST}" stroke="${GSTROKE}" stroke-width="1.5"/>
+
+    <!-- liquid fill -->
+    <g clip-path="url(#bc${id})">
+      ${fillH > 0 ? `
+        <rect x="${bx}" y="${fillY}" width="${bw}" height="${fillH + rx}"
+              fill="url(#fg${id})"/>
+        <ellipse cx="${bx + bw / 2}" cy="${fillY}" rx="${bw / 2 - 1}" ry="3.5"
+                 fill="${FILL}" opacity="0.65"/>
+      ` : ""}
+    </g>
+
+    <!-- bottle outline stroke -->
+    <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}"
+          rx="${rx}" ry="${rx}"
+          fill="none" stroke="url(#bg${id})" stroke-width="2.5"/>
+
+    <!-- label -->
+    <rect x="${bx + 6}" y="${bodyY + 14}" width="${bw - 12}" height="38"
+          rx="4" fill="${LABELBG}" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+    <text x="${bx + bw / 2}" y="${bodyY + 27}"
+          text-anchor="middle"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
+          font-size="8.5" font-weight="800" letter-spacing="0.5"
+          fill="${DARK}">Rx</text>
+    <text x="${bx + bw / 2}" y="${bodyY + 38}"
+          text-anchor="middle"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
+          font-size="${isLongLabel ? 5.2 : 4.8}" font-weight="600"
+          fill="#aaa">${isLongLabel ? label : "MONTHLY SUPPLY"}</text>
+
+    <!-- sheen -->
+    <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}"
+          rx="${rx}" ry="${rx}" fill="url(#sh${id})"/>
+
+    <!-- neck -->
+    <rect x="${neckX}" y="${bodyY - neckH}" width="${neckW}" height="${neckH + 4}"
+          rx="4" fill="url(#bg${id})" opacity="0.85"
+          stroke="${DARK}" stroke-width="1"/>
+
+    <!-- cap -->
+    <rect x="${neckX - 4}" y="${bodyY - neckH - capH + 2}" width="${neckW + 8}" height="${capH}"
+          rx="6" fill="url(#cg${id})" stroke="${CAP2}" stroke-width="1"/>
+    <line x1="${neckX - 2}"     y1="${bodyY - neckH - capH + 10}"
+          x2="${neckX + neckW + 2}" y2="${bodyY - neckH - capH + 10}"
+          stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+    <line x1="${neckX - 2}"     y1="${bodyY - neckH - capH + 15}"
+          x2="${neckX + neckW + 2}" y2="${bodyY - neckH - capH + 15}"
+          stroke="rgba(0,0,0,0.1)" stroke-width="0.8"/>
+  `;
+}
+
+function renderRxBottle() {
+  const usage   = getCurrentMonthTabletUsage(state);
+  const used    = usage.used    || 0;
+  const planned = usage.planned || 0;
+  const remaining = Math.max(0, planned - used);
+  const pct     = planned > 0 ? remaining / planned : 1;
+  const medName = (state.settings.medicationName || "Rx").trim();
+
+  drawRxBottle(els.rxBottleSvg, pct, medName);
+
+  if (els.rxBottleSub) {
+    els.rxBottleSub.textContent = planned > 0
+      ? `${used} used · ${remaining} left`
+      : "Set supply in Settings";
+  }
+}
+
 function render() {
   renderGauge();
   renderMiniTrend();
   renderRecent();
+  renderRecoveryContext();
+  renderRxBottle();
 }
 
 els.nowButton.addEventListener("click", () => {
@@ -353,6 +621,7 @@ els.syncOuraHomeButton?.addEventListener("click", async () => {
   try {
     const { warnings } = await syncOuraSleep(state);
     render();
+    renderRecoveryContext();
     const notice = warnings.length > 0
       ? `Oura synced (${warnings.join(", ")} unavailable).`
       : "Oura sleep data synced.";

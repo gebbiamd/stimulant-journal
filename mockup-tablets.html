@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tablet Dose Mockup</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #efe1c7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 64px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      gap: 28px;
+    }
+    h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; font-weight: 600; }
+
+    .card {
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 22px 24px 20px;
+      width: 100%; max-width: 380px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      border: 1.5px solid transparent;
+      transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+    }
+    .card.is-over {
+      background: rgba(255, 235, 235, 0.72);
+      border-color: rgba(210, 50, 50, 0.3);
+      box-shadow: 0 2px 20px rgba(210, 50, 50, 0.15);
+    }
+
+    .card-eyebrow { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: #aaa; font-weight: 600; margin-bottom: 4px; }
+    .card.is-over .card-eyebrow { color: rgba(200,60,60,0.6); }
+    .card-title   { font-size: 1.05rem; font-weight: 700; color: #1a1a2e; margin-bottom: 18px; }
+
+    .tablet-track { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .dose-summary { margin-top: 14px; font-size: 0.8rem; color: #666; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+    .dose-summary strong { font-size: 1.6rem; font-weight: 800; color: #1a1a2e; line-height: 1; }
+    .dose-summary .unit { color: #999; font-size: 0.75rem; }
+    .cap-label { font-size: 0.78rem; }
+    .cap-label.over { color: #c93030; font-weight: 700; }
+
+    .controls { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px; }
+    .controls label { font-size: 0.8rem; color: #555; display: flex; flex-direction: column; gap: 4px; }
+    .controls input[type=range] { width: 100%; accent-color: #6aaedb; }
+
+    .examples { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 10px; }
+    .example-row {
+      border-radius: 14px;
+      padding: 12px 16px 10px;
+      display: flex; flex-direction: column; gap: 8px;
+      background: rgba(255,255,255,0.45);
+    }
+    .example-row.is-over {
+      background: rgba(255, 230, 230, 0.6);
+    }
+    .example-label { font-size: 0.68rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .example-row.is-over .example-label { color: rgba(200,60,60,0.55); }
+  </style>
+</head>
+<body>
+
+<h2>Tablet Dose Tracker — v3</h2>
+
+<div class="card" id="mainCard">
+  <div class="card-eyebrow">Dose Gauge</div>
+  <div class="card-title">💊 Today's dose</div>
+  <div class="tablet-track" id="mainTrack"></div>
+  <div class="dose-summary">
+    <strong id="doseTotal">0</strong>
+    <span class="unit">mg</span>
+    <span class="cap-label" id="capLabel">today</span>
+  </div>
+</div>
+
+<div class="controls">
+  <label>Tablets taken: <strong id="takenVal">0</strong>
+    <input type="range" id="takenSlider" min="0" max="5" step="0.5" value="0"/>
+  </label>
+  <label>mg per tablet: <strong id="mgVal">10</strong> mg
+    <input type="range" id="mgSlider" min="5" max="30" step="5" value="10"/>
+  </label>
+</div>
+
+<div class="examples">
+  <div class="example-row"><div class="example-label">0 — empty</div><div class="tablet-track" id="ex0"></div></div>
+  <div class="example-row"><div class="example-label">1 tablet</div><div class="tablet-track" id="ex1"></div></div>
+  <div class="example-row"><div class="example-label">1.5 tablets</div><div class="tablet-track" id="ex15"></div></div>
+  <div class="example-row"><div class="example-label">2 tablets</div><div class="tablet-track" id="ex2"></div></div>
+  <div class="example-row"><div class="example-label">3 — full limit</div><div class="tablet-track" id="ex3"></div></div>
+  <div class="example-row is-over"><div class="example-label">3.5 — overage</div><div class="tablet-track" id="ex35"></div></div>
+  <div class="example-row is-over"><div class="example-label">5 — significant overage</div><div class="tablet-track" id="ex5"></div></div>
+</div>
+
+<script>
+const DAILY_LIMIT = 3;
+
+// ── Padding around oval so glow is never clipped ─────────────────────
+const PAD = 10; // px of breathing room on each side
+const OW = 58, OH = 34; // oval dimensions
+const SW = OW + PAD * 2, SH = OH + PAD * 2; // SVG canvas with padding
+const cx = SW / 2, cy = SH / 2;
+const rx = OW / 2 - 1, ry = OH / 2 - 1;
+
+function tabletSVG(fill, over = false) {
+  const uid = Math.random().toString(36).slice(2, 8);
+
+  // Blue palette (normal tablets)
+  const B_LIGHT  = "#a8ddf0";
+  const B_MID    = "#7ec8e3";
+  const B_BASE   = "#5ab0d0";
+  const B_DARK   = "#3a8aaa";
+  const SCORE    = "#2e7a96";
+  const SPECKLE  = "rgba(58,138,170,0.15)";
+
+  // Red palette (overage tablets)
+  const R_LIGHT  = "#f7a0a0";
+  const R_MID    = "#e86060";
+  const R_BASE   = "#d43535";
+  const R_DARK   = "#a82020";
+  const R_SCORE  = "#8a1515";
+  const R_SPEC   = "rgba(168,32,32,0.12)";
+
+  const isRed = over && fill > 0;
+  const LIGHT = isRed ? R_LIGHT : B_LIGHT;
+  const MID   = isRed ? R_MID   : B_MID;
+  const BASE  = isRed ? R_BASE  : B_BASE;
+  const DARK  = isRed ? R_DARK  : B_DARK;
+  const SCOL  = isRed ? R_SCORE : SCORE;
+  const SPEC  = isRed ? R_SPEC  : SPECKLE;
+
+  const EMPTY_FILL   = "rgba(0,0,0,0.06)";
+  const EMPTY_STROKE = "rgba(0,0,0,0.13)";
+
+  let s = `
+    <defs>
+      <clipPath id="oval${uid}">
+        <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>
+      </clipPath>
+      <radialGradient id="matteGrad${uid}" cx="50%" cy="38%" r="62%">
+        <stop offset="0%"   stop-color="${LIGHT}"/>
+        <stop offset="55%"  stop-color="${BASE}"/>
+        <stop offset="100%" stop-color="${DARK}"/>
+      </radialGradient>
+      <linearGradient id="halfGrad${uid}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%"   stop-color="${LIGHT}"/>
+        <stop offset="49%"  stop-color="${MID}"/>
+        <stop offset="50%"  stop-color="${EMPTY_FILL}"/>
+        <stop offset="100%" stop-color="${EMPTY_FILL}"/>
+      </linearGradient>
+      ${isRed ? `
+      <filter id="glow${uid}" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+        <feColorMatrix in="blur" type="matrix"
+          values="1.8 0 0 0 0.1
+                  0   0 0 0 0
+                  0   0 0 0 0
+                  0   0 0 0.9 0" result="coloredBlur"/>
+        <feMerge>
+          <feMergeNode in="coloredBlur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>` : ""}
+    </defs>
+  `;
+
+  // Ghost shell (base layer, always)
+  s += `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"
+        fill="${EMPTY_FILL}" stroke="${EMPTY_STROKE}" stroke-width="1.5"/>`;
+
+  if (fill === 1) {
+    s += `
+      <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"
+               fill="url(#matteGrad${uid})"
+               ${isRed ? `filter="url(#glow${uid})"` : ""}/>
+      <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"
+               fill="${SPEC}" clip-path="url(#oval${uid})"/>
+      <!-- score line shadow -->
+      <line x1="${cx}" y1="${cy - ry + 4}" x2="${cx}" y2="${cy + ry - 4}"
+            stroke="${SCOL}" stroke-width="1.8" opacity="0.5"
+            clip-path="url(#oval${uid})"/>
+      <!-- score line highlight -->
+      <line x1="${cx + 0.9}" y1="${cy - ry + 4}" x2="${cx + 0.9}" y2="${cy + ry - 4}"
+            stroke="rgba(255,255,255,0.3)" stroke-width="0.9"
+            clip-path="url(#oval${uid})"/>
+      <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"
+               fill="none" stroke="${DARK}" stroke-width="1.1" opacity="0.45"/>
+    `;
+  } else if (fill === 0.5) {
+    // For the glow on a half-tablet, apply the filter to a group wrapping the filled half
+    s += `
+      <g ${isRed ? `filter="url(#glow${uid})"` : ""}>
+        <g clip-path="url(#oval${uid})">
+          <rect x="${PAD}" y="${PAD}" width="${OW / 2}" height="${OH}"
+                fill="url(#matteGrad${uid})"/>
+          <rect x="${PAD}" y="${PAD}" width="${OW / 2}" height="${OH}"
+                fill="${SPEC}"/>
+        </g>
+      </g>
+      <line x1="${cx}" y1="${cy - ry + 3}" x2="${cx}" y2="${cy + ry - 3}"
+            stroke="${SCOL}" stroke-width="1.8" opacity="0.45"
+            clip-path="url(#oval${uid})"/>
+      <line x1="${cx + 0.9}" y1="${cy - ry + 3}" x2="${cx + 0.9}" y2="${cy + ry - 3}"
+            stroke="rgba(255,255,255,0.28)" stroke-width="0.9"
+            clip-path="url(#oval${uid})"/>
+      <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"
+               fill="none" stroke="${EMPTY_STROKE}" stroke-width="1.2"/>
+    `;
+  }
+
+  return `<svg width="${SW}" height="${SH}" viewBox="0 0 ${SW} ${SH}"
+               style="display:block;overflow:visible">${s}</svg>`;
+}
+
+// ── Render track ─────────────────────────────────────────────────────
+function renderTrack(container, taken) {
+  container.innerHTML = "";
+  const slots = Math.max(DAILY_LIMIT, Math.ceil(taken));
+  for (let i = 0; i < slots; i++) {
+    const rem  = taken - i;
+    const fill = rem >= 1 ? 1 : rem >= 0.5 ? 0.5 : 0;
+    const over = i >= DAILY_LIMIT && fill > 0;
+    const div  = document.createElement("div");
+    div.style.display = "flex";
+    div.innerHTML = tabletSVG(fill, over);
+    container.appendChild(div);
+  }
+}
+
+// ── Interactive ──────────────────────────────────────────────────────
+function update() {
+  const taken = +document.getElementById("takenSlider").value;
+  const mg    = +document.getElementById("mgSlider").value;
+  document.getElementById("takenVal").textContent = taken;
+  document.getElementById("mgVal").textContent    = mg;
+
+  renderTrack(document.getElementById("mainTrack"), taken);
+
+  const total = taken * mg;
+  document.getElementById("doseTotal").textContent = total % 1 === 0 ? total : total.toFixed(1);
+
+  const over    = taken > DAILY_LIMIT;
+  const cap     = document.getElementById("capLabel");
+  const excess  = +(taken - DAILY_LIMIT).toFixed(1);
+  cap.textContent = over
+    ? `⚠️ ${excess} tablet${excess !== 1 ? "s" : ""} over limit`
+    : "today";
+  cap.className = "cap-label" + (over ? " over" : "");
+
+  document.getElementById("mainCard").classList.toggle("is-over", over);
+}
+
+document.getElementById("takenSlider").addEventListener("input", update);
+document.getElementById("mgSlider").addEventListener("input", update);
+
+renderTrack(document.getElementById("ex0"),  0);
+renderTrack(document.getElementById("ex1"),  1);
+renderTrack(document.getElementById("ex15"), 1.5);
+renderTrack(document.getElementById("ex2"),  2);
+renderTrack(document.getElementById("ex3"),  3);
+renderTrack(document.getElementById("ex35"), 3.5);
+renderTrack(document.getElementById("ex5"),  5);
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rx Bottle Mockup</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #efe1c7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      gap: 40px;
+    }
+
+    h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888;
+      font-weight: 600;
+    }
+
+    /* ── Card shell (matches app style) ── */
+    .card {
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+
+    .card-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #999;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    /* ── Bottle scene ── */
+    .bottle-scene {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 28px;
+    }
+
+    .bottle-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* SVG bottle */
+    .rx-bottle-svg {
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.18));
+    }
+
+    .bottle-meta {
+      text-align: center;
+    }
+    .bottle-meta .count {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #1a1a2e;
+      line-height: 1;
+    }
+    .bottle-meta .sub {
+      font-size: 0.72rem;
+      color: #999;
+      margin-top: 2px;
+    }
+
+    /* ── Slider demo controls ── */
+    .controls {
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .controls label {
+      font-size: 0.8rem;
+      color: #555;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .controls input[type=range] {
+      width: 100%;
+      accent-color: #e07b35;
+    }
+
+    /* ── Variant row ── */
+    .variants {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      align-items: flex-end;
+    }
+    .variant-label {
+      font-size: 0.65rem;
+      color: #aaa;
+      text-align: center;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Rx Bottle — Design Mockup</h2>
+
+  <!-- INTERACTIVE CARD -->
+  <div class="card">
+    <div class="card-label">💊 Monthly supply</div>
+    <div class="bottle-scene">
+      <div class="bottle-wrap">
+        <svg class="rx-bottle-svg" id="mainBottle" width="90" height="160" viewBox="0 0 90 160"></svg>
+        <div class="bottle-meta">
+          <div class="count" id="countLabel">18 / 30</div>
+          <div class="sub" id="subLabel">12 used · 18 remaining</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDER CONTROLS -->
+  <div class="controls">
+    <label>
+      Tablets used: <strong id="usedVal">12</strong>
+      <input type="range" id="usedSlider" min="0" max="30" value="12" />
+    </label>
+    <label>
+      Total supply: <strong id="totalVal">30</strong>
+      <input type="range" id="totalSlider" min="10" max="60" value="30" />
+    </label>
+  </div>
+
+  <!-- STATIC VARIANTS ROW -->
+  <div class="card">
+    <div class="card-label">Fill states</div>
+    <div class="variants">
+      <div>
+        <svg id="v100" width="54" height="96" viewBox="0 0 90 160"></svg>
+        <div class="variant-label">Full</div>
+      </div>
+      <div>
+        <svg id="v66" width="54" height="96" viewBox="0 0 90 160"></svg>
+        <div class="variant-label">⅔ left</div>
+      </div>
+      <div>
+        <svg id="v33" width="54" height="96" viewBox="0 0 90 160"></svg>
+        <div class="variant-label">⅓ left</div>
+      </div>
+      <div>
+        <svg id="v10" width="54" height="96" viewBox="0 0 90 160"></svg>
+        <div class="variant-label">Almost gone</div>
+      </div>
+      <div>
+        <svg id="v0" width="54" height="96" viewBox="0 0 90 160"></svg>
+        <div class="variant-label">Empty</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ─────────────────────────────────────────
+//  Bottle SVG renderer
+//  pct = 0..1  (fraction REMAINING)
+// ─────────────────────────────────────────
+function drawBottle(svg, pct) {
+  // Palette
+  const BOTTLE_ORANGE  = "#e07b35";
+  const BOTTLE_DARK    = "#b85e1f";
+  const FILL_COLOR     = "#f5a05a";
+  const EMPTY_COLOR    = "rgba(0,0,0,0.06)";
+  const GHOST_STROKE   = "rgba(0,0,0,0.12)";
+  const CAP_COLOR      = "#c8c8c8";
+  const CAP_DARK       = "#a0a0a0";
+  const LABEL_BG       = "rgba(255,255,255,0.55)";
+  const LABEL_TEXT     = "#b85e1f";
+
+  // Geometry (in 90×160 viewBox)
+  const bx = 10, bw = 70;          // body x, width
+  const neckX = 22, neckW = 46;    // neck x, width
+  const neckH = 18;                 // neck height
+  const bodyY = 35, bodyH = 110;   // body top, height
+  const capH = 22;                  // cap height
+  const rx = 7;                     // corner radius on body
+
+  // Fill geometry — liquid sits inside the body
+  const innerY = bodyY + 2;
+  const innerH = bodyH - 4;
+  const fillH   = Math.round(innerH * pct);
+  const fillY   = innerY + innerH - fillH;
+
+  // Pill dots (3 scattered inside bottle, fade when area empties)
+  const pills = [
+    { cx: 35, cy: bodyY + bodyH * 0.65, r: 5, angle: -20 },
+    { cx: 55, cy: bodyY + bodyH * 0.75, r: 4, angle:  15 },
+    { cx: 42, cy: bodyY + bodyH * 0.82, r: 4.5, angle: 5 },
+  ];
+
+  let html = `
+    <defs>
+      <clipPath id="bodyClip${svg.id}">
+        <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}" rx="${rx}" ry="${rx}"/>
+      </clipPath>
+      <linearGradient id="bottleGrad${svg.id}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%"   stop-color="${BOTTLE_DARK}" />
+        <stop offset="40%"  stop-color="${BOTTLE_ORANGE}" />
+        <stop offset="100%" stop-color="${BOTTLE_DARK}" />
+      </linearGradient>
+      <linearGradient id="fillGrad${svg.id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="${FILL_COLOR}" stop-opacity="0.95"/>
+        <stop offset="100%" stop-color="${BOTTLE_DARK}" stop-opacity="0.9"/>
+      </linearGradient>
+      <linearGradient id="capGrad${svg.id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${CAP_COLOR}"/>
+        <stop offset="100%" stop-color="${CAP_DARK}"/>
+      </linearGradient>
+      <!-- sheen overlay -->
+      <linearGradient id="sheen${svg.id}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%"   stop-color="rgba(255,255,255,0.22)"/>
+        <stop offset="35%"  stop-color="rgba(255,255,255,0.04)"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,0.08)"/>
+      </linearGradient>
+    </defs>
+
+    <!-- ── BOTTLE BODY (empty shell — ghost) ── -->
+    <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}"
+          rx="${rx}" ry="${rx}"
+          fill="${EMPTY_COLOR}" stroke="${GHOST_STROKE}" stroke-width="1.5"/>
+
+    <!-- ── FILL liquid ── -->
+    <g clip-path="url(#bodyClip${svg.id})">
+      ${fillH > 0 ? `
+      <rect x="${bx}" y="${fillY}" width="${bw}" height="${fillH + rx}"
+            fill="url(#fillGrad${svg.id})"/>
+      <!-- subtle wave top edge -->
+      <ellipse cx="${bx + bw/2}" cy="${fillY}" rx="${bw/2}" ry="4"
+               fill="${FILL_COLOR}" opacity="0.7"/>
+      ` : ""}
+    </g>
+
+    <!-- ── BOTTLE BODY outline (drawn on top for crisp edge) ── -->
+    <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}"
+          rx="${rx}" ry="${rx}"
+          fill="url(#bottleGrad${svg.id})" opacity="${pct > 0 ? 0 : 0.13}"
+          stroke="url(#bottleGrad${svg.id})" stroke-width="2.5" fill-opacity="0"/>
+
+    <!-- ── LABEL strip ── -->
+    <rect x="${bx+6}" y="${bodyY + 18}" width="${bw-12}" height="34"
+          rx="4" fill="${LABEL_BG}" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+    <text x="${bx + bw/2}" y="${bodyY + 32}" text-anchor="middle"
+          font-family="-apple-system,sans-serif" font-size="7.5" font-weight="700"
+          fill="${LABEL_TEXT}">Rx</text>
+    <text x="${bx + bw/2}" y="${bodyY + 43}" text-anchor="middle"
+          font-family="-apple-system,sans-serif" font-size="5.5" fill="#999">AMPHETAMINE</text>
+
+    <!-- ── SHEEN overlay ── -->
+    <rect x="${bx}" y="${bodyY}" width="${bw}" height="${bodyH}"
+          rx="${rx}" ry="${rx}"
+          fill="url(#sheen${svg.id})"/>
+
+    <!-- ── NECK ── -->
+    <rect x="${neckX}" y="${bodyY - neckH}" width="${neckW}" height="${neckH + 4}"
+          rx="4" ry="4"
+          fill="url(#bottleGrad${svg.id})" opacity="0.85"
+          stroke="${BOTTLE_DARK}" stroke-width="1"/>
+
+    <!-- ── CAP ── -->
+    <rect x="${neckX - 4}" y="${bodyY - neckH - capH + 2}" width="${neckW + 8}" height="${capH}"
+          rx="6" ry="6"
+          fill="url(#capGrad${svg.id})"
+          stroke="${CAP_DARK}" stroke-width="1"/>
+    <!-- cap ridge lines -->
+    <line x1="${neckX - 2}" y1="${bodyY - neckH - capH + 10}" x2="${neckX + neckW + 2}" y2="${bodyY - neckH - capH + 10}"
+          stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+    <line x1="${neckX - 2}" y1="${bodyY - neckH - capH + 15}" x2="${neckX + neckW + 2}" y2="${bodyY - neckH - capH + 15}"
+          stroke="rgba(0,0,0,0.1)" stroke-width="0.8"/>
+  `;
+
+  svg.innerHTML = html;
+}
+
+// ── Interactive bottle ──
+function update() {
+  const used  = Number(document.getElementById("usedSlider").value);
+  const total = Number(document.getElementById("totalSlider").value);
+  document.getElementById("usedVal").textContent  = used;
+  document.getElementById("totalVal").textContent = total;
+
+  const remaining = Math.max(0, total - used);
+  const pct = total > 0 ? remaining / total : 0;
+
+  drawBottle(document.getElementById("mainBottle"), pct);
+  document.getElementById("countLabel").textContent = `${remaining} / ${total}`;
+  document.getElementById("subLabel").textContent   = `${used} used · ${remaining} remaining`;
+}
+
+document.getElementById("usedSlider").addEventListener("input", update);
+document.getElementById("totalSlider").addEventListener("input", update);
+
+// ── Static variants ──
+drawBottle(document.getElementById("v100"), 1.0);
+drawBottle(document.getElementById("v66"),  0.66);
+drawBottle(document.getElementById("v33"),  0.33);
+drawBottle(document.getElementById("v10"),  0.10);
+drawBottle(document.getElementById("v0"),   0.0);
+
+update();
+</script>
+</body>
+</html>
