@@ -956,6 +956,106 @@ function getOuraRecoverySnapshot(state) {
   };
 }
 
+function getRecoveryContextMessage(state) {
+  const recovery = getOuraRecoverySnapshot(state);
+  const latestSleep = getLatestOuraSleep(state);
+
+  // No data at all
+  const hasAnyData = recovery.readinessScore || recovery.latestHrv || latestSleep;
+  if (!hasAnyData) return null;
+
+  const readiness = recovery.readinessScore;
+  const hrv = recovery.latestHrv;
+  const tempDev = recovery.temperatureDeviation;
+  const stress = recovery.stressSummary;
+  const sleepHours = latestSleep?.total_sleep_duration ? Number(latestSleep.total_sleep_duration) / 3600 : null;
+  const sleepScore = latestSleep?.score ? Number(latestSleep.score) : null;
+  const spo2 = recovery.spo2Average;
+
+  // Possible illness signal
+  if (Number.isFinite(tempDev) && tempDev >= 0.8) {
+    return {
+      tone: "warning",
+      headline: "Temperature elevated",
+      detail: `Your body temp is ${tempDev > 0 ? "+" : ""}${tempDev.toFixed(1)}° from baseline. Your body may be fighting something — worth being mindful of how you feel today.`,
+    };
+  }
+
+  // Low SpO2
+  if (Number.isFinite(spo2) && spo2 < 94) {
+    return {
+      tone: "warning",
+      headline: "Low blood oxygen last night",
+      detail: `SpO2 averaged ${spo2.toFixed(1)}% — below the typical healthy range. Sleep quality may have been affected more than the score suggests.`,
+    };
+  }
+
+  // Very low readiness
+  if (Number.isFinite(readiness) && readiness < 60) {
+    return {
+      tone: "caution",
+      headline: "Recovery is low today",
+      detail: `Readiness score is ${readiness}. Stimulants may feel more intense or wear off differently. Earlier timing for your last dose could help tonight's sleep.`,
+    };
+  }
+
+  // High stress
+  if (stress === "High") {
+    return {
+      tone: "caution",
+      headline: "Stress signal detected",
+      detail: "Oura flagged elevated stress. Your nervous system is already working hard — be mindful of how you feel as the day progresses.",
+    };
+  }
+
+  // Poor sleep
+  if (Number.isFinite(sleepHours) && sleepHours < 6) {
+    return {
+      tone: "caution",
+      headline: "Short sleep last night",
+      detail: `Only ${sleepHours.toFixed(1)}h of sleep. You may feel like you need more today — try to stick close to your usual pattern and prioritize an early last dose.`,
+    };
+  }
+
+  // Low sleep score (but not short)
+  if (Number.isFinite(sleepScore) && sleepScore < 65) {
+    return {
+      tone: "caution",
+      headline: "Sleep quality was low",
+      detail: `Sleep score was ${sleepScore}. Quality rest matters for how stimulants feel — your response today may be less predictable.`,
+    };
+  }
+
+  // Moderate readiness
+  if (Number.isFinite(readiness) && readiness >= 60 && readiness < 75) {
+    return {
+      tone: "neutral",
+      headline: "Moderate recovery",
+      detail: `Readiness is ${readiness} — not fully recovered but not a red flag. A typical day is likely fine; just keep an eye on how you feel.`,
+    };
+  }
+
+  // Good recovery
+  if (Number.isFinite(readiness) && readiness >= 75) {
+    return {
+      tone: "good",
+      headline: "Well recovered today",
+      detail: `Readiness is ${readiness}${stress === "Recovered" ? " and stress is low" : ""}. Stimulant response is likely to be typical today.`,
+    };
+  }
+
+  // Sleep only (no readiness)
+  if (Number.isFinite(sleepHours) && sleepHours >= 7 && Number.isFinite(sleepScore) && sleepScore >= 75) {
+    return {
+      tone: "good",
+      headline: "Good sleep last night",
+      detail: `${sleepHours.toFixed(1)}h with a score of ${sleepScore}. Starting the day well rested.`,
+    };
+  }
+
+  return null;
+}
+
 function scoreColor(score, thresholds = { good: 85, ok: 70 }) {
   if (!Number.isFinite(score)) return "";
   if (score >= thresholds.good) return "metric--good";

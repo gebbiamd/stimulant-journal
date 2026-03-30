@@ -35,6 +35,11 @@ const els = {
   monthTabletUsageFill: document.querySelector("#monthTabletUsageFill"),
   lastSleepHeadline: document.querySelector("#lastSleepHeadline"),
   lastSleepDetail: document.querySelector("#lastSleepDetail"),
+  lastSleepChip: document.querySelector("#lastSleepHeadline")?.closest(".stat-chip"),
+  recoveryContextChip: document.querySelector("#recoveryContextChip"),
+  recoveryContextLabel: document.querySelector("#recoveryContextLabel"),
+  recoveryContextHeadline: document.querySelector("#recoveryContextHeadline"),
+  recoveryContextDetail: document.querySelector("#recoveryContextDetail"),
   doseRecommendationHeadline: document.querySelector("#doseRecommendationHeadline"),
   doseRecommendationDetail: document.querySelector("#doseRecommendationDetail"),
   miniTrendChart: document.querySelector("#miniTrendChart"),
@@ -216,9 +221,15 @@ function renderGauge() {
         ? `Bedtime ${bedtime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
         : "Latest synced Oura sleep";
     }
+    if (els.lastSleepChip) {
+      applyScoreColor(els.lastSleepChip, Number(latestSleep.score) || null, { good: 85, ok: 70 });
+    }
   } else {
     els.lastSleepHeadline.textContent = "No Oura sleep yet";
     els.lastSleepDetail.textContent = "Connect and sync Oura in More Details.";
+    if (els.lastSleepChip) {
+      applyScoreColor(els.lastSleepChip, null, { good: 85, ok: 70 });
+    }
   }
 }
 
@@ -337,10 +348,31 @@ function renderRecent() {
   }
 }
 
+function renderRecoveryContext() {
+  const chip = els.recoveryContextChip;
+  if (!chip) return;
+  const msg = getRecoveryContextMessage(state);
+  if (!msg) {
+    chip.classList.add("hidden");
+    return;
+  }
+  chip.classList.remove("hidden");
+  // Clear old tone classes
+  chip.className = chip.className.replace(/\btone-\w+\b/g, "").trim();
+  chip.classList.add(`tone-${msg.tone}`);
+  if (els.recoveryContextLabel) {
+    const labels = { good: "Body signal ✅", neutral: "Body signal 💙", caution: "Body signal ⚠️", warning: "Body signal 🌡️" };
+    els.recoveryContextLabel.textContent = labels[msg.tone] || "Body signal";
+  }
+  if (els.recoveryContextHeadline) els.recoveryContextHeadline.textContent = msg.headline;
+  if (els.recoveryContextDetail) els.recoveryContextDetail.textContent = msg.detail;
+}
+
 function render() {
   renderGauge();
   renderMiniTrend();
   renderRecent();
+  renderRecoveryContext();
 }
 
 els.nowButton.addEventListener("click", () => {
@@ -353,6 +385,7 @@ els.syncOuraHomeButton?.addEventListener("click", async () => {
   try {
     const { warnings } = await syncOuraSleep(state);
     render();
+    renderRecoveryContext();
     const notice = warnings.length > 0
       ? `Oura synced (${warnings.join(", ")} unavailable).`
       : "Oura sleep data synced.";
