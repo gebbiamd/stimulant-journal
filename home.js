@@ -1067,13 +1067,14 @@ document.querySelector("#connOpenAiSaveBtn")?.addEventListener("click", () => {
 
 // ── End connections sheet ──────────────────────────────────────────
 
+render();
 (async () => {
   try {
     await loadRemoteStateInto(state);
+    render();
   } catch (error) {
     console.error(error);
     setNotice(error.message, "error");
   }
   registerServiceWorker();
-  render();
 })();
