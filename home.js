@@ -291,14 +291,16 @@ function renderGauge() {
   els.doseRecommendationDetail.textContent = recommendation.detail;
 
   const latestSleep = getLatestOuraSleep(state);
-  if (latestSleep && latestSleep.total_sleep_duration) {
-    const sleepHours = Number(latestSleep.total_sleep_duration) / 3600;
+  if (latestSleep) {
+    const sleepHours = latestSleep.total_sleep_duration ? Number(latestSleep.total_sleep_duration) / 3600 : null;
     const bedtime = latestSleep.bedtime_start ? new Date(latestSleep.bedtime_start) : null;
     const displayDate = getOuraDisplayDate(latestSleep);
     const todayKey = dateKey(new Date());
     const displayKey = displayDate ? dateKey(displayDate) : "";
     const scoreLabel = latestSleep.score ?? "Pending";
-    els.lastSleepHeadline.textContent = `${formatNumber(sleepHours)}h • score ${scoreLabel}`;
+    els.lastSleepHeadline.textContent = sleepHours !== null
+      ? `${formatNumber(sleepHours)}h • score ${scoreLabel}`
+      : `Score ${scoreLabel}`;
     if (displayDate && displayKey !== todayKey) {
       els.lastSleepDetail.textContent = `Newest Oura day ${displayDate.toLocaleDateString()}`;
     } else {
