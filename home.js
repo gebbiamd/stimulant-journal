@@ -899,28 +899,45 @@ function updateConnSheet() {
 
   // Oura
   const ouraToken = state.settings?.ouraToken;
+  const ouraToggleBtn = document.querySelector("#connOuraToggle");
+  const ouraFormEl = document.querySelector("#connOuraForm");
   if (ouraToken) {
     setConnRowStatus(ouraRow, ouraDot, "green");
     const lastSync = state.settings?.ouraLastSync;
     ouraDetail.textContent = lastSync ? `Last synced ${new Date(lastSync).toLocaleDateString()}` : "Connected";
+    if (ouraToggleBtn && ouraFormEl?.classList.contains("hidden")) ouraToggleBtn.textContent = "Manage";
   } else {
     setConnRowStatus(ouraRow, ouraDot, "red");
     ouraDetail.textContent = "Not connected";
+    if (ouraToggleBtn && ouraFormEl?.classList.contains("hidden")) ouraToggleBtn.textContent = "Set up";
   }
 
   // OpenAI
-  const openAiKey = state.settings?.openAiKey;
-  if (openAiKey) {
+  const relayUrl = state.settings?.openAiRelayUrl;
+  const openAiToggleBtn = document.querySelector("#connOpenAiToggle");
+  const openAiFormEl = document.querySelector("#connOpenAiForm");
+  if (relayUrl) {
     setConnRowStatus(openAiRow, openAiDot, "green");
-    openAiDetail.textContent = "API key set";
+    openAiDetail.textContent = "Relay configured";
+    if (openAiToggleBtn && openAiFormEl?.classList.contains("hidden")) openAiToggleBtn.textContent = "Manage";
   } else {
     setConnRowStatus(openAiRow, openAiDot, "yellow");
-    openAiDetail.textContent = "No API key";
+    openAiDetail.textContent = "No relay set";
+    if (openAiToggleBtn && openAiFormEl?.classList.contains("hidden")) openAiToggleBtn.textContent = "Set up";
+  }
+
+  // Tab badge: show when any critical connection is missing
+  const badge = document.querySelector("#connTabBadge");
+  if (badge) {
+    const hasIssue = !email || !ouraToken;
+    badge.classList.toggle("hidden", !hasIssue);
   }
 }
 
 document.querySelector("#connectionsButton")?.addEventListener("click", openSheet);
 connOverlay?.addEventListener("click", closeSheet);
+if (location.hash === "#connections") { openSheet(); history.replaceState(null, "", location.pathname); }
+updateConnSheet();
 
 connSupabaseAction?.addEventListener("click", async () => {
   const email = state.settings?.supabaseEmail || state.auth?.email;
@@ -967,6 +984,74 @@ document.querySelector("#connCreateBtn")?.addEventListener("click", async () => 
     errEl.textContent = err.message;
   }
 });
+// ── Oura inline form ──────────────────────────────────────────────
+const connOuraToggle = document.querySelector("#connOuraToggle");
+const connOuraForm = document.querySelector("#connOuraForm");
+connOuraToggle?.addEventListener("click", () => {
+  const isOpen = !connOuraForm.classList.contains("hidden");
+  if (!isOpen) {
+    const clientIdInput = document.querySelector("#connOuraClientId");
+    if (clientIdInput) clientIdInput.value = state.settings?.ouraClientId || "";
+  }
+  connOuraForm.classList.toggle("hidden", isOpen);
+  connOuraToggle.textContent = isOpen ? (state.settings?.ouraToken ? "Manage" : "Set up") : "Cancel";
+});
+
+document.querySelector("#connOuraConnectBtn")?.addEventListener("click", async () => {
+  const clientIdInput = document.querySelector("#connOuraClientId");
+  const clientId = clientIdInput?.value.trim();
+  if (clientId) {
+    state.settings.ouraClientId = clientId;
+    persistState(state);
+  }
+  try {
+    await startOuraAuth(state);
+  } catch (err) {
+    setNotice(err.message, "error");
+  }
+});
+
+document.querySelector("#connOuraDisconnectBtn")?.addEventListener("click", async () => {
+  try {
+    await disconnectOuraRemote(state);
+    state = loadState();
+    updateConnSheet();
+    connOuraForm.classList.add("hidden");
+    connOuraToggle.textContent = "Set up";
+    setNotice("Oura disconnected.", "success");
+  } catch (err) {
+    setNotice(err.message, "error");
+  }
+});
+
+// ── OpenAI inline form ────────────────────────────────────────────
+const connOpenAiToggle = document.querySelector("#connOpenAiToggle");
+const connOpenAiForm = document.querySelector("#connOpenAiForm");
+connOpenAiToggle?.addEventListener("click", () => {
+  const isOpen = !connOpenAiForm.classList.contains("hidden");
+  if (!isOpen) {
+    const relayInput = document.querySelector("#connOpenAiRelayUrl");
+    const modelInput = document.querySelector("#connOpenAiModel");
+    if (relayInput) relayInput.value = state.settings?.openAiRelayUrl || "";
+    if (modelInput) modelInput.value = state.settings?.openAiModel || "";
+  }
+  connOpenAiForm.classList.toggle("hidden", isOpen);
+  connOpenAiToggle.textContent = isOpen ? (state.settings?.openAiRelayUrl ? "Manage" : "Set up") : "Cancel";
+});
+
+document.querySelector("#connOpenAiSaveBtn")?.addEventListener("click", () => {
+  const relayUrl = document.querySelector("#connOpenAiRelayUrl")?.value.trim() || "";
+  const model = document.querySelector("#connOpenAiModel")?.value.trim() || "";
+  state.settings.openAiRelayUrl = relayUrl;
+  if (model) state.settings.openAiModel = model;
+  persistState(state);
+  state = loadState();
+  updateConnSheet();
+  connOpenAiForm.classList.add("hidden");
+  connOpenAiToggle.textContent = relayUrl ? "Manage" : "Set up";
+  setNotice("OpenAI settings saved.", "success");
+});
+
 // ── End connections sheet ──────────────────────────────────────────
 
 (async () => {

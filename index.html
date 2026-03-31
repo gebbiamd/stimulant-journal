@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest?v=72" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=73" />
+    <link rel="stylesheet" href="./styles.css?v=79" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -24,24 +24,6 @@
     </div>
 
     <main class="app-shell">
-      <section class="hero card">
-        <div class="hero-row">
-          <div>
-            <h1>📚 Stimulant Journal</h1>
-          </div>
-          <div class="hero-actions">
-            <button id="connectionsButton" class="ghost-button hero-icon-button" type="button" aria-label="Menu">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-                <line x1="4" y1="7" x2="20" y2="7"/>
-                <line x1="4" y1="12" x2="20" y2="12"/>
-                <line x1="4" y1="17" x2="20" y2="17"/>
-              </svg>
-            </button>
-            <button id="installButton" class="ghost-button hidden" type="button">Install App</button>
-          </div>
-        </div>
-      </section>
-
       <!-- Connections sheet -->
       <div id="connectionsOverlay" class="sheet-overlay hidden" aria-hidden="true"></div>
       <div id="connectionsSheet" class="bottom-sheet hidden" role="dialog" aria-label="Connections">
@@ -80,7 +62,14 @@
             <strong class="conn-name">Oura Ring</strong>
             <span class="conn-detail" id="connOuraDetail">Not connected</span>
           </div>
-          <a class="ghost-button conn-action" href="./settings.html#oura">Connect</a>
+          <button class="ghost-button conn-action" id="connOuraToggle" type="button">Set up</button>
+        </div>
+        <div id="connOuraForm" class="conn-inline-form hidden">
+          <label>Oura client ID<input id="connOuraClientId" type="text" placeholder="From your Oura developer app" /></label>
+          <div class="conn-signin-actions">
+            <button id="connOuraConnectBtn" class="primary-button" type="button">Connect Oura</button>
+            <button id="connOuraDisconnectBtn" class="ghost-button" type="button">Disconnect</button>
+          </div>
         </div>
 
         <div class="conn-row" id="connOpenAiRow">
@@ -89,7 +78,14 @@
             <strong class="conn-name">OpenAI</strong>
             <span class="conn-detail" id="connOpenAiDetail">No API key</span>
           </div>
-          <a class="ghost-button conn-action" href="./settings.html#ai">Set key</a>
+          <button class="ghost-button conn-action" id="connOpenAiToggle" type="button">Set up</button>
+        </div>
+        <div id="connOpenAiForm" class="conn-inline-form hidden">
+          <label>Relay URL <span class="muted" style="font-weight:normal;font-size:0.75rem">(optional)</span><input id="connOpenAiRelayUrl" type="url" placeholder="Leave blank for built-in Supabase relay" /></label>
+          <label>Model<input id="connOpenAiModel" type="text" placeholder="gpt-4o" /></label>
+          <div class="conn-signin-actions">
+            <button id="connOpenAiSaveBtn" class="primary-button" type="button">Save</button>
+          </div>
         </div>
       </div>
 
@@ -315,6 +311,16 @@
         </span>
         <span class="tab-label">Settings</span>
       </a>
+      <button id="connectionsButton" class="tab-link" type="button" aria-label="Connections">
+        <span class="tab-icon tab-icon-badged" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          <span id="connTabBadge" class="tab-conn-badge hidden"></span>
+        </span>
+        <span class="tab-label">Connect</span>
+      </button>
     </nav>
 
     <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
@@ -328,6 +334,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./journal-core.js?v=72"></script>
-    <script src="./home.js?v=74"></script>
+    <script src="./home.js?v=76"></script>
   </body>
 </html>
