@@ -271,7 +271,7 @@ function renderGauge() {
 
   els.todayTotal.textContent = formatNumber(total);
   els.todayUnit.textContent = unitLabel(state);
-  els.todayEntries.textContent = `${todayEntries.length}`;
+  if (els.todayEntries) els.todayEntries.textContent = `${todayEntries.length}`;
   els.todayLastDose.textContent = lastDose
     ? lastDose.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
     : "None";
@@ -281,7 +281,7 @@ function renderGauge() {
   els.todayGaugeLabel.textContent = over
     ? `${excess} tablet${excess !== 1 ? "s" : ""} over daily limit`
     : `${tabletLabel(totalTablets)} today • ${Math.round(suggestedRatio * 100)}% of the ${suggestedCap} mg cap`;
-  els.gaugeReason.textContent = `${gauge.reason} Monthly tablets used: ${formatNumber(tabletUsage.used)} of ${formatNumber(tabletUsage.planned)}.`;
+  if (els.gaugeReason) els.gaugeReason.textContent = `${gauge.reason} Monthly tablets used: ${formatNumber(tabletUsage.used)} of ${formatNumber(tabletUsage.planned)}.`;
   els.monthTabletUsage.textContent = `${formatNumber(tabletUsage.used)} / ${formatNumber(tabletUsage.planned)}`;
   els.doseUnitLabel.textContent = "tabs";
   els.doseMgHint.textContent = "";
