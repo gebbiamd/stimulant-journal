@@ -712,51 +712,83 @@ function renderDoseSleepChart() {
     return;
   }
 
-  const width = 360;
-  const chartLeft = 26;
-  const chartRight = 334;
+  const chartLeft = 38;
+  const chartRight = 354;
+  const chartTop = 14;
   const chartBottom = 190;
-  const chartTop = 18;
   const chartWidth = chartRight - chartLeft;
-  const maxDose = Math.max(...points.map((point) => point.doseTotal), 1);
-  const minSleep = Math.max(0, Math.min(...points.map((point) => point.sleepHours || 0)) - 0.5);
-  const maxSleep = Math.max(...points.map((point) => point.sleepHours || 0), 1) + 0.35;
+  const chartHeight = chartBottom - chartTop;
+
+  // Bars: capped at 50% of chart height so a single outlier never crushes everything
+  const maxDose = Math.max(...points.map((p) => p.doseTotal), 1);
+  const BAR_MAX_H = chartHeight * 0.5;
+
+  // Sleep line: independent scale across full chart height
+  const sleepVals = points.map((p) => p.sleepHours || 0);
+  const rawMin = Math.min(...sleepVals);
+  const rawMax = Math.max(...sleepVals);
+  const minSleep = Math.floor(rawMin - 0.25);
+  const maxSleep = Math.ceil(rawMax + 0.25);
+  const sleepRange = Math.max(maxSleep - minSleep, 1);
+  const toSleepY = (h) => chartBottom - ((h - minSleep) / sleepRange) * chartHeight;
+
   const slotWidth = chartWidth / points.length;
-  const barWidth = Math.min(26, Math.max(18, slotWidth * 0.54));
+  const barWidth = Math.min(22, Math.max(10, slotWidth * 0.52));
 
-  const bars = points
-    .map((point, index) => {
-      const x = chartLeft + index * slotWidth + (slotWidth - barWidth) / 2;
-      const h = ((point.doseTotal || 0) / maxDose) * (chartBottom - chartTop);
-      const y = chartBottom - h;
-      return `<rect x="${x}" y="${y}" width="${barWidth}" height="${Math.max(h, 4)}" rx="9" fill="rgba(18,110,235,0.72)" />`;
-    })
-    .join("");
+  // Bars
+  const bars = points.map((p, i) => {
+    const x = chartLeft + i * slotWidth + (slotWidth - barWidth) / 2;
+    const h = Math.max(((p.doseTotal || 0) / maxDose) * BAR_MAX_H, p.doseTotal > 0 ? 3 : 0);
+    const y = chartBottom - h;
+    const rx = Math.min(5, h / 2);
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth}" height="${Math.max(h, 0.1).toFixed(1)}" rx="${rx}" fill="rgba(18,110,235,0.55)" />`;
+  }).join("");
 
-  const linePoints = points
-    .map((point, index) => {
-      const x = chartLeft + index * slotWidth + slotWidth / 2;
-      const y = chartBottom - (((point.sleepHours || 0) - minSleep) / Math.max(maxSleep - minSleep, 0.5)) * (chartBottom - chartTop);
-      return `${x},${y}`;
-    })
-    .join(" ");
+  // Sleep line + dots
+  const lineCoords = points.map((p, i) => {
+    const x = chartLeft + i * slotWidth + slotWidth / 2;
+    const y = toSleepY(p.sleepHours || 0);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+
+  const dots = points.map((p, i) => {
+    const x = chartLeft + i * slotWidth + slotWidth / 2;
+    const y = toSleepY(p.sleepHours || 0);
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.5" fill="#73efe7" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" />`;
+  }).join("");
+
+  // Y-axis sleep ticks (left side)
+  const sleepTicks = [];
+  for (let h = minSleep; h <= maxSleep; h++) {
+    if (h < 0) continue;
+    const y = toSleepY(h);
+    sleepTicks.push(
+      `<line x1="${chartLeft - 4}" y1="${y.toFixed(1)}" x2="${chartRight}" y2="${y.toFixed(1)}" stroke="rgba(33,79,142,0.07)" stroke-width="1" />`,
+      `<text x="${(chartLeft - 6).toFixed(1)}" y="${(y + 3.5).toFixed(1)}" text-anchor="end" font-size="8.5" fill="rgba(90,72,56,0.65)" font-family="'Avenir Next',sans-serif">${h}h</text>`
+    );
+  }
+
+  // X-axis day labels
+  const dayLabels = points.map((p, i) => {
+    const x = chartLeft + i * slotWidth + slotWidth / 2;
+    return `<text x="${x.toFixed(1)}" y="208" text-anchor="middle" font-size="8" fill="rgba(90,72,56,0.6)" font-family="'Avenir Next',sans-serif">${p.dayLabel}</text>`;
+  }).join("");
+
+  // Dose axis label (right side)
+  const doseLabelY = (chartBottom - BAR_MAX_H / 2).toFixed(1);
 
   els.doseSleepChart.innerHTML = `
-    <line x1="${chartLeft}" y1="${chartTop}" x2="${chartRight}" y2="${chartTop}" stroke="rgba(33,79,142,0.08)" stroke-width="1" />
-    <line x1="${chartLeft}" y1="${(chartTop + chartBottom) / 2}" x2="${chartRight}" y2="${(chartTop + chartBottom) / 2}" stroke="rgba(33,79,142,0.08)" stroke-width="1" />
-    <line x1="${chartLeft}" y1="${chartBottom}" x2="${width - chartLeft}" y2="${chartBottom}" stroke="rgba(33,79,142,0.22)" stroke-width="1.5" />
+    ${sleepTicks.join("")}
+    <line x1="${chartLeft}" y1="${chartBottom}" x2="${chartRight}" y2="${chartBottom}" stroke="rgba(33,79,142,0.22)" stroke-width="1.5" />
+    <line x1="${chartLeft}" y1="${chartTop}" x2="${chartLeft}" y2="${chartBottom}" stroke="rgba(33,79,142,0.14)" stroke-width="1" />
     ${bars}
-    <polyline points="${linePoints}" fill="none" stroke="#73efe7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></polyline>
-    ${points
-      .map((point, index) => {
-        const x = chartLeft + index * slotWidth + slotWidth / 2;
-        const y = chartBottom - (((point.sleepHours || 0) - minSleep) / Math.max(maxSleep - minSleep, 0.5)) * (chartBottom - chartTop);
-        return `<circle cx="${x}" cy="${y}" r="5.5" fill="#73efe7" />`;
-      })
-      .join("")}
+    <polyline points="${lineCoords}" fill="none" stroke="#73efe7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+    ${dots}
+    ${dayLabels}
+    <text x="${chartRight}" y="${doseLabelY}" text-anchor="end" font-size="8" fill="rgba(18,110,235,0.55)" font-family="'Avenir Next',sans-serif">dose →</text>
   `;
 
-  els.doseSleepLegend.textContent = `${getSleepInsightSummary(state)} Blue bars = total dose on the day before sleep. Teal line = hours slept.`;
+  els.doseSleepLegend.textContent = `${getSleepInsightSummary(state)} Blue bars = dose. Teal line = hours slept.`;
 }
 
 function renderTimingSleepChart() {
@@ -767,33 +799,77 @@ function renderTimingSleepChart() {
     return;
   }
 
-  const width = 360;
-  const height = 220;
-  const chartLeft = 22;
-  const chartRight = 338;
-  const chartTop = 22;
-  const chartBottom = 184;
-  const minHour = Math.min(...points.map((point) => point.lastDoseHour), 8);
-  const maxHour = Math.max(...points.map((point) => point.lastDoseHour), 24);
-  const minSleep = Math.min(...points.map((point) => point.sleepHours), 0);
-  const maxSleep = Math.max(...points.map((point) => point.sleepHours), 10);
+  const chartLeft = 38;
+  const chartRight = 354;
+  const chartTop = 14;
+  const chartBottom = 190;
+  const chartWidth = chartRight - chartLeft;
+  const chartHeight = chartBottom - chartTop;
 
-  const circles = points
-    .map((point) => {
-      const x = chartLeft + ((point.lastDoseHour - minHour) / Math.max(maxHour - minHour, 1)) * (chartRight - chartLeft);
-      const y = chartBottom - ((point.sleepHours - minSleep) / Math.max(maxSleep - minSleep, 1)) * (chartBottom - chartTop);
-      return `<circle cx="${x}" cy="${y}" r="7" fill="rgba(239,91,114,0.72)" stroke="rgba(255,255,255,0.85)" stroke-width="2" />`;
-    })
-    .join("");
+  // X axis: last dose hour. Snap to clean hour boundaries
+  const rawMinHour = Math.min(...points.map((p) => p.lastDoseHour));
+  const rawMaxHour = Math.max(...points.map((p) => p.lastDoseHour));
+  const minHour = Math.floor(rawMinHour) - 1;
+  const maxHour = Math.ceil(rawMaxHour) + 1;
+  const hourRange = Math.max(maxHour - minHour, 2);
+
+  // Y axis: sleep hours
+  const sleepVals = points.map((p) => p.sleepHours);
+  const minSleep = Math.floor(Math.min(...sleepVals) - 0.5);
+  const maxSleep = Math.ceil(Math.max(...sleepVals) + 0.5);
+  const sleepRange = Math.max(maxSleep - minSleep, 1);
+
+  const toX = (h) => chartLeft + ((h - minHour) / hourRange) * chartWidth;
+  const toY = (s) => chartBottom - ((s - minSleep) / sleepRange) * chartHeight;
+
+  // Gridlines + Y-axis labels (sleep hours)
+  const yTicks = [];
+  for (let s = minSleep; s <= maxSleep; s++) {
+    if (s < 0) continue;
+    const y = toY(s);
+    yTicks.push(
+      `<line x1="${chartLeft}" y1="${y.toFixed(1)}" x2="${chartRight}" y2="${y.toFixed(1)}" stroke="rgba(33,79,142,0.07)" stroke-width="1" />`,
+      `<text x="${(chartLeft - 5).toFixed(1)}" y="${(y + 3.5).toFixed(1)}" text-anchor="end" font-size="8.5" fill="rgba(90,72,56,0.65)" font-family="'Avenir Next',sans-serif">${s}h</text>`
+    );
+  }
+
+  // X-axis labels (time of day)
+  const hourFmt = (h) => {
+    const h24 = Math.round(h) % 24;
+    if (h24 === 0) return "12a";
+    if (h24 === 12) return "12p";
+    return h24 < 12 ? `${h24}a` : `${h24 - 12}p`;
+  };
+  const xTicks = [];
+  // Pick ~4-5 evenly spaced hour ticks
+  const tickStep = hourRange <= 6 ? 1 : hourRange <= 12 ? 2 : 3;
+  for (let h = Math.ceil(minHour / tickStep) * tickStep; h <= maxHour; h += tickStep) {
+    const x = toX(h);
+    xTicks.push(
+      `<line x1="${x.toFixed(1)}" y1="${chartTop}" x2="${x.toFixed(1)}" y2="${chartBottom}" stroke="rgba(33,79,142,0.07)" stroke-width="1" />`,
+      `<text x="${x.toFixed(1)}" y="207" text-anchor="middle" font-size="8.5" fill="rgba(90,72,56,0.65)" font-family="'Avenir Next',sans-serif">${hourFmt(h)}</text>`
+    );
+  }
+
+  // Data points
+  const circles = points.map((p) => {
+    const x = toX(p.lastDoseHour);
+    const y = toY(p.sleepHours);
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="rgba(239,91,114,0.72)" stroke="rgba(255,255,255,0.85)" stroke-width="2" />`;
+  }).join("");
 
   els.timingSleepChart.innerHTML = `
+    ${yTicks.join("")}
+    ${xTicks.join("")}
     <line x1="${chartLeft}" y1="${chartBottom}" x2="${chartRight}" y2="${chartBottom}" stroke="rgba(33,79,142,0.22)" stroke-width="1.5" />
     <line x1="${chartLeft}" y1="${chartTop}" x2="${chartLeft}" y2="${chartBottom}" stroke="rgba(33,79,142,0.22)" stroke-width="1.5" />
     ${circles}
+    <text x="${(chartLeft + chartWidth / 2).toFixed(1)}" y="218" text-anchor="middle" font-size="8" fill="rgba(90,72,56,0.45)" font-family="'Avenir Next',sans-serif">last dose time →</text>
+    <text x="10" y="${(chartTop + chartHeight / 2).toFixed(1)}" text-anchor="middle" font-size="8" fill="rgba(90,72,56,0.45)" transform="rotate(-90,10,${(chartTop + chartHeight / 2).toFixed(1)})" font-family="'Avenir Next',sans-serif">sleep hrs ↑</text>
   `;
 
-  const avgLastDoseHour = points.reduce((sum, point) => sum + point.lastDoseHour, 0) / points.length;
-  els.timingSleepLegend.textContent = `Recent matched nights: ${points.length}. Later dots on the x-axis mean later last doses; higher dots mean more sleep. Average last-dose time: ${formatNumber(avgLastDoseHour)}h.`;
+  const avgLastDoseHour = points.reduce((sum, p) => sum + p.lastDoseHour, 0) / points.length;
+  els.timingSleepLegend.textContent = `${points.length} matched nights. Later = later last dose, higher = more sleep. Avg last dose: ${hourFmt(Math.round(avgLastDoseHour))}.`;
 }
 
 els.syncOuraButton.addEventListener("click", async () => {
