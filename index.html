@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest?v=64" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=72" />
+    <link rel="stylesheet" href="./styles.css?v=73" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -29,9 +29,69 @@
           <div>
             <h1>📚 Stimulant Journal</h1>
           </div>
-          <button id="installButton" class="ghost-button hidden" type="button">Install App</button>
+          <div class="hero-actions">
+            <button id="connectionsButton" class="ghost-button hero-icon-button" type="button" aria-label="Menu">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <line x1="4" y1="7" x2="20" y2="7"/>
+                <line x1="4" y1="12" x2="20" y2="12"/>
+                <line x1="4" y1="17" x2="20" y2="17"/>
+              </svg>
+            </button>
+            <button id="installButton" class="ghost-button hidden" type="button">Install App</button>
+          </div>
         </div>
       </section>
+
+      <!-- Connections sheet -->
+      <div id="connectionsOverlay" class="sheet-overlay hidden" aria-hidden="true"></div>
+      <div id="connectionsSheet" class="bottom-sheet hidden" role="dialog" aria-label="Connections">
+        <div class="sheet-handle"></div>
+        <h2 class="sheet-title">Connections</h2>
+
+        <div class="conn-row" id="connSupabaseRow">
+          <div class="conn-dot" id="connSupabaseDot"></div>
+          <div class="conn-info">
+            <strong class="conn-name">Cloud account</strong>
+            <span class="conn-detail" id="connSupabaseDetail">Not signed in</span>
+          </div>
+          <button class="ghost-button conn-action" id="connSupabaseAction" type="button">Sign In</button>
+        </div>
+
+        <!-- Inline sign-in form (shown when not authenticated) -->
+        <form id="connSignInForm" class="conn-signin-form" autocomplete="on">
+          <label>
+            Email
+            <input id="connEmail" name="email" type="email" autocomplete="username" placeholder="you@example.com" />
+          </label>
+          <label>
+            Password
+            <input id="connPassword" name="password" type="password" autocomplete="current-password" placeholder="Password" />
+          </label>
+          <div class="conn-signin-actions">
+            <button class="primary-button" type="submit">Sign In</button>
+            <button class="ghost-button" id="connCreateBtn" type="button">Create Account</button>
+          </div>
+          <p id="connSignInError" class="conn-error muted"></p>
+        </form>
+
+        <div class="conn-row" id="connOuraRow">
+          <div class="conn-dot" id="connOuraDot"></div>
+          <div class="conn-info">
+            <strong class="conn-name">Oura Ring</strong>
+            <span class="conn-detail" id="connOuraDetail">Not connected</span>
+          </div>
+          <a class="ghost-button conn-action" href="./settings.html#oura">Connect</a>
+        </div>
+
+        <div class="conn-row" id="connOpenAiRow">
+          <div class="conn-dot" id="connOpenAiDot"></div>
+          <div class="conn-info">
+            <strong class="conn-name">OpenAI</strong>
+            <span class="conn-detail" id="connOpenAiDetail">No API key</span>
+          </div>
+          <a class="ghost-button conn-action" href="./settings.html#ai">Set key</a>
+        </div>
+      </div>
 
       <section class="card header-card">
         <div class="section-header section-header-inline">
@@ -291,6 +351,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./journal-core.js?v=64"></script>
-    <script src="./home.js?v=64"></script>
+    <script src="./home.js?v=74"></script>
   </body>
 </html>
