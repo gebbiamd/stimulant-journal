@@ -53,6 +53,11 @@ const els = {
   aiChatInput: document.querySelector("#aiChatInput"),
   aiChatSendButton: document.querySelector("#aiChatSendButton"),
   activityItemTemplate: document.querySelector("#activityItemTemplate"),
+  paceGaugeMo: document.querySelector("#paceGaugeMo"),
+  paceGauge7d: document.querySelector("#paceGauge7d"),
+  paceGaugeMonthSub: document.querySelector("#paceGaugeMonthSub"),
+  paceGaugeMonthChip: document.querySelector("#paceGaugeMonthChip"),
+  paceGauge7dChip: document.querySelector("#paceGauge7dChip"),
 };
 
 function loadAiChatMessages() {
@@ -603,12 +608,146 @@ function renderRxBottle() {
   }
 }
 
+// ── Pace Gauge ────────────────────────────────────────────────────────
+const PACE_ZONES = [
+  { limit: 25, color: '#2d9e6b', bg: 'rgba(45,158,107,0.13)',  label: 'On target'  },
+  { limit: 30, color: '#d4900a', bg: 'rgba(212,144,10,0.12)',  label: 'Moderate'   },
+  { limit: 35, color: '#d86020', bg: 'rgba(216,96,32,0.12)',   label: 'High'       },
+  { limit: 45, color: '#c94040', bg: 'rgba(201,64,64,0.12)',   label: 'Over limit' },
+];
+
+function getPaceZone(v) {
+  return PACE_ZONES.find(z => v <= z.limit) || PACE_ZONES[PACE_ZONES.length - 1];
+}
+
+function drawPaceGauge(svgEl, value) {
+  if (!svgEl) return;
+  const CX = 100, CY = 112, R = 80, TW = 15, NL = 58, MAX = 45;
+  const START_DEG = 225, SWEEP = 270;
+  const v = Math.min(Math.max(value, 0), MAX);
+  const toRad = d => d * Math.PI / 180;
+  const valToAngle = val => START_DEG - (Math.min(val, MAX) / MAX) * SWEEP;
+  const pt = (deg, r = R) => [
+    +(CX + r * Math.cos(toRad(deg))).toFixed(2),
+    +(CY - r * Math.sin(toRad(deg))).toFixed(2),
+  ];
+  const zone = getPaceZone(v);
+  let h = '';
+  const [sx, sy] = pt(START_DEG);
+  const [ex, ey] = pt(START_DEG - SWEEP);
+
+  // Full background track — round end caps come for free
+  h += `<path d="M ${sx} ${sy} A ${R} ${R} 0 1 1 ${ex} ${ey}"
+    fill="none" stroke="${PACE_ZONES[PACE_ZONES.length - 1].color}" stroke-width="${TW}" stroke-linecap="round" opacity="0.22"/>`;
+
+  // Zone arcs 1–3 (butt caps, no boundary bleed)
+  let prevDeg = START_DEG;
+  let [ppx, ppy] = pt(START_DEG);
+  for (let i = 0; i < PACE_ZONES.length - 1; i++) {
+    const z = PACE_ZONES[i];
+    const ea = valToAngle(z.limit);
+    const [epx, epy] = pt(ea);
+    const span = Math.abs(prevDeg - ea);
+    h += `<path d="M ${ppx} ${ppy} A ${R} ${R} 0 ${span > 180 ? 1 : 0} 1 ${epx} ${epy}"
+      fill="none" stroke="${z.color}" stroke-width="${TW}" stroke-linecap="butt" opacity="0.22"/>`;
+    prevDeg = ea;
+    [ppx, ppy] = [epx, epy];
+  }
+
+  // Active fill arc
+  if (v > 0.3) {
+    const va = valToAngle(v);
+    const [vx, vy] = pt(va);
+    const span = START_DEG - va;
+    h += `<path d="M ${sx} ${sy} A ${R} ${R} 0 ${span > 180 ? 1 : 0} 1 ${vx} ${vy}"
+      fill="none" stroke="${zone.color}" stroke-width="${TW}" stroke-linecap="round" opacity="0.9"/>`;
+  }
+
+  // Zone boundary ticks + labels
+  for (const t of [25, 30, 35]) {
+    const ta = toRad(valToAngle(t));
+    const inR = R - TW / 2 - 1, outR = R + TW / 2 + 3, lblR = R + TW / 2 + 14;
+    const [ix, iy] = [+(CX + inR * Math.cos(ta)).toFixed(1), +(CY - inR * Math.sin(ta)).toFixed(1)];
+    const [ox, oy] = [+(CX + outR * Math.cos(ta)).toFixed(1), +(CY - outR * Math.sin(ta)).toFixed(1)];
+    const [lx, ly] = [+(CX + lblR * Math.cos(ta)).toFixed(1), +(CY - lblR * Math.sin(ta)).toFixed(1)];
+    h += `<line x1="${ix}" y1="${iy}" x2="${ox}" y2="${oy}" stroke="rgba(255,255,255,0.92)" stroke-width="2.2"/>`;
+    h += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle"
+      font-size="7" fill="rgba(0,0,0,0.4)" font-weight="700"
+      font-family="'Avenir Next',system-ui,sans-serif">${t}</text>`;
+  }
+
+  // Needle
+  const na = toRad(valToAngle(v));
+  const [tipX, tipY] = [+(CX + NL * Math.cos(na)).toFixed(2), +(CY - NL * Math.sin(na)).toFixed(2)];
+  const bw = 3.2;
+  const npts = [
+    `${+(CX + Math.sin(na) * bw).toFixed(2)},${+(CY + Math.cos(na) * bw).toFixed(2)}`,
+    `${+(CX - Math.sin(na) * bw).toFixed(2)},${+(CY - Math.cos(na) * bw).toFixed(2)}`,
+    `${tipX},${tipY}`,
+  ].join(' ');
+  h += `<polygon points="${npts}" fill="rgba(0,0,0,0.14)" transform="translate(1.5,2)"/>`;
+  h += `<polygon points="${npts}" fill="#2a1810"/>`;
+  h += `<circle cx="${CX}" cy="${CY}" r="8" fill="#2a1810"/>`;
+  h += `<circle cx="${CX}" cy="${CY}" r="3.5" fill="rgba(255,255,255,0.62)"/>`;
+
+  // Value label
+  h += `<text x="${CX}" y="${CY - 24}" text-anchor="middle"
+    font-size="34" font-weight="800" fill="#1a1a2e"
+    font-family="'Avenir Next Condensed','Franklin Gothic Medium',system-ui,sans-serif">${v.toFixed(1)}</text>`;
+  h += `<text x="${CX}" y="${CY - 6}" text-anchor="middle"
+    font-size="7.5" fill="#9e9e9e" letter-spacing="0.07em" font-weight="700"
+    font-family="'Avenir Next',system-ui,sans-serif">MG / DAY</text>`;
+
+  svgEl.innerHTML = h;
+}
+
+function renderPaceGauge() {
+  const entries = getDoseEntries(state);
+  const now = new Date();
+
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const daysElapsed = Math.max(1, (now - monthStart) / 86400000);
+  const monthTotal = entries
+    .filter(e => new Date(e.timestamp) >= monthStart)
+    .reduce((s, e) => s + Number(e.amount), 0);
+  const monthlyPace = monthTotal / daysElapsed;
+
+  const weekAgo = now.getTime() - 7 * 86400000;
+  const weekTotal = entries
+    .filter(e => new Date(e.timestamp).getTime() >= weekAgo)
+    .reduce((s, e) => s + Number(e.amount), 0);
+  const weeklyAvg = weekTotal / 7;
+
+  drawPaceGauge(els.paceGaugeMo, monthlyPace);
+  drawPaceGauge(els.paceGauge7d, weeklyAvg);
+
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  if (els.paceGaugeMonthSub) {
+    els.paceGaugeMonthSub.textContent = `${monthNames[now.getMonth()]} · ${Math.floor(daysElapsed)} of ${daysInMonth} days`;
+  }
+
+  const moZone = getPaceZone(monthlyPace);
+  const wkZone = getPaceZone(weeklyAvg);
+  if (els.paceGaugeMonthChip) {
+    els.paceGaugeMonthChip.textContent = moZone.label;
+    els.paceGaugeMonthChip.style.color = moZone.color;
+    els.paceGaugeMonthChip.style.background = moZone.bg;
+  }
+  if (els.paceGauge7dChip) {
+    els.paceGauge7dChip.textContent = wkZone.label;
+    els.paceGauge7dChip.style.color = wkZone.color;
+    els.paceGauge7dChip.style.background = wkZone.bg;
+  }
+}
+
 function render() {
   renderGauge();
   renderMiniTrend();
   renderRecent();
   renderRecoveryContext();
   renderRxBottle();
+  renderPaceGauge();
 }
 
 els.nowButton.addEventListener("click", () => {
