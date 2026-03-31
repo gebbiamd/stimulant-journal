@@ -1,11 +1,11 @@
-const CACHE_NAME = "stimulant-journal-v76";
+const CACHE_NAME = "stimulant-journal-v77";
 const ASSETS = [
   "./",
   "./index.html",
   "./summary.html",
   "./settings.html",
   "./styles.css?v=74",
-  "./journal-core.js?v=72",
+  "./journal-core.js?v=76",
   "./home.js?v=75",
   "./summary.js?v=73",
   "./settings.js?v=72",
