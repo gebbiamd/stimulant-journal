@@ -69,7 +69,7 @@
   }
 
   .section-header h2 {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
   }
 }
 
@@ -79,7 +79,7 @@
 
 html {
   color-scheme: light;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 body {
@@ -208,13 +208,13 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(1.55rem, 5.5vw, 2.2rem);
+  font-size: clamp(1.75rem, 6vw, 2.4rem);
   max-width: none;
   white-space: nowrap;
 }
 
 h2 {
-  font-size: 1.15rem;
+  font-size: 1.3rem;
 }
 
 h3 {
@@ -436,12 +436,12 @@ h3 {
 }
 
 .header-side .stat-chip span {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   margin-bottom: 0.08rem;
 }
 
 .header-side .stat-chip strong {
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   line-height: 1.1;
 }
 
@@ -558,7 +558,7 @@ label {
 
 .compact-settings-form label {
   gap: 0.38rem;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
 }
 
 input,
@@ -1778,7 +1778,7 @@ button.calendar-cell {
 
   .entry-card .section-header > div {
     flex: 1;
-    text-align: center;
+    text-align: left;
   }
 
   .entry-card .split-fields {
