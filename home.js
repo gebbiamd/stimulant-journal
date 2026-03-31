@@ -879,6 +879,9 @@ function updateConnSheet() {
   const ouraRow = document.querySelector("#connOuraRow");
   const ouraDot = document.querySelector("#connOuraDot");
   const ouraDetail = document.querySelector("#connOuraDetail");
+  const openAiRow = document.querySelector("#connOpenAiRow");
+  const openAiDot = document.querySelector("#connOpenAiDot");
+  const openAiDetail = document.querySelector("#connOpenAiDetail");
   // Supabase
   const email = state.settings?.supabaseEmail || state.auth?.email;
   if (email) {
@@ -1064,13 +1067,14 @@ document.querySelector("#connOpenAiSaveBtn")?.addEventListener("click", () => {
 
 // ── End connections sheet ──────────────────────────────────────────
 
+render();
 (async () => {
   try {
     await loadRemoteStateInto(state);
+    render();
   } catch (error) {
     console.error(error);
     setNotice(error.message, "error");
   }
   registerServiceWorker();
-  render();
 })();

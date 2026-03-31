@@ -918,12 +918,7 @@ els.calendarGrid?.addEventListener("click", (event) => {
   renderFocusedDecay();
 });
 
-(async () => {
-  try {
-    await loadRemoteStateInto(state);
-  } catch (error) {
-    setNotice(error.message, "error");
-  }
+function renderAll() {
   renderHeaderMetrics();
   renderSummaryTrend();
   renderCalendar();
@@ -941,5 +936,15 @@ els.calendarGrid?.addEventListener("click", (event) => {
   renderOuraSleep();
   renderDoseSleepChart();
   renderTimingSleepChart();
+}
+
+renderAll();
+(async () => {
+  try {
+    await loadRemoteStateInto(state);
+    renderAll();
+  } catch (error) {
+    setNotice(error.message, "error");
+  }
   registerServiceWorker();
 })();
