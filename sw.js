@@ -6,7 +6,7 @@ const ASSETS = [
   "./settings.html",
   "./styles.css?v=74",
   "./journal-core.js?v=76",
-  "./home.js?v=75",
+  "./home.js?v=76",
   "./summary.js?v=73",
   "./settings.js?v=72",
   "./manifest.webmanifest?v=72",

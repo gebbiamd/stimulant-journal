@@ -879,10 +879,6 @@ function updateConnSheet() {
   const ouraRow = document.querySelector("#connOuraRow");
   const ouraDot = document.querySelector("#connOuraDot");
   const ouraDetail = document.querySelector("#connOuraDetail");
-  const openAiRow = document.querySelector("#connOpenAiRow");
-  const openAiDot = document.querySelector("#connOpenAiDot");
-  const openAiDetail = document.querySelector("#connOpenAiDetail");
-
   // Supabase
   const email = state.settings?.supabaseEmail || state.auth?.email;
   if (email) {
@@ -908,15 +904,6 @@ function updateConnSheet() {
     ouraDetail.textContent = "Not connected";
   }
 
-  // OpenAI
-  const openAiKey = state.settings?.openAiKey;
-  if (openAiKey) {
-    setConnRowStatus(openAiRow, openAiDot, "green");
-    openAiDetail.textContent = "API key set";
-  } else {
-    setConnRowStatus(openAiRow, openAiDot, "yellow");
-    openAiDetail.textContent = "No API key";
-  }
 }
 
 document.querySelector("#connectionsButton")?.addEventListener("click", openSheet);
