@@ -1692,27 +1692,25 @@ function formatAiSummaryHtml(summary) {
 }
 
 async function generateAiSummary(state) {
-  const relayUrl = (state.settings.openAiRelayUrl || "").trim() || getDefaultOpenAiRelayUrl();
+  const customRelay = (state.settings.openAiRelayUrl || "").trim();
   const payload = {
     mode: "summary",
     model: state.settings.openAiModel || "gpt-5.4",
     journal: buildAiJournalPayload(state),
   };
-
-  const headers = { "Content-Type": "application/json" };
-  if (relayUrl === getDefaultOpenAiRelayUrl()) {
-    const session = await getSupabaseSession();
-    if (!session?.access_token) {
-      throw new Error("Sign in with email first so the built-in AI summary can use your Supabase relay.");
-    }
-    headers.Authorization = `Bearer ${session.access_token}`;
-  }
-
-  const response = await fetch(relayUrl, {
+  const init = {
     method: "POST",
-    headers,
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  };
+
+  let response;
+  if (customRelay) {
+    response = await fetch(customRelay, init);
+  } else {
+    // Use fetchSupabaseFunctionWithSession so expired tokens are auto-refreshed + retried
+    response = await fetchSupabaseFunctionWithSession("openai-summary", init);
+  }
   if (!response.ok) {
     const detail = await response.text();
     throw new Error(`AI summary failed: ${response.status} ${detail}`);
@@ -1721,28 +1719,25 @@ async function generateAiSummary(state) {
 }
 
 async function askAiJournalChat(state, messages) {
-  const relayUrl = (state.settings.openAiRelayUrl || "").trim() || getDefaultOpenAiRelayUrl();
+  const customRelay = (state.settings.openAiRelayUrl || "").trim();
   const payload = {
     mode: "chat",
     model: state.settings.openAiModel || "gpt-5.4",
     journal: buildAiJournalPayload(state),
     messages,
   };
-
-  const headers = { "Content-Type": "application/json" };
-  if (relayUrl === getDefaultOpenAiRelayUrl()) {
-    const session = await getSupabaseSession();
-    if (!session?.access_token) {
-      throw new Error("Sign in with email first so the built-in AI chat can use your Supabase relay.");
-    }
-    headers.Authorization = `Bearer ${session.access_token}`;
-  }
-
-  const response = await fetch(relayUrl, {
+  const init = {
     method: "POST",
-    headers,
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  };
+
+  let response;
+  if (customRelay) {
+    response = await fetch(customRelay, init);
+  } else {
+    response = await fetchSupabaseFunctionWithSession("openai-summary", init);
+  }
   if (!response.ok) {
     const detail = await response.text();
     throw new Error(`AI chat failed: ${response.status} ${detail}`);
