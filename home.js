@@ -1011,10 +1011,13 @@ document.querySelector("#connOuraConnectBtn")?.addEventListener("click", async (
     state.settings.ouraClientId = clientId;
     persistState(state);
   }
+  const btn = document.querySelector("#connOuraConnectBtn");
+  setBusy(btn, "Connecting...", true);
   try {
     await startOuraAuth(state);
   } catch (err) {
     setNotice(err.message, "error");
+    setBusy(btn, "Connect Oura", false);
   }
 });
 
