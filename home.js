@@ -23,7 +23,8 @@ const els = {
   todayTotal: document.querySelector("#todayTotal"),
   todayUnit: document.querySelector("#todayUnit"),
   todayEntries: document.querySelector("#todayEntries"),
-  todayLastDose: document.querySelector("#todayLastDose"),
+  weekSparkline: document.querySelector("#weekSparkline"),
+  weekSparklineLabel: document.querySelector("#weekSparklineLabel"),
   todayGaugeBadge: document.querySelector("#todayGaugeBadge"),
   todayGaugeLabel: document.querySelector("#todayGaugeLabel"),
   gaugeReason: document.querySelector("#gaugeReason"),
@@ -251,6 +252,52 @@ function renderTabletTrack(container, taken, dailyLimit) {
   if (card) card.classList.toggle("gauge-over", taken > dailyLimit);
 }
 
+function renderWeekSparkline() {
+  if (!els.weekSparkline) return;
+  const days = getTotalsByDay(state, 7);
+  const dailyLimit = (state.settings.dailyTabletLimit || 3) * (state.settings.mgPerTablet || 10);
+  const maxVal = Math.max(...days.map(d => d.total), dailyLimit, 1);
+
+  // SVG layout: 7 bars, each 8px wide, 3px gap, viewBox 80×38
+  const VW = 80, VH = 38, barH_max = 28, barW = 8, gap = 3;
+  const totalW = 7 * barW + 6 * gap; // 74
+  const startX = (VW - totalW) / 2;  // 3
+
+  const limitY = VH - 2 - Math.round((dailyLimit / maxVal) * barH_max);
+
+  const barEls = days.map((day, i) => {
+    const h = day.total > 0 ? Math.max(3, Math.round((day.total / maxVal) * barH_max)) : 2;
+    const x = startX + i * (barW + gap);
+    const y = VH - 2 - h;
+    const isToday = i === 6;
+    const over = day.total > dailyLimit;
+    const empty = day.total === 0;
+    const fill = empty
+      ? "rgba(180,180,180,0.28)"
+      : over
+        ? "#d43535"
+        : isToday
+          ? "#3a8aaa"
+          : "#5ab0d0";
+    return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="2" fill="${fill}"/>`;
+  }).join("");
+
+  const refLine = dailyLimit > 0
+    ? `<line x1="${startX}" y1="${limitY}" x2="${startX + totalW}" y2="${limitY}" stroke="#3a8aaa" stroke-width="1" stroke-dasharray="2,2" opacity="0.45"/>`
+    : "";
+
+  els.weekSparkline.innerHTML =
+    `<svg viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="xMidYMid meet">${refLine}${barEls}</svg>`;
+
+  const daysWithDose = days.filter(d => d.total > 0);
+  if (daysWithDose.length === 0) {
+    els.weekSparklineLabel.textContent = "No doses yet";
+  } else {
+    const avg = Math.round(daysWithDose.reduce((s, d) => s + d.total, 0) / daysWithDose.length);
+    els.weekSparklineLabel.textContent = `avg ${avg} mg`;
+  }
+}
+
 function renderGauge() {
   const todayEntries = getTodayDoseEntries(state);
   const total = todayEntries.reduce((sum, entry) => sum + Number(entry.amount), 0);
@@ -272,9 +319,7 @@ function renderGauge() {
   els.todayTotal.textContent = formatNumber(total);
   els.todayUnit.textContent = unitLabel(state);
   if (els.todayEntries) els.todayEntries.textContent = `${todayEntries.length}`;
-  els.todayLastDose.textContent = lastDose
-    ? lastDose.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
-    : "None";
+  renderWeekSparkline();
   els.todayGaugeBadge.textContent = over ? `⚠️ +${excess} over` : gauge.label;
   els.todayGaugeBadge.className = `status-badge ${over ? "warning" : gauge.tone}`;
   els.headerCard.className = `card header-card gauge-${over ? "over" : gauge.tone}`;

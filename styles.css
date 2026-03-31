@@ -503,7 +503,7 @@ h3 {
 .tablet-gauge-panel {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
   padding: 0.25rem 0;
 }
@@ -518,7 +518,7 @@ h3 {
 .tablet-readout {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.25rem;
 }
 
@@ -698,6 +698,19 @@ h3 {
 .header-side .compact-action-button,
 .header-side .muted {
   grid-column: 1 / -1;
+}
+
+.week-sparkline-chip .week-sparkline {
+  width: 100%;
+  display: block;
+  margin: 0.15rem 0 0.1rem;
+}
+
+.week-sparkline-chip .week-sparkline svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
 }
 
 .stat-chip span,
@@ -1915,7 +1928,7 @@ button.calendar-cell {
   }
 
   .tablet-gauge-panel {
-    align-items: flex-start;
+    align-items: center;
   }
 
   .calendar-grid {
