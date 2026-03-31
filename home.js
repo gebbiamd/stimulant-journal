@@ -847,6 +847,128 @@ const savedAiSummary = loadSavedAiSummary();
 if (savedAiSummary) {
   renderAiSummary(savedAiSummary.summary, savedAiSummary.generatedAt);
 }
+
+// ── Connections sheet ──────────────────────────────────────────────
+const connSheet = document.querySelector("#connectionsSheet");
+const connOverlay = document.querySelector("#connectionsOverlay");
+const connSignInForm = document.querySelector("#connSignInForm");
+const connSupabaseAction = document.querySelector("#connSupabaseAction");
+
+function openSheet() {
+  connSheet.classList.remove("hidden");
+  connOverlay.classList.remove("hidden");
+  connSheet.removeAttribute("aria-hidden");
+  updateConnSheet();
+}
+function closeSheet() {
+  connSheet.classList.add("hidden");
+  connOverlay.classList.add("hidden");
+  connSheet.setAttribute("aria-hidden", "true");
+}
+
+function setConnRowStatus(rowEl, dotEl, status) {
+  rowEl.classList.remove("status-green", "status-yellow", "status-red");
+  rowEl.classList.add(`status-${status}`);
+  dotEl.className = `conn-dot ${status}`;
+}
+
+function updateConnSheet() {
+  const supabaseRow = document.querySelector("#connSupabaseRow");
+  const supabaseDot = document.querySelector("#connSupabaseDot");
+  const supabaseDetail = document.querySelector("#connSupabaseDetail");
+  const ouraRow = document.querySelector("#connOuraRow");
+  const ouraDot = document.querySelector("#connOuraDot");
+  const ouraDetail = document.querySelector("#connOuraDetail");
+  const openAiRow = document.querySelector("#connOpenAiRow");
+  const openAiDot = document.querySelector("#connOpenAiDot");
+  const openAiDetail = document.querySelector("#connOpenAiDetail");
+
+  // Supabase
+  const email = state.settings?.supabaseEmail || state.auth?.email;
+  if (email) {
+    setConnRowStatus(supabaseRow, supabaseDot, "green");
+    supabaseDetail.textContent = email;
+    connSupabaseAction.textContent = "Sign Out";
+    connSignInForm.style.display = "none";
+  } else {
+    setConnRowStatus(supabaseRow, supabaseDot, "red");
+    supabaseDetail.textContent = "Not signed in";
+    connSupabaseAction.textContent = "Sign In";
+    connSignInForm.style.display = "flex";
+  }
+
+  // Oura
+  const ouraToken = state.settings?.ouraToken;
+  if (ouraToken) {
+    setConnRowStatus(ouraRow, ouraDot, "green");
+    const lastSync = state.settings?.ouraLastSync;
+    ouraDetail.textContent = lastSync ? `Last synced ${new Date(lastSync).toLocaleDateString()}` : "Connected";
+  } else {
+    setConnRowStatus(ouraRow, ouraDot, "red");
+    ouraDetail.textContent = "Not connected";
+  }
+
+  // OpenAI
+  const openAiKey = state.settings?.openAiKey;
+  if (openAiKey) {
+    setConnRowStatus(openAiRow, openAiDot, "green");
+    openAiDetail.textContent = "API key set";
+  } else {
+    setConnRowStatus(openAiRow, openAiDot, "yellow");
+    openAiDetail.textContent = "No API key";
+  }
+}
+
+document.querySelector("#connectionsButton")?.addEventListener("click", openSheet);
+connOverlay?.addEventListener("click", closeSheet);
+
+connSupabaseAction?.addEventListener("click", async () => {
+  const email = state.settings?.supabaseEmail || state.auth?.email;
+  if (email) {
+    await signOut(state);
+    updateConnSheet();
+  } else {
+    connSignInForm.style.display = "flex";
+    document.querySelector("#connEmail")?.focus();
+  }
+});
+
+connSignInForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.querySelector("#connEmail")?.value.trim();
+  const password = document.querySelector("#connPassword")?.value;
+  const errEl = document.querySelector("#connSignInError");
+  errEl.textContent = "";
+  const btn = connSignInForm.querySelector("button[type=submit]");
+  setBusy(btn, "Signing in...", true);
+  try {
+    await signIn(state, email, password);
+    state = loadState();
+    updateConnSheet();
+    setNotice("Signed in successfully.", "success");
+  } catch (err) {
+    errEl.textContent = err.message;
+  } finally {
+    setBusy(btn, "Signing in...", false);
+  }
+});
+
+document.querySelector("#connCreateBtn")?.addEventListener("click", async () => {
+  const email = document.querySelector("#connEmail")?.value.trim();
+  const password = document.querySelector("#connPassword")?.value;
+  const errEl = document.querySelector("#connSignInError");
+  errEl.textContent = "";
+  try {
+    await createAccount(state, email, password);
+    state = loadState();
+    updateConnSheet();
+    setNotice("Account created and signed in.", "success");
+  } catch (err) {
+    errEl.textContent = err.message;
+  }
+});
+// ── End connections sheet ──────────────────────────────────────────
+
 (async () => {
   try {
     await loadRemoteStateInto(state);
