@@ -599,6 +599,7 @@ select {
   font-size: 0.93rem;
   max-width: 100%;
   overflow: hidden;
+  color: var(--muted);
 }
 
 .home-entry-form input[type="datetime-local"]::-webkit-date-and-time-value {
@@ -612,7 +613,7 @@ select {
 }
 
 .home-entry-form textarea {
-  min-height: 3.1rem;
+  min-height: 2.4rem;
 }
 
 textarea {
