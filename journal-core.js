@@ -229,9 +229,14 @@ async function loadRemoteStateInto(state) {
   const user = await refreshAuthState(state);
   if (!user) return state;
 
-  const [{ data: settingsRows, error: settingsError }, { data: entryRows, error: entriesError }] = await Promise.all([
+  const [
+    { data: settingsRows, error: settingsError },
+    { data: entryRows, error: entriesError },
+    { data: ouraRows },
+  ] = await Promise.all([
     client.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
     client.from("journal_entries").select("*").eq("user_id", user.id).order("timestamp", { ascending: false }),
+    client.from("oura_cache").select("*").eq("user_id", user.id).maybeSingle(),
   ]);
 
   if (settingsError) throw settingsError;
@@ -273,6 +278,21 @@ async function loadRemoteStateInto(state) {
       )
       .filter(Boolean)
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  }
+
+  if (ouraRows) {
+    state.integrations.oura = {
+      ...state.integrations.oura,
+      sleep: Array.isArray(ouraRows.sleep) ? ouraRows.sleep : state.integrations.oura.sleep,
+      readiness: Array.isArray(ouraRows.readiness) ? ouraRows.readiness : state.integrations.oura.readiness,
+      stress: Array.isArray(ouraRows.stress) ? ouraRows.stress : state.integrations.oura.stress,
+      resilience: Array.isArray(ouraRows.resilience) ? ouraRows.resilience : state.integrations.oura.resilience,
+      heartrate: Array.isArray(ouraRows.heartrate) ? ouraRows.heartrate : state.integrations.oura.heartrate,
+      activity: Array.isArray(ouraRows.activity) ? ouraRows.activity : state.integrations.oura.activity,
+      workouts: Array.isArray(ouraRows.workouts) ? ouraRows.workouts : state.integrations.oura.workouts,
+      spo2: Array.isArray(ouraRows.spo2) ? ouraRows.spo2 : state.integrations.oura.spo2,
+      lastSyncAt: ouraRows.synced_at ?? state.integrations.oura.lastSyncAt,
+    };
   }
 
   persistState(state);
@@ -865,6 +885,25 @@ async function syncOuraSleep(state) {
   state.integrations.oura.spo2 = Array.isArray(payload.spo2) ? payload.spo2 : [];
   state.integrations.oura.lastSyncAt = new Date().toISOString();
   persistState(state);
+
+  // Persist Oura data to Supabase so it's available on any device
+  const client = getSupabaseClient();
+  const user = await refreshAuthState(state);
+  if (user) {
+    await client.from("oura_cache").upsert({
+      user_id: user.id,
+      sleep: state.integrations.oura.sleep,
+      readiness: state.integrations.oura.readiness,
+      stress: state.integrations.oura.stress,
+      resilience: state.integrations.oura.resilience,
+      heartrate: state.integrations.oura.heartrate,
+      activity: state.integrations.oura.activity,
+      workouts: state.integrations.oura.workouts,
+      spo2: state.integrations.oura.spo2,
+      synced_at: state.integrations.oura.lastSyncAt,
+    }, { onConflict: "user_id" });
+  }
+
   return { sleep: state.integrations.oura.sleep, warnings: payload.sync_warnings || [] };
 }
 

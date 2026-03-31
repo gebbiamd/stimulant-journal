@@ -879,10 +879,6 @@ function updateConnSheet() {
   const ouraRow = document.querySelector("#connOuraRow");
   const ouraDot = document.querySelector("#connOuraDot");
   const ouraDetail = document.querySelector("#connOuraDetail");
-  const openAiRow = document.querySelector("#connOpenAiRow");
-  const openAiDot = document.querySelector("#connOpenAiDot");
-  const openAiDetail = document.querySelector("#connOpenAiDetail");
-
   // Supabase
   const email = state.settings?.supabaseEmail || state.auth?.email;
   if (email) {
@@ -942,8 +938,9 @@ updateConnSheet();
 connSupabaseAction?.addEventListener("click", async () => {
   const email = state.settings?.supabaseEmail || state.auth?.email;
   if (email) {
-    await signOut(state);
+    await signOutFromSupabase(state);
     updateConnSheet();
+    render();
   } else {
     connSignInForm.style.display = "flex";
     document.querySelector("#connEmail")?.focus();
@@ -959,9 +956,12 @@ connSignInForm?.addEventListener("submit", async (e) => {
   const btn = connSignInForm.querySelector("button[type=submit]");
   setBusy(btn, "Signing in...", true);
   try {
-    await signIn(state, email, password);
+    await signInWithPassword(email, password);
+    await loadRemoteStateInto(state);
     state = loadState();
     updateConnSheet();
+    closeSheet();
+    render();
     setNotice("Signed in successfully.", "success");
   } catch (err) {
     errEl.textContent = err.message;
@@ -976,10 +976,17 @@ document.querySelector("#connCreateBtn")?.addEventListener("click", async () => 
   const errEl = document.querySelector("#connSignInError");
   errEl.textContent = "";
   try {
-    await createAccount(state, email, password);
-    state = loadState();
-    updateConnSheet();
-    setNotice("Account created and signed in.", "success");
+    const data = await signUpWithEmailPassword(email, password);
+    if (data.user && !data.session) {
+      errEl.textContent = "Check your email to confirm your account, then sign in.";
+    } else {
+      await loadRemoteStateInto(state);
+      state = loadState();
+      updateConnSheet();
+      closeSheet();
+      render();
+      setNotice("Account created and signed in.", "success");
+    }
   } catch (err) {
     errEl.textContent = err.message;
   }
