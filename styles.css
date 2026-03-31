@@ -180,16 +180,31 @@ a {
   gap: 0.5rem;
 }
 
-.hero-icon-button {
+.menu-button {
+  position: absolute;
+  top: 14px;
+  right: 14px;
   width: 36px;
   height: 36px;
-  min-height: 36px;
+  min-height: 0;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  color: var(--muted);
+  border-radius: 10px;
+  border: 1.5px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(6px);
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.menu-button:hover,
+.menu-button:focus-visible {
+  background: rgba(255,255,255,0.8);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  outline: none;
 }
 
 /* Bottom sheet */
