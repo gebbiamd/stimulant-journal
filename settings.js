@@ -166,12 +166,15 @@ function saveStateAndSync(message) {
   setNotice(message, "success");
 }
 
-function renderEntryEditor() {
+function renderEntryEditor(showAll = false) {
   if (!els.entryEditorList || !els.entryEditorEmpty) return;
   const entries = [...state.entries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   els.entryEditorEmpty.classList.toggle("hidden", entries.length > 0);
   els.entryEditorList.innerHTML = "";
   if (!entries.length) return;
+
+  const LIMIT = 5;
+  const visible = showAll ? entries : entries.slice(0, LIMIT);
 
   const head = document.createElement("div");
   head.className = "entry-editor-head";
@@ -183,7 +186,7 @@ function renderEntryEditor() {
   `;
   els.entryEditorList.appendChild(head);
 
-  for (const entry of entries) {
+  for (const entry of visible) {
     const row = document.createElement("article");
     row.className = "entry-editor-item";
     const doseValue = entry.type === "dose" ? Number(entry.tabletCount || 0) : "";
@@ -215,6 +218,16 @@ function renderEntryEditor() {
       </div>
     `;
     els.entryEditorList.appendChild(row);
+  }
+
+  if (!showAll && entries.length > LIMIT) {
+    const btn = document.createElement("button");
+    btn.className = "ghost-button compact-action-button";
+    btn.style.marginTop = "0.4rem";
+    btn.type = "button";
+    btn.textContent = `Show all ${entries.length} entries`;
+    btn.addEventListener("click", () => renderEntryEditor(true));
+    els.entryEditorList.appendChild(btn);
   }
 }
 
@@ -264,9 +277,9 @@ els.settingsForm?.addEventListener("submit", (event) => {
       Number.parseFloat(els.vacationDoseThreshold.value) || defaultState.settings.vacationDoseThreshold,
     vacationFrequencyDays:
       Number.parseInt(els.vacationFrequencyDays.value, 10) || defaultState.settings.vacationFrequencyDays,
-    openAiRelayUrl: els.openAiRelayUrl.value.trim(),
-    openAiModel: (els.openAiModel.value || defaultState.settings.openAiModel).trim(),
-    ouraClientId: els.ouraClientId.value.trim(),
+    openAiRelayUrl: els.openAiRelayUrl?.value?.trim() ?? state.settings.openAiRelayUrl ?? "",
+    openAiModel: (els.openAiModel?.value?.trim() || state.settings.openAiModel || defaultState.settings.openAiModel),
+    ouraClientId: els.ouraClientId?.value?.trim() ?? state.settings.ouraClientId ?? "",
     lastRefillDate: els.lastRefillDate.value || "",
     refillIntervalDays: Number.parseInt(els.refillIntervalDays.value, 10) || defaultState.settings.refillIntervalDays,
     refillRequestLeadDays: Number.parseInt(els.refillRequestLeadDays.value, 10) || defaultState.settings.refillRequestLeadDays,

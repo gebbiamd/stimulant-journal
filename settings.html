@@ -7,7 +7,7 @@
     <link rel="manifest" href="./manifest.webmanifest?v=72" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=72" />
+    <link rel="stylesheet" href="./styles.css?v=79" />
     <title>Settings | Stimulant Journal</title>
   </head>
   <body data-page="settings">
@@ -18,15 +18,6 @@
     </div>
 
     <main class="app-shell">
-      <section class="hero card compact-hero">
-        <div class="hero-row">
-          <div>
-            <p class="eyebrow">Settings</p>
-            <h1>⚙️ Settings</h1>
-          </div>
-        </div>
-      </section>
-
       <section class="card">
         <div class="section-header">
           <div>
@@ -78,7 +69,37 @@
             </label>
           </div>
           <details class="settings-disclosure">
-            <summary>Advanced settings</summary>
+            <summary><span>💊 Refill tracking</span></summary>
+            <div class="settings-grid settings-grid-advanced">
+              <label>
+                Last refill date
+                <input id="lastRefillDate" name="lastRefillDate" type="date" />
+              </label>
+              <label>
+                Refill every (days)
+                <input id="refillIntervalDays" name="refillIntervalDays" type="number" min="1" step="1" />
+              </label>
+              <label>
+                Request early by (days)
+                <input id="refillRequestLeadDays" name="refillRequestLeadDays" type="number" min="0" step="1" />
+              </label>
+            </div>
+            <div class="split-fields entry-editor-inventory" style="margin-top:0.7rem">
+              <label>
+                Current tablets on hand
+                <input id="tabletsOnHand" name="tabletsOnHand" type="number" min="0" step="0.5" />
+              </label>
+              <div class="entry-editor-summary">
+                <span>Inventory shortcut</span>
+                <strong id="inventorySummary">0 on hand</strong>
+              </div>
+            </div>
+            <div class="data-actions compact-actions" style="margin-top:0.7rem">
+              <button id="applyInventoryButton" class="nav-button emphasis-button" type="button">Update Tablets On Hand</button>
+            </div>
+          </details>
+          <details class="settings-disclosure">
+            <summary><span>⚙️ Advanced settings</span></summary>
             <div class="settings-grid settings-grid-advanced">
               <label>
                 Dose unit
@@ -109,45 +130,6 @@
       <section class="card">
         <div class="section-header">
           <div>
-            <p class="eyebrow">Refills</p>
-            <h2>💊 Refill tracking</h2>
-          </div>
-        </div>
-        <div class="stack-form compact-settings-form">
-          <div class="settings-grid settings-grid-core">
-            <label>
-              Last refill date
-              <input id="lastRefillDate" name="lastRefillDate" type="date" />
-            </label>
-            <label>
-              Refill every (days)
-              <input id="refillIntervalDays" name="refillIntervalDays" type="number" min="1" step="1" />
-            </label>
-            <label>
-              Request early by (days)
-              <input id="refillRequestLeadDays" name="refillRequestLeadDays" type="number" min="0" step="1" />
-            </label>
-          </div>
-          <div class="split-fields entry-editor-inventory">
-            <label>
-              Current tablets on hand
-              <input id="tabletsOnHand" name="tabletsOnHand" type="number" min="0" step="0.5" />
-            </label>
-            <div class="entry-editor-summary">
-              <span>Inventory shortcut</span>
-              <strong id="inventorySummary">0 on hand</strong>
-            </div>
-          </div>
-          <div class="data-actions compact-actions">
-            <button id="applyInventoryButton" class="nav-button emphasis-button" type="button">Update Tablets On Hand</button>
-          </div>
-          <p class="muted">Summary will remind you when you are inside the refill request window.</p>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="section-header">
-          <div>
             <p class="eyebrow">Backup</p>
             <h2>🗂️ Export or import data</h2>
           </div>
@@ -161,81 +143,7 @@
         </div>
       </section>
 
-      <section class="card">
-        <div class="section-header">
-          <div>
-            <p class="eyebrow">Integrations</p>
-            <h2>🔗 Oura and AI</h2>
-          </div>
-        </div>
-        <div class="stack-form compact-settings-form">
-          <div class="stat-chip">
-            <span>Oura status</span>
-            <strong id="ouraStatus">Not connected</strong>
-          </div>
-          <div class="data-actions compact-actions">
-            <button id="ouraConnectButton" class="nav-button emphasis-button" type="button">Connect Oura</button>
-            <button id="ouraDisconnectButton" class="ghost-button" type="button">Disconnect Oura</button>
-          </div>
-          <label>
-            OpenAI relay URL
-            <input id="openAiRelayUrl" name="openAiRelayUrl" type="url" placeholder="Optional override. Leave blank to use Supabase AI relay." />
-          </label>
-          <div class="split-fields">
-            <label>
-              OpenAI model
-              <input id="openAiModel" name="openAiModel" type="text" placeholder="gpt-5.4" />
-            </label>
-            <label>
-              Oura client ID
-              <input id="ouraClientId" name="ouraClientId" type="text" placeholder="From your Oura developer app" />
-            </label>
-          </div>
-          <div class="stat-chip">
-            <span>OpenAI summaries</span>
-            <strong id="openAiStatus">Relay not configured</strong>
-          </div>
-          <p class="muted">
-            Oura sync is manual right now. Connect Oura here, then use Sync Oura from Home or More Details. Leave the relay URL blank to use the built-in Supabase AI summary function once it is deployed.
-          </p>
-        </div>
-      </section>
 
-      <section class="card">
-        <div class="section-header">
-          <div>
-            <p class="eyebrow">Account</p>
-            <h2>☁️ Supabase sync</h2>
-          </div>
-        </div>
-        <div class="stack-form compact-settings-form">
-          <div class="stat-chip">
-            <span>Cloud account</span>
-            <strong id="authStatus">Not signed in</strong>
-          </div>
-          <label>
-            Email
-            <input id="authEmail" name="authEmail" type="email" placeholder="you@example.com" autocomplete="email" />
-          </label>
-          <label>
-            Password
-            <input
-              id="authPassword"
-              name="authPassword"
-              type="password"
-              placeholder="At least 6 characters"
-              autocomplete="current-password"
-            />
-          </label>
-          <div class="data-actions compact-actions">
-            <button id="authCreateButton" class="nav-button emphasis-button" type="button">Create Account</button>
-            <button id="authSignInButton" class="nav-button emphasis-button" type="button">Sign In</button>
-            <button id="authRefreshButton" class="ghost-button" type="button">Pull Latest Cloud Data</button>
-            <button id="authSignOutButton" class="ghost-button" type="button">Sign Out</button>
-          </div>
-          <p class="muted">Create an account once, then sign in with email and password to sync entries and settings across devices.</p>
-        </div>
-      </section>
     </main>
 
     <nav class="tab-bar" aria-label="Primary">
@@ -266,12 +174,21 @@
         </span>
         <span class="tab-label">Settings</span>
       </a>
+      <a class="tab-link" href="./index.html#connections" aria-label="Connections">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+        </span>
+        <span class="tab-label">Connect</span>
+      </a>
     </nav>
 
     <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./journal-core.js?v=76"></script>
-    <script src="./settings.js?v=72"></script>
+    <script src="./settings.js?v=76"></script>
   </body>
 </html>
