@@ -1708,8 +1708,7 @@ async function generateAiSummary(state) {
   if (customRelay) {
     response = await fetch(customRelay, init);
   } else {
-    // Use fetchSupabaseFunctionWithSession so expired tokens are auto-refreshed + retried
-    response = await fetchSupabaseFunctionWithSession("openai-summary", init);
+    response = await fetchSupabaseFunctionAnon("openai-summary", init);
   }
   if (!response.ok) {
     const detail = await response.text();
@@ -1736,7 +1735,7 @@ async function askAiJournalChat(state, messages) {
   if (customRelay) {
     response = await fetch(customRelay, init);
   } else {
-    response = await fetchSupabaseFunctionWithSession("openai-summary", init);
+    response = await fetchSupabaseFunctionAnon("openai-summary", init);
   }
   if (!response.ok) {
     const detail = await response.text();
