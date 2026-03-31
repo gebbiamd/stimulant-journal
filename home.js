@@ -896,13 +896,13 @@ function updateConnSheet() {
     connSignInForm.style.display = "flex";
   }
 
-  // Oura
-  const ouraToken = state.settings?.ouraToken;
+  // Oura — connection is server-side; use lastSyncAt as the connected indicator
+  const ouraConnected = !!(state.integrations?.oura?.lastSyncAt || state.integrations?.oura?.accessToken);
   const ouraToggleBtn = document.querySelector("#connOuraToggle");
   const ouraFormEl = document.querySelector("#connOuraForm");
-  if (ouraToken) {
+  if (ouraConnected) {
     setConnRowStatus(ouraRow, ouraDot, "green");
-    const lastSync = state.settings?.ouraLastSync;
+    const lastSync = state.integrations?.oura?.lastSyncAt;
     ouraDetail.textContent = lastSync ? `Last synced ${new Date(lastSync).toLocaleDateString()}` : "Connected";
     if (ouraToggleBtn && ouraFormEl?.classList.contains("hidden")) ouraToggleBtn.textContent = "Manage";
   } else {
@@ -928,7 +928,7 @@ function updateConnSheet() {
   // Tab badge: show when any critical connection is missing
   const badge = document.querySelector("#connTabBadge");
   if (badge) {
-    const hasIssue = !email || !ouraToken;
+    const hasIssue = !email || !ouraConnected;
     badge.classList.toggle("hidden", !hasIssue);
   }
 }
@@ -1004,7 +1004,8 @@ connOuraToggle?.addEventListener("click", () => {
     if (clientIdInput) clientIdInput.value = state.settings?.ouraClientId || "";
   }
   connOuraForm.classList.toggle("hidden", isOpen);
-  connOuraToggle.textContent = isOpen ? (state.settings?.ouraToken ? "Manage" : "Set up") : "Cancel";
+  const _ouraConn = !!(state.integrations?.oura?.lastSyncAt || state.integrations?.oura?.accessToken);
+  connOuraToggle.textContent = isOpen ? (_ouraConn ? "Manage" : "Set up") : "Cancel";
 });
 
 document.querySelector("#connOuraConnectBtn")?.addEventListener("click", async () => {
