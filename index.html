@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest?v=72" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=85" />
+    <link rel="stylesheet" href="./styles.css?v=86" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -39,18 +39,10 @@
           <button class="ghost-button conn-action" id="connSupabaseAction" type="button">Sign In</button>
         </div>
 
-        <!-- Inline sign-in form (shown when not authenticated) -->
-        <form id="connSignInForm" class="conn-signin-form" autocomplete="on" action=".">
-          <label for="connEmail">Email</label>
-          <input id="connEmail" name="username" type="email" autocomplete="username" placeholder="you@example.com" />
-          <label for="connPassword">Password</label>
-          <input id="connPassword" name="password" type="password" autocomplete="current-password" placeholder="Password" />
-          <div class="conn-signin-actions">
-            <button class="primary-button" type="submit">Sign In</button>
-            <button class="ghost-button" id="connCreateBtn" type="button">Create Account</button>
-          </div>
-          <p id="connSignInError" class="conn-error muted"></p>
-        </form>
+        <!-- Sign-in link (shown when not authenticated) -->
+        <div id="connSignInPrompt" class="conn-signin-prompt hidden">
+          <a href="./login.html" class="nav-button emphasis-button conn-signin-link">Sign in to sync →</a>
+        </div>
 
         <div class="conn-row" id="connOuraRow">
           <div class="conn-dot" id="connOuraDot"></div>
@@ -355,6 +347,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./journal-core.js?v=82"></script>
-    <script src="./home.js?v=90"></script>
+    <script src="./home.js?v=91"></script>
   </body>
 </html>
