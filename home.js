@@ -485,10 +485,11 @@ function updateEntryTypeUi() {
   document.querySelectorAll("#entryTypePicker .entry-type-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.type === currentEntryType);
   });
-  const showQuantity = currentEntryType === "dose" || currentEntryType === "refill";
+  const showQuantity = currentEntryType === "dose" || currentEntryType === "refill" || currentEntryType === "adjustment";
   if (els.doseQuantityFields) els.doseQuantityFields.classList.toggle("hidden", !showQuantity);
   if (els.doseAmountLabel) {
-    els.doseAmountLabel.textContent = currentEntryType === "refill" ? "Tablets received" : "Tablets taken";
+    const labels = { dose: "Tablets taken", refill: "Tablets received", adjustment: "Tablets to add" };
+    els.doseAmountLabel.textContent = labels[currentEntryType] || "Tablets";
   }
   if (els.doseMgHint) els.doseMgHint.style.display = currentEntryType === "dose" ? "" : "none";
   const noteField = document.querySelector(".entry-note-field");
@@ -515,6 +516,8 @@ function renderRecent() {
     let doseText;
     if (entry.type === "refill") {
       doseText = `💊 Rx pickup · ${entry.tabletCount || 0} tabs`;
+    } else if (entry.type === "adjustment") {
+      doseText = `➕ Added ${entry.tabletCount || 0} tabs to supply`;
     } else if (entry.type === "note") {
       doseText = `📝 ${entry.note || "Note"}`;
     } else {
@@ -938,6 +941,11 @@ els.doseForm.addEventListener("submit", (event) => {
     if (!count && !note) { setBusy(submitButton, "Saving...", false); return; }
     saveRefillEntry(state, count, els.doseTime.value, note);
     message = `Rx pickup logged · ${count} tablets.`;
+  } else if (currentEntryType === "adjustment") {
+    const count = Number.isFinite(tabletCount) && tabletCount > 0 ? tabletCount : 0;
+    if (!count) { setBusy(submitButton, "Saving...", false); return; }
+    saveAdjustmentEntry(state, count, els.doseTime.value, note);
+    message = `Added ${count} tablet${count !== 1 ? "s" : ""} to supply.`;
   } else if (currentEntryType === "note") {
     if (!note) { setBusy(submitButton, "Saving...", false); return; }
     saveNoteEntry(state, els.doseTime.value, note);
