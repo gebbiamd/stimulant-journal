@@ -40,15 +40,11 @@
         </div>
 
         <!-- Inline sign-in form (shown when not authenticated) -->
-        <form id="connSignInForm" class="conn-signin-form" autocomplete="on">
-          <label>
-            Email
-            <input id="connEmail" name="email" type="email" autocomplete="username" placeholder="you@example.com" />
-          </label>
-          <label>
-            Password
-            <input id="connPassword" name="password" type="password" autocomplete="current-password" placeholder="Password" />
-          </label>
+        <form id="connSignInForm" class="conn-signin-form" autocomplete="on" action=".">
+          <label for="connEmail">Email</label>
+          <input id="connEmail" name="username" type="email" autocomplete="username" placeholder="you@example.com" />
+          <label for="connPassword">Password</label>
+          <input id="connPassword" name="password" type="password" autocomplete="current-password" placeholder="Password" />
           <div class="conn-signin-actions">
             <button class="primary-button" type="submit">Sign In</button>
             <button class="ghost-button" id="connCreateBtn" type="button">Create Account</button>
@@ -359,6 +355,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./journal-core.js?v=82"></script>
-    <script src="./home.js?v=89"></script>
+    <script src="./home.js?v=90"></script>
   </body>
 </html>
