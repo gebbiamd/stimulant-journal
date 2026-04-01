@@ -118,7 +118,9 @@ function extractRecommendationLines(summary) {
 function ensureRecommendationsSection(summary) {
   const text = String(summary || "").trim();
   if (!text) return text;
-  if (/recommendations?:/i.test(text)) return text;
+  // Detect existing Recommendations section in any common format:
+  // "Recommendations:", "## Recommendations", "**Recommendations**", etc.
+  if (/^\s*#{0,3}\s*\*{0,2}recommendations?\*{0,2}/im.test(text)) return text;
   const recommendations = extractRecommendationLines(text);
   if (!recommendations.length) return text;
   return `${text}\n\nRecommendations:\n${recommendations.map((line) => `- ${line.replace(/^[-*]\s+/, "")}`).join("\n")}`;

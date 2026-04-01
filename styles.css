@@ -1644,10 +1644,54 @@ button.calendar-cell {
   font-size: 0.82rem;
 }
 
-.ai-recommendations-heading {
-  margin-top: 0.95rem;
-  padding-top: 0.8rem;
-  border-top: 1px solid rgba(19, 58, 112, 0.14);
+/* AI summary collapsible sections */
+details.ai-section {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+details.ai-section + details.ai-section {
+  border-top: 1px solid rgba(140, 90, 40, 0.1);
+}
+summary.ai-section-heading {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(100, 60, 20, 0.65);
+  padding: 0.65rem 0 0.35rem;
+  user-select: none;
+  -webkit-user-select: none;
+}
+summary.ai-section-heading::-webkit-details-marker,
+summary.ai-section-heading::marker { display: none; }
+summary.ai-section-heading::before {
+  content: "▸";
+  font-size: 0.65rem;
+  opacity: 0.5;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+details.ai-section[open] > summary.ai-section-heading::before {
+  transform: rotate(90deg);
+}
+.ai-section-body {
+  padding-bottom: 0.35rem;
+}
+details.ai-section-recs > summary.ai-section-heading {
+  color: rgba(20, 90, 55, 0.75);
+}
+details.ai-section-recs {
+  background: rgba(20, 160, 80, 0.04);
+  border-radius: 8px;
+  padding: 0 0.5rem;
+  margin-top: 0.25rem;
+  border: 1px solid rgba(20, 140, 70, 0.12) !important;
 }
 
 .empty-state p,
