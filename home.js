@@ -1145,6 +1145,13 @@ connSignInForm?.addEventListener("submit", async (e) => {
   setBusy(btn, "Signing in...", true);
   try {
     await signInWithPassword(email, password);
+    // Tell the browser/Keychain the sign-in succeeded so it can save/autofill credentials
+    if (window.PasswordCredential) {
+      try {
+        const cred = new PasswordCredential({ id: email, password });
+        await navigator.credentials.store(cred);
+      } catch { /* non-critical */ }
+    }
     await loadRemoteStateInto(state);
     state = loadState();
     updateConnSheet();
