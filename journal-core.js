@@ -395,16 +395,10 @@ async function syncStateToSupabase(state) {
   const { error: settingsError } = await client.from("user_settings").upsert(settingsPayload, { onConflict: "user_id" });
   if (settingsError) throw settingsError;
 
-  // Upsert entries by ID — never delete-then-reinsert (data loss risk)
+  // Upsert entries by ID — safe, never deletes data
   if (entryPayload.length) {
     const { error: upsertError } = await client.from("journal_entries").upsert(entryPayload, { onConflict: "id" });
     if (upsertError) throw upsertError;
-  }
-
-  // Remove entries from Supabase that no longer exist locally
-  const localIds = entryPayload.map((e) => e.id);
-  if (localIds.length > 0) {
-    await client.from("journal_entries").delete().eq("user_id", user.id).not("id", "in", `(${localIds.map(id => `"${id}"`).join(",")})`);
   }
 }
 
