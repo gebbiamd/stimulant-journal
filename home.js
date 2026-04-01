@@ -1036,7 +1036,6 @@ if (savedAiSummary) {
 // ── Connections sheet ──────────────────────────────────────────────
 const connSheet = document.querySelector("#connectionsSheet");
 const connOverlay = document.querySelector("#connectionsOverlay");
-const connSignInForm = document.querySelector("#connSignInForm");
 const connSupabaseAction = document.querySelector("#connSupabaseAction");
 
 function openSheet() {
@@ -1069,16 +1068,17 @@ function updateConnSheet() {
   const openAiDetail = document.querySelector("#connOpenAiDetail");
   // Supabase
   const email = state.settings?.supabaseEmail || state.auth?.email;
+  const signInPrompt = document.querySelector("#connSignInPrompt");
   if (email) {
     setConnRowStatus(supabaseRow, supabaseDot, "green");
     supabaseDetail.textContent = email;
     connSupabaseAction.textContent = "Sign Out";
-    connSignInForm.style.display = "none";
+    if (signInPrompt) signInPrompt.classList.add("hidden");
   } else {
     setConnRowStatus(supabaseRow, supabaseDot, "red");
     supabaseDetail.textContent = "Not signed in";
     connSupabaseAction.textContent = "Sign In";
-    connSignInForm.style.display = "flex";
+    if (signInPrompt) signInPrompt.classList.remove("hidden");
   }
 
   // Oura — connection is server-side; use lastSyncAt as the connected indicator
@@ -1130,60 +1130,7 @@ connSupabaseAction?.addEventListener("click", async () => {
     updateConnSheet();
     render();
   } else {
-    connSignInForm.style.display = "flex";
-    document.querySelector("#connEmail")?.focus();
-  }
-});
-
-connSignInForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.querySelector("#connEmail")?.value.trim();
-  const password = document.querySelector("#connPassword")?.value;
-  const errEl = document.querySelector("#connSignInError");
-  errEl.textContent = "";
-  const btn = connSignInForm.querySelector("button[type=submit]");
-  setBusy(btn, "Signing in...", true);
-  try {
-    await signInWithPassword(email, password);
-    // Tell the browser/Keychain the sign-in succeeded so it can save/autofill credentials
-    if (window.PasswordCredential) {
-      try {
-        const cred = new PasswordCredential({ id: email, password });
-        await navigator.credentials.store(cred);
-      } catch { /* non-critical */ }
-    }
-    await loadRemoteStateInto(state);
-    state = loadState();
-    updateConnSheet();
-    closeSheet();
-    render();
-    setNotice("Signed in successfully.", "success");
-  } catch (err) {
-    errEl.textContent = err.message;
-  } finally {
-    setBusy(btn, "Signing in...", false);
-  }
-});
-
-document.querySelector("#connCreateBtn")?.addEventListener("click", async () => {
-  const email = document.querySelector("#connEmail")?.value.trim();
-  const password = document.querySelector("#connPassword")?.value;
-  const errEl = document.querySelector("#connSignInError");
-  errEl.textContent = "";
-  try {
-    const data = await signUpWithEmailPassword(email, password);
-    if (data.user && !data.session) {
-      errEl.textContent = "Check your email to confirm your account, then sign in.";
-    } else {
-      await loadRemoteStateInto(state);
-      state = loadState();
-      updateConnSheet();
-      closeSheet();
-      render();
-      setNotice("Account created and signed in.", "success");
-    }
-  } catch (err) {
-    errEl.textContent = err.message;
+    window.location.href = "./login.html";
   }
 });
 // ── Oura inline form ──────────────────────────────────────────────
@@ -1266,7 +1213,7 @@ render();
   const signInBannerBtn = document.querySelector("#signInBannerBtn");
   if (signInBannerBtn) {
     signInBannerBtn.addEventListener("click", () => {
-      document.querySelector("#connectionsButton")?.click();
+      window.location.href = "./login.html";
     });
   }
 

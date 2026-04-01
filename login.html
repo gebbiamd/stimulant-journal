@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#efe1c7" />
+    <link rel="manifest" href="./manifest.webmanifest?v=72" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
+    <link rel="stylesheet" href="./styles.css?v=86" />
+    <title>Sign In | Stimulant Journal</title>
+  </head>
+  <body data-page="login">
+    <div class="background">
+      <div class="orb orb-one"></div>
+      <div class="orb orb-two"></div>
+      <div class="grid"></div>
+    </div>
+
+    <main class="app-shell login-shell">
+      <section class="card login-card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Cloud sync</p>
+            <h2>☁️ Sign in</h2>
+          </div>
+        </div>
+
+        <form id="loginForm" class="login-form" autocomplete="on" action=".">
+          <label for="loginEmail">Email</label>
+          <input
+            id="loginEmail"
+            name="username"
+            type="email"
+            autocomplete="username"
+            placeholder="you@example.com"
+            required
+          />
+          <label for="loginPassword">Password</label>
+          <input
+            id="loginPassword"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Password"
+            required
+          />
+          <p id="loginError" class="conn-error"></p>
+          <div class="login-actions">
+            <button class="nav-button emphasis-button" type="submit" id="loginSubmitBtn">Sign In</button>
+            <button class="ghost-button" type="button" id="loginCreateBtn">Create Account</button>
+          </div>
+        </form>
+
+        <a href="./index.html" class="login-back-link">← Back</a>
+      </section>
+    </main>
+
+    <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./journal-core.js?v=82"></script>
+    <script src="./login.js?v=1"></script>
+  </body>
+</html>

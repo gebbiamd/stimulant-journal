@@ -2528,3 +2528,70 @@ details.ai-section-recs {
   font-size: 0.75rem;
   color: var(--text-muted, #888);
 }
+
+/* ── Login page ──────────────────────────────────────────── */
+.login-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 1.5rem 1rem 2rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.login-form label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.login-form input[type="email"],
+.login-form input[type="password"] {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.login-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.login-back-link {
+  display: block;
+  text-align: center;
+  margin-top: 1.25rem;
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-decoration: none;
+  opacity: 0.75;
+}
+
+.login-back-link:hover {
+  opacity: 1;
+}
+
+.conn-signin-prompt {
+  padding: 0.75rem 0 0.5rem;
+  border-bottom: 1px solid rgba(90,72,56,0.08);
+}
+
+.conn-signin-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
