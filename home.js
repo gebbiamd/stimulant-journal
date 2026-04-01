@@ -13,9 +13,10 @@ const els = {
   doseForm: document.querySelector("#doseForm"),
   doseAmount: document.querySelector("#doseAmount"),
   doseTime: document.querySelector("#doseTime"),
+  dateTimeField: document.querySelector("#dateTimeField"),
+  useCurrentTime: document.querySelector("#useCurrentTime"),
   doseNote: document.querySelector("#doseNote"),
   doseMgHint: document.querySelector("#doseMgHint"),
-  nowButton: document.querySelector("#nowButton"),
   syncOuraHomeButton: document.querySelector("#syncOuraHomeButton"),
   doseUnitLabel: document.querySelector("#doseUnitLabel"),
   headerCard: document.querySelector(".header-card"),
@@ -62,6 +63,10 @@ const els = {
   entryTypePicker: document.querySelector("#entryTypePicker"),
   doseQuantityFields: document.querySelector("#doseQuantityFields"),
   doseAmountLabel: document.querySelector("#doseAmountLabel"),
+  doseSliderWrap: document.querySelector("#doseSliderWrap"),
+  doseSlider: document.querySelector("#doseSlider"),
+  doseSliderDisplay: document.querySelector("#doseSliderDisplay"),
+  doseNumberWrap: document.querySelector("#doseNumberWrap"),
 };
 
 function loadAiChatMessages() {
@@ -480,19 +485,46 @@ function renderMiniTrend() {
 
 // ── Entry type picker ─────────────────────────────────────────────────
 let currentEntryType = "dose";
+let adjustmentSign = 1; // 1 = add, -1 = remove
+
+function getEntryTimestamp() {
+  return els.useCurrentTime?.checked ? new Date().toISOString() : (els.doseTime?.value || new Date().toISOString());
+}
+
+function updateSliderDisplay() {
+  const v = parseFloat(els.doseSlider?.value ?? 0);
+  if (els.doseSliderDisplay) els.doseSliderDisplay.textContent = v % 1 === 0 ? String(v) : v.toFixed(1);
+  // keep hidden doseAmount in sync so form submit reads correctly
+  if (els.doseAmount) els.doseAmount.value = v > 0 ? String(v) : "";
+}
+
+function updateAdjustmentLabel() {
+  if (els.doseAmountLabel && currentEntryType === "adjustment") {
+    els.doseAmountLabel.textContent = adjustmentSign > 0 ? "Tablets to add" : "Tablets to remove";
+  }
+}
 
 function updateEntryTypeUi() {
   document.querySelectorAll("#entryTypePicker .entry-type-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.type === currentEntryType);
   });
-  const showQuantity = currentEntryType === "dose" || currentEntryType === "refill";
+  const showQuantity = currentEntryType === "dose" || currentEntryType === "refill" || currentEntryType === "adjustment";
   if (els.doseQuantityFields) els.doseQuantityFields.classList.toggle("hidden", !showQuantity);
+
+  const isDose = currentEntryType === "dose";
+  if (els.doseSliderWrap) els.doseSliderWrap.classList.toggle("hidden", !isDose);
+  if (els.doseNumberWrap) els.doseNumberWrap.classList.toggle("hidden", isDose);
+
   if (els.doseAmountLabel) {
-    els.doseAmountLabel.textContent = currentEntryType === "refill" ? "Tablets received" : "Tablets taken";
+    const labels = { dose: "Tablets taken", refill: "Tablets received" };
+    els.doseAmountLabel.textContent = labels[currentEntryType] || "";
+    if (currentEntryType === "adjustment") updateAdjustmentLabel();
   }
-  if (els.doseMgHint) els.doseMgHint.style.display = currentEntryType === "dose" ? "" : "none";
+  if (els.doseMgHint) els.doseMgHint.style.display = "none"; // mg hint removed from form
   const noteField = document.querySelector(".entry-note-field");
   if (noteField) noteField.classList.toggle("hidden", currentEntryType !== "note");
+  const signToggle = document.querySelector("#adjustSignToggle");
+  if (signToggle) signToggle.classList.toggle("hidden", currentEntryType !== "adjustment");
 }
 
 function renderRecent() {
@@ -515,6 +547,8 @@ function renderRecent() {
     let doseText;
     if (entry.type === "refill") {
       doseText = `💊 Rx pickup · ${entry.tabletCount || 0} tabs`;
+    } else if (entry.type === "adjustment") {
+      doseText = `➕ Added ${entry.tabletCount || 0} tabs to supply`;
     } else if (entry.type === "note") {
       doseText = `📝 ${entry.note || "Note"}`;
     } else {
@@ -848,9 +882,25 @@ function render() {
   renderPaceGauge();
 }
 
-els.nowButton.addEventListener("click", () => {
-  setDateTimeInputNow(els.doseTime);
-  setNotice("Dose timestamp set to the current time.", "success");
+// Dose slider
+els.doseSlider?.addEventListener("input", updateSliderDisplay);
+
+// Use current time checkbox
+els.useCurrentTime?.addEventListener("change", () => {
+  const showPicker = !els.useCurrentTime.checked;
+  if (els.dateTimeField) els.dateTimeField.classList.toggle("hidden", !showPicker);
+  if (showPicker) setDateTimeInputNow(els.doseTime);
+});
+
+// Adjustment sign toggle
+document.querySelectorAll("#adjustSignToggle .adjust-sign-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    adjustmentSign = Number(btn.dataset.sign);
+    document.querySelectorAll("#adjustSignToggle .adjust-sign-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.sign === btn.dataset.sign);
+    });
+    updateAdjustmentLabel();
+  });
 });
 els.syncOuraHomeButton?.addEventListener("click", async () => {
   setBusy(els.syncOuraHomeButton, "Syncing Oura...", true);
@@ -929,6 +979,7 @@ els.doseForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const tabletCount = Number.parseFloat(els.doseAmount?.value);
   const note = els.doseNote.value.trim();
+  const timestamp = getEntryTimestamp();
   const submitButton = els.doseForm.querySelector('button[type="submit"]');
   setBusy(submitButton, "Saving...", true);
 
@@ -936,34 +987,43 @@ els.doseForm.addEventListener("submit", (event) => {
   if (currentEntryType === "refill") {
     const count = Number.isFinite(tabletCount) && tabletCount > 0 ? tabletCount : 0;
     if (!count && !note) { setBusy(submitButton, "Saving...", false); return; }
-    saveRefillEntry(state, count, els.doseTime.value, note);
+    saveRefillEntry(state, count, timestamp, note);
     message = `Rx pickup logged · ${count} tablets.`;
+  } else if (currentEntryType === "adjustment") {
+    const count = Number.isFinite(tabletCount) && tabletCount > 0 ? tabletCount : 0;
+    if (!count) { setBusy(submitButton, "Saving...", false); return; }
+    saveAdjustmentEntry(state, count * adjustmentSign, timestamp, note);
+    message = adjustmentSign > 0
+      ? `Added ${count} tablet${count !== 1 ? "s" : ""} to supply.`
+      : `Removed ${count} tablet${count !== 1 ? "s" : ""} from supply.`;
   } else if (currentEntryType === "note") {
     if (!note) { setBusy(submitButton, "Saving...", false); return; }
-    saveNoteEntry(state, els.doseTime.value, note);
+    saveNoteEntry(state, timestamp, note);
     message = "Note saved.";
   } else {
     // dose
     const hasDose = Number.isFinite(tabletCount) && tabletCount > 0;
     if (!hasDose && !note) { setBusy(submitButton, "Saving...", false); return; }
     if (hasDose) {
-      saveDoseEntry(state, tabletCount, els.doseTime.value, note);
+      saveDoseEntry(state, tabletCount, timestamp, note);
       message = "Dose entry saved.";
     } else {
-      saveNoteEntry(state, els.doseTime.value, note);
+      saveNoteEntry(state, timestamp, note);
       message = "Note saved without a dose.";
     }
   }
 
   els.doseForm.reset();
-  setDateTimeInputNow(els.doseTime);
+  // Reset slider and checkbox
+  if (els.doseSlider) { els.doseSlider.value = "0"; updateSliderDisplay(); }
+  if (els.useCurrentTime) els.useCurrentTime.checked = true;
+  if (els.dateTimeField) els.dateTimeField.classList.add("hidden");
   updateEntryTypeUi();
   render();
   setNotice(message, "success");
   setBusy(submitButton, "Saving...", false);
 });
 
-setDateTimeInputNow(els.doseTime);
 updateEntryTypeUi();
 renderInstallPrompt(els.installButton);
 aiChatMessages = loadAiChatMessages();
@@ -1085,6 +1145,13 @@ connSignInForm?.addEventListener("submit", async (e) => {
   setBusy(btn, "Signing in...", true);
   try {
     await signInWithPassword(email, password);
+    // Tell the browser/Keychain the sign-in succeeded so it can save/autofill credentials
+    if (window.PasswordCredential) {
+      try {
+        const cred = new PasswordCredential({ id: email, password });
+        await navigator.credentials.store(cred);
+      } catch { /* non-critical */ }
+    }
     await loadRemoteStateInto(state);
     state = loadState();
     updateConnSheet();

@@ -789,7 +789,8 @@ select {
 }
 
 .home-entry-form {
-  gap: 0.55rem;
+  gap: 0.65rem;
+  align-items: center;
 }
 
 .home-entry-form input,
@@ -939,19 +940,14 @@ textarea {
 }
 
 .entry-submit-row {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  gap: 0.65rem;
-  align-items: center;
+  display: flex;
+  justify-content: center;
 }
 
-.entry-submit-row .ghost-button,
 .entry-submit-row .primary-button {
-  min-width: 0;
-}
-
-.entry-now-button {
-  white-space: nowrap;
+  min-width: 10rem;
+  max-width: 16rem;
+  width: 100%;
 }
 
 .entry-type-picker {
@@ -981,6 +977,124 @@ textarea {
 }
 
 .entry-type-btn:hover:not(.active) {
+  background: rgba(140, 90, 40, 0.07);
+}
+
+.dose-qty-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.dose-qty-heading {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(80, 50, 10, 0.5);
+}
+
+.dose-slider-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.dose-slider-readout {
+  line-height: 1;
+}
+
+.dose-slider-readout strong {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #4a2d00;
+}
+
+.dose-slider-unit {
+  font-size: 0.9rem;
+  color: rgba(80, 50, 10, 0.55);
+  font-weight: 500;
+}
+
+#doseSlider {
+  width: 100%;
+  height: 6px;
+  accent-color: rgba(160, 100, 10, 0.85);
+  cursor: pointer;
+}
+
+.dose-number-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dose-number-wrap input {
+  width: 5.5rem;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 600;
+  padding: 0.45rem 0.6rem;
+  border-radius: 12px;
+}
+
+.dose-number-unit {
+  font-size: 0.85rem;
+  color: rgba(80, 50, 10, 0.55);
+  font-weight: 500;
+}
+
+.use-current-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: rgba(80, 50, 10, 0.7);
+  cursor: pointer;
+  margin: 0.1rem 0;
+}
+
+.use-current-time-row input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: rgba(160, 100, 10, 0.9);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.adjust-sign-toggle {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.35rem 0 0.1rem;
+}
+
+.adjust-sign-btn {
+  flex: 1;
+  padding: 0.3rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(140, 90, 40, 0.18);
+  background: transparent;
+  color: rgba(100, 60, 20, 0.6);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.adjust-sign-btn.active {
+  background: rgba(180, 120, 20, 0.15);
+  border-color: rgba(180, 120, 20, 0.35);
+  color: #5a3d00;
+  font-weight: 600;
+}
+
+.adjust-sign-btn:hover:not(.active) {
   background: rgba(140, 90, 40, 0.07);
 }
 

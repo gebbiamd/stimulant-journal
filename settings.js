@@ -19,7 +19,6 @@ const els = {
   dailyTarget: document.querySelector("#dailyTarget"),
   monthlyTarget: document.querySelector("#monthlyTarget"),
   doseDaysTarget: document.querySelector("#doseDaysTarget"),
-  monthlyTablets: document.querySelector("#monthlyTablets"),
   mgPerTablet: document.querySelector("#mgPerTablet"),
   decayHalfLifeHours: document.querySelector("#decayHalfLifeHours"),
   vacationThreshold: document.querySelector("#vacationThreshold"),
@@ -28,14 +27,10 @@ const els = {
   openAiRelayUrl: document.querySelector("#openAiRelayUrl"),
   openAiModel: document.querySelector("#openAiModel"),
   ouraClientId: document.querySelector("#ouraClientId"),
-  lastRefillDate: document.querySelector("#lastRefillDate"),
   refillIntervalDays: document.querySelector("#refillIntervalDays"),
   refillRequestLeadDays: document.querySelector("#refillRequestLeadDays"),
   exportButton: document.querySelector("#exportButton"),
   importInput: document.querySelector("#importInput"),
-  tabletsOnHand: document.querySelector("#tabletsOnHand"),
-  inventorySummary: document.querySelector("#inventorySummary"),
-  applyInventoryButton: document.querySelector("#applyInventoryButton"),
   reloadEntriesButton: document.querySelector("#reloadEntriesButton"),
   entryEditorList: document.querySelector("#entryEditorList"),
   entryEditorEmpty: document.querySelector("#entryEditorEmpty"),
@@ -111,11 +106,6 @@ function hydrate() {
   }
   if (els.openAiStatus) {
     els.openAiStatus.textContent = state.settings.openAiRelayUrl ? "Relay configured" : "Relay not configured";
-  }
-  if (els.tabletsOnHand && els.inventorySummary) {
-    const usage = getCurrentMonthTabletUsage(state);
-    els.tabletsOnHand.value = String(usage.remaining);
-    els.inventorySummary.textContent = `${formatNumber(usage.remaining)} on hand • ${formatNumber(usage.used)} used this month`;
   }
   renderEntryEditor();
 }
@@ -268,7 +258,7 @@ els.settingsForm?.addEventListener("submit", (event) => {
     dailyTarget: Number.parseFloat(els.dailyTarget.value) || defaultState.settings.dailyTarget,
     monthlyTarget: Number.parseFloat(els.monthlyTarget.value) || defaultState.settings.monthlyTarget,
     doseDaysTarget: Number.parseInt(els.doseDaysTarget.value, 10) || defaultState.settings.doseDaysTarget,
-    monthlyTablets: Number.parseFloat(els.monthlyTablets.value) || defaultState.settings.monthlyTablets,
+    monthlyTablets: state.settings.monthlyTablets,
     mgPerTablet: Number.parseFloat(els.mgPerTablet.value) || defaultState.settings.mgPerTablet,
     decayHalfLifeHours:
       Number.parseFloat(els.decayHalfLifeHours.value) || defaultState.settings.decayHalfLifeHours,
@@ -280,7 +270,6 @@ els.settingsForm?.addEventListener("submit", (event) => {
     openAiRelayUrl: els.openAiRelayUrl?.value?.trim() ?? state.settings.openAiRelayUrl ?? "",
     openAiModel: (els.openAiModel?.value?.trim() || state.settings.openAiModel || defaultState.settings.openAiModel),
     ouraClientId: els.ouraClientId?.value?.trim() ?? state.settings.ouraClientId ?? "",
-    lastRefillDate: els.lastRefillDate.value || "",
     refillIntervalDays: Number.parseInt(els.refillIntervalDays.value, 10) || defaultState.settings.refillIntervalDays,
     refillRequestLeadDays: Number.parseInt(els.refillRequestLeadDays.value, 10) || defaultState.settings.refillRequestLeadDays,
   };
@@ -298,19 +287,6 @@ els.importInput?.addEventListener("change", importData((nextState) => {
 els.reloadEntriesButton?.addEventListener("click", () => {
   hydrate();
   setNotice("Reloaded entries from the current saved state.", "success");
-});
-els.applyInventoryButton?.addEventListener("click", () => {
-  const onHand = Number.parseFloat(els.tabletsOnHand?.value || "");
-  if (!Number.isFinite(onHand) || onHand < 0) {
-    setNotice("Current tablets on hand must be zero or more.", "error");
-    return;
-  }
-  const usage = getCurrentMonthTabletUsage(state);
-  state.settings.monthlyTablets = usage.used + onHand;
-  if (els.monthlyTablets) {
-    els.monthlyTablets.value = String(state.settings.monthlyTablets);
-  }
-  saveStateAndSync("Inventory updated.");
 });
 els.entryEditorList?.addEventListener("click", (event) => {
   const saveButton = event.target.closest(".entry-save-button");

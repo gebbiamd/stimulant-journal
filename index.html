@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest?v=72" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=83" />
+    <link rel="stylesheet" href="./styles.css?v=85" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -40,15 +40,11 @@
         </div>
 
         <!-- Inline sign-in form (shown when not authenticated) -->
-        <form id="connSignInForm" class="conn-signin-form" autocomplete="on">
-          <label>
-            Email
-            <input id="connEmail" name="email" type="email" autocomplete="username" placeholder="you@example.com" />
-          </label>
-          <label>
-            Password
-            <input id="connPassword" name="password" type="password" autocomplete="current-password" placeholder="Password" />
-          </label>
+        <form id="connSignInForm" class="conn-signin-form" autocomplete="on" action=".">
+          <label for="connEmail">Email</label>
+          <input id="connEmail" name="username" type="email" autocomplete="username" placeholder="you@example.com" />
+          <label for="connPassword">Password</label>
+          <input id="connPassword" name="password" type="password" autocomplete="current-password" placeholder="Password" />
           <div class="conn-signin-actions">
             <button class="primary-button" type="submit">Sign In</button>
             <button class="ghost-button" id="connCreateBtn" type="button">Create Account</button>
@@ -188,31 +184,38 @@
           <button class="entry-type-btn active" data-type="dose" type="button">Dose taken</button>
           <button class="entry-type-btn" data-type="note" type="button">Note</button>
           <button class="entry-type-btn" data-type="refill" type="button">Rx pickup</button>
+          <button class="entry-type-btn" data-type="adjustment" type="button">Adjust qty</button>
         </div>
         <form id="doseForm" class="stack-form home-entry-form compact-settings-form">
-          <div class="split-fields entry-split-fields" id="doseQuantityFields">
-            <label class="entry-field">
-              <span id="doseAmountLabel">Tablets taken</span>
-              <div class="input-with-unit">
-                <input
-                  id="doseAmount"
-                  name="doseAmount"
-                  type="number"
-                  inputmode="decimal"
-                  min="0"
-                  step="0.5"
-                  placeholder="0"
-                />
-                <span id="doseUnitLabel" class="unit-label">tabs</span>
+          <div id="doseQuantityFields" class="dose-qty-section">
+            <span id="doseAmountLabel" class="dose-qty-heading">Tablets taken</span>
+            <!-- Slider UI — dose type only -->
+            <div id="doseSliderWrap" class="dose-slider-wrap">
+              <div class="dose-slider-readout">
+                <strong id="doseSliderDisplay">0</strong><span class="dose-slider-unit"> tabs</span>
               </div>
-            </label>
-            <label class="entry-field">
-              Date/time
-              <input id="doseTime" name="doseTime" type="datetime-local" />
-            </label>
+              <input id="doseSlider" type="range" min="0" max="6" step="0.5" value="0" />
+            </div>
+            <!-- Compact number input — refill / adjustment -->
+            <div id="doseNumberWrap" class="dose-number-wrap hidden">
+              <input
+                id="doseAmount"
+                name="doseAmount"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="0.5"
+                placeholder="0"
+              />
+              <span id="doseUnitLabel" class="dose-number-unit">tabs</span>
+            </div>
+          </div>
+          <div id="adjustSignToggle" class="adjust-sign-toggle hidden">
+            <button class="adjust-sign-btn active" data-sign="1" type="button">+ Add</button>
+            <button class="adjust-sign-btn" data-sign="-1" type="button">− Remove</button>
           </div>
           <p id="doseMgHint" class="field-hint muted"></p>
-          <label class="entry-note-field">
+          <label class="entry-note-field hidden">
             Note
             <textarea
               id="doseNote"
@@ -222,10 +225,16 @@
               placeholder=""
             ></textarea>
           </label>
+          <label class="use-current-time-row">
+            <input type="checkbox" id="useCurrentTime" checked />
+            Use current time
+          </label>
+          <label class="entry-field hidden" id="dateTimeField">
+            Date/time
+            <input id="doseTime" name="doseTime" type="datetime-local" />
+          </label>
           <div class="entry-submit-row">
-            <button id="nowButton" class="ghost-button compact-action-button entry-now-button" type="button">Use Current Time</button>
             <button class="primary-button" type="submit">Save Entry</button>
-            <p class="muted"></p>
           </div>
         </form>
       </section>
@@ -345,7 +354,7 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=81"></script>
-    <script src="./home.js?v=86"></script>
+    <script src="./journal-core.js?v=82"></script>
+    <script src="./home.js?v=90"></script>
   </body>
 </html>
