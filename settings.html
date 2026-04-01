@@ -52,10 +52,6 @@
               <input id="mgPerTablet" name="mgPerTablet" type="number" min="0" step="0.5" />
             </label>
             <label>
-              Tablets this month
-              <input id="monthlyTablets" name="monthlyTablets" type="number" min="0" step="1" />
-            </label>
-            <label>
               Daily target
               <input id="dailyTarget" name="dailyTarget" type="number" min="0" step="1" />
             </label>
@@ -72,10 +68,6 @@
             <summary><span>💊 Refill tracking</span></summary>
             <div class="settings-grid settings-grid-advanced">
               <label>
-                Last refill date
-                <input id="lastRefillDate" name="lastRefillDate" type="date" />
-              </label>
-              <label>
                 Refill every (days)
                 <input id="refillIntervalDays" name="refillIntervalDays" type="number" min="1" step="1" />
               </label>
@@ -83,19 +75,6 @@
                 Request early by (days)
                 <input id="refillRequestLeadDays" name="refillRequestLeadDays" type="number" min="0" step="1" />
               </label>
-            </div>
-            <div class="split-fields entry-editor-inventory" style="margin-top:0.7rem">
-              <label>
-                Current tablets on hand
-                <input id="tabletsOnHand" name="tabletsOnHand" type="number" min="0" step="0.5" />
-              </label>
-              <div class="entry-editor-summary">
-                <span>Inventory shortcut</span>
-                <strong id="inventorySummary">0 on hand</strong>
-              </div>
-            </div>
-            <div class="data-actions compact-actions" style="margin-top:0.7rem">
-              <button id="applyInventoryButton" class="nav-button emphasis-button" type="button">Update Tablets On Hand</button>
             </div>
           </details>
           <details class="settings-disclosure">
@@ -188,7 +167,7 @@
     <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=81"></script>
-    <script src="./settings.js?v=77"></script>
+    <script src="./journal-core.js?v=82"></script>
+    <script src="./settings.js?v=78"></script>
   </body>
 </html>

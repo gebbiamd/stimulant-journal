@@ -81,6 +81,15 @@ function normalizeEntry(entry) {
       note: String(entry.note || "").trim(),
     };
   }
+  if (entry.type === "adjustment") {
+    return {
+      id: entry.id || crypto.randomUUID(),
+      type: "adjustment",
+      tabletCount: Number(entry.tabletCount ?? entry.tablet_count) || 0,
+      timestamp,
+      note: String(entry.note || "").trim(),
+    };
+  }
   const tabletCount =
     entry.tabletCount !== undefined && entry.tabletCount !== null
       ? Number(entry.tabletCount) || 0
@@ -351,7 +360,7 @@ async function syncStateToSupabase(state) {
     type: entry.type,
     timestamp: entry.timestamp,
     amount: entry.type === "dose" ? entry.amount : null,
-    tablet_count: (entry.type === "dose" || entry.type === "refill") ? entry.tabletCount : null,
+    tablet_count: (entry.type === "dose" || entry.type === "refill" || entry.type === "adjustment") ? entry.tabletCount : null,
     mg_per_tablet: entry.type === "dose" ? entry.mgPerTablet : null,
     note: entry.note || "",
   }));
@@ -580,7 +589,11 @@ function getCurrentMonthTabletUsage(state) {
     const used = state.entries
       .filter((e) => e.type === "dose" && new Date(e.timestamp) >= refillTimestamp)
       .reduce((sum, e) => sum + Number(e.tabletCount || 0), 0);
-    return { used, planned: startingCount, remaining: Math.max(startingCount - used, 0) };
+    const adjustments = state.entries
+      .filter((e) => e.type === "adjustment" && new Date(e.timestamp) >= refillTimestamp)
+      .reduce((sum, e) => sum + Number(e.tabletCount || 0), 0);
+    const planned = startingCount + adjustments;
+    return { used, planned, remaining: Math.max(planned - used, 0) };
   }
 
   // Fall back to calendar month + settings when no refill has been logged
@@ -590,7 +603,10 @@ function getCurrentMonthTabletUsage(state) {
 }
 
 function getRefillStatus(state) {
-  const refillDate = parseLocalDateKey(state.settings.lastRefillDate);
+  const lastRefillEntry = state.entries
+    .filter((e) => e.type === "refill")
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+  const refillDate = lastRefillEntry ? startOfLocalDay(new Date(lastRefillEntry.timestamp)) : null;
   const refillIntervalDays = Number(state.settings.refillIntervalDays) || defaultState.settings.refillIntervalDays;
   const refillRequestLeadDays = Number(state.settings.refillRequestLeadDays) || defaultState.settings.refillRequestLeadDays;
   const usage = getCurrentMonthTabletUsage(state);
@@ -598,8 +614,8 @@ function getRefillStatus(state) {
   if (!refillDate) {
     return {
       tone: "neutral",
-      headline: "No refill date set",
-      detail: "Add your last refill date in Settings to get a request reminder.",
+      headline: "No refill logged yet",
+      detail: "Log an Rx pickup to start tracking your refill schedule.",
       dueDate: null,
       requestDate: null,
       daysUntilDue: null,
@@ -755,6 +771,19 @@ function saveRefillEntry(state, tabletCount, timestamp, note) {
   state.entries.push({
     id: crypto.randomUUID(),
     type: "refill",
+    tabletCount: Number(tabletCount) || 0,
+    timestamp: parseTimestamp(timestamp),
+    note: String(note || "").trim(),
+  });
+  state.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  persistState(state);
+  queueRemoteSync(state);
+}
+
+function saveAdjustmentEntry(state, tabletCount, timestamp, note) {
+  state.entries.push({
+    id: crypto.randomUUID(),
+    type: "adjustment",
     tabletCount: Number(tabletCount) || 0,
     timestamp: parseTimestamp(timestamp),
     note: String(note || "").trim(),
