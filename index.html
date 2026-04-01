@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest?v=72" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=79" />
+    <link rel="stylesheet" href="./styles.css?v=81" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -87,6 +87,12 @@
             <button id="connOpenAiSaveBtn" class="primary-button" type="button">Save</button>
           </div>
         </div>
+      </div>
+
+      <!-- Persistent sign-in nudge banner -->
+      <div id="signInBanner" class="sign-in-banner hidden">
+        Sign in to sync your data.
+        <button id="signInBannerBtn" class="sign-in-banner-btn" type="button">Sign in →</button>
       </div>
 
       <section class="card header-card">
@@ -334,7 +340,7 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=78"></script>
-    <script src="./home.js?v=81"></script>
+    <script src="./journal-core.js?v=79"></script>
+    <script src="./home.js?v=83"></script>
   </body>
 </html>

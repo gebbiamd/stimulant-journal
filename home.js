@@ -1138,12 +1138,31 @@ document.querySelector("#connOpenAiSaveBtn")?.addEventListener("click", () => {
 
 render();
 (async () => {
+  const signInBanner = document.querySelector("#signInBanner");
+  const signInBannerBtn = document.querySelector("#signInBannerBtn");
+  if (signInBannerBtn) {
+    signInBannerBtn.addEventListener("click", () => {
+      document.querySelector("#connectionsButton")?.click();
+    });
+  }
+
+  function updateSignInBanner() {
+    if (!signInBanner) return;
+    if (!state.auth?.userId) {
+      signInBanner.classList.remove("hidden");
+    } else {
+      signInBanner.classList.add("hidden");
+    }
+  }
+
   try {
     await loadRemoteStateInto(state);
     render();
+    updateSignInBanner();
   } catch (error) {
     console.error(error);
     setNotice(error.message, "error");
+    updateSignInBanner();
   }
   registerServiceWorker();
 })();

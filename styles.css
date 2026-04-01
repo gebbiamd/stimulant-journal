@@ -1122,6 +1122,37 @@ textarea {
   background: linear-gradient(135deg, rgba(221, 79, 103, 0.92), rgba(255, 141, 161, 0.82));
 }
 
+.sign-in-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0.5rem 1rem 0.25rem;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(237, 168, 49, 0.18), rgba(255, 214, 112, 0.12));
+  border: 1px solid rgba(180, 120, 20, 0.22);
+  color: #5a3d00;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.sign-in-banner.hidden { display: none; }
+.sign-in-banner-btn {
+  background: rgba(180, 120, 20, 0.15);
+  border: 1px solid rgba(180, 120, 20, 0.3);
+  border-radius: 6px;
+  color: #5a3d00;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.sign-in-banner-btn:hover {
+  background: rgba(180, 120, 20, 0.28);
+}
+
 .status-callout[data-tone="success"] {
   background: rgba(214, 255, 243, 0.82);
   border-color: rgba(45, 157, 120, 0.3);
