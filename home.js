@@ -491,6 +491,8 @@ function updateEntryTypeUi() {
     els.doseAmountLabel.textContent = currentEntryType === "refill" ? "Tablets received" : "Tablets taken";
   }
   if (els.doseMgHint) els.doseMgHint.style.display = currentEntryType === "dose" ? "" : "none";
+  const noteField = document.querySelector(".entry-note-field");
+  if (noteField) noteField.classList.toggle("hidden", currentEntryType !== "note");
 }
 
 function renderRecent() {
