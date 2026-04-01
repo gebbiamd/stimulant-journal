@@ -151,8 +151,13 @@ function getSupabaseClient() {
 
 async function refreshAuthState(state) {
   const client = getSupabaseClient();
-  const { data, error } = await client.auth.getSession();
+  let { data, error } = await client.auth.getSession();
   if (error) throw error;
+  // If session is missing or nearly expired, attempt a silent token refresh
+  if (!data.session || (data.session.expires_at && data.session.expires_at * 1000 <= Date.now() + 60_000)) {
+    const { data: refreshed } = await client.auth.refreshSession().catch(() => ({ data: null }));
+    if (refreshed?.session) data = refreshed;
+  }
   const user = data.session?.user || null;
   state.auth = {
     email: user?.email || "",

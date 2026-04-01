@@ -536,13 +536,15 @@ function renderOuraSleep() {
       const scoreCls = score >= 85 ? "good" : score >= 70 ? "ok" : score ? "poor" : "";
       const displayDate = getOuraDisplayDate(item);
       const dayLabel = displayDate ? displayDate.toLocaleDateString([], { month: "numeric", day: "numeric" }) : (item.day || "-");
+      const isPending = score && !hours && !deep && !rem;
+      const pendingCell = `<span class="score-chip" style="opacity:0.55;font-size:0.6rem;letter-spacing:0.03em">syncing…</span>`;
       return `<div class="oura-table-row">
         <span>${dayLabel}</span>
         <span>${score ? `<span class="score-chip ${scoreCls}">${score}</span>` : "-"}</span>
-        <span>${hours ? `${formatNumber(hours)}h` : "-"}</span>
-        <span>${deep ? `${formatNumber(deep)}h` : "-"}</span>
-        <span>${rem ? `${formatNumber(rem)}h` : "-"}</span>
-        <span>${tib ? `${formatNumber(tib)}h` : "-"}</span>
+        <span>${isPending ? pendingCell : hours ? `${formatNumber(hours)}h` : "-"}</span>
+        <span>${isPending ? "" : deep ? `${formatNumber(deep)}h` : "-"}</span>
+        <span>${isPending ? "" : rem ? `${formatNumber(rem)}h` : "-"}</span>
+        <span>${isPending ? "" : tib ? `${formatNumber(tib)}h` : "-"}</span>
       </div>`;
     }).join("")}
   `;
