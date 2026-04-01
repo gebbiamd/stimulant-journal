@@ -1650,49 +1650,72 @@ function formatAiSummaryHtml(summary) {
 
   const html = [];
   let inList = false;
+  let inSection = false;
+
   const closeList = () => {
-    if (inList) {
-      html.push("</ul>");
-      inList = false;
-    }
+    if (inList) { html.push("</ul>"); inList = false; }
+  };
+  const closeSection = () => {
+    closeList();
+    if (inSection) { html.push("</div></details>"); inSection = false; }
   };
 
   for (const line of lines) {
-    const bulletMatch = line.match(/^[-*]\s+(.+)$/);
-    const emojiBulletMatch = line.match(/^([\p{Extended_Pictographic}\u2600-\u27BF]+)\s+(.+)$/u);
-    const numberedHeaderMatch = line.match(/^\d+\.\s+(.+)$/);
-    const colonHeaderMatch = line.match(/^([^:]{2,60}):\s*(.*)$/);
+    // ## Heading or ### Heading — open a collapsible section
+    const mdHeadingMatch = line.match(/^#{1,3}\s+(.+)$/);
+    if (mdHeadingMatch) {
+      closeSection();
+      const rawTitle = mdHeadingMatch[1];
+      const title = formatInlineAiText(rawTitle);
+      const isRec = /recommendations?/i.test(rawTitle);
+      const cls = isRec ? "ai-section ai-section-recs" : "ai-section";
+      html.push(`<details class="${cls}" open><summary class="ai-section-heading">${title}</summary><div class="ai-section-body">`);
+      inSection = true;
+      continue;
+    }
 
-    if (bulletMatch || emojiBulletMatch) {
-      const bulletContent = bulletMatch ? bulletMatch[1] : `${emojiBulletMatch[1]} ${emojiBulletMatch[2]}`;
-      if (!inList) {
-        html.push("<ul>");
-        inList = true;
-      }
-      html.push(`<li>${formatInlineAiText(bulletContent)}</li>`);
+    const bulletMatch = line.match(/^[-*]\s+(.+)$/);
+    if (bulletMatch) {
+      if (!inList) { html.push("<ul>"); inList = true; }
+      html.push(`<li>${formatInlineAiText(bulletMatch[1])}</li>`);
       continue;
     }
 
     closeList();
 
+    // Standalone numbered header without ## (e.g. "1. Overall pattern")
+    const numberedHeaderMatch = line.match(/^(\d+)\.\s+([^:].+)$/);
     if (numberedHeaderMatch) {
-      html.push(`<p><strong>${formatInlineAiText(numberedHeaderMatch[1])}</strong></p>`);
+      closeSection();
+      const title = formatInlineAiText(`${numberedHeaderMatch[1]}. ${numberedHeaderMatch[2]}`);
+      html.push(`<details class="ai-section" open><summary class="ai-section-heading">${title}</summary><div class="ai-section-body">`);
+      inSection = true;
       continue;
     }
 
+    // Colon header (e.g. "Recommendations:" or "Key finding: text")
+    const colonHeaderMatch = line.match(/^([^:]{2,60}):\s*(.*)$/);
     if (colonHeaderMatch) {
       const rawHeader = colonHeaderMatch[1];
-      const header = formatInlineAiText(rawHeader);
-      const body = formatInlineAiText(colonHeaderMatch[2]);
-      const classes = /recommendations?/i.test(rawHeader) ? "ai-recommendations-heading" : "";
-      html.push(body ? `<p class="${classes}"><strong>${header}:</strong> ${body}</p>` : `<p class="${classes}"><strong>${header}</strong></p>`);
+      const isRec = /recommendations?/i.test(rawHeader);
+      if (isRec) {
+        closeSection();
+        html.push(`<details class="ai-section ai-section-recs" open><summary class="ai-section-heading">${formatInlineAiText(rawHeader)}</summary><div class="ai-section-body">`);
+        inSection = true;
+        const body = colonHeaderMatch[2].trim();
+        if (body) html.push(`<p>${formatInlineAiText(body)}</p>`);
+      } else {
+        const header = formatInlineAiText(rawHeader);
+        const body = formatInlineAiText(colonHeaderMatch[2]);
+        html.push(body ? `<p><strong>${header}:</strong> ${body}</p>` : `<p><strong>${header}</strong></p>`);
+      }
       continue;
     }
 
     html.push(`<p>${formatInlineAiText(line)}</p>`);
   }
 
-  closeList();
+  closeSection();
   return html.join("");
 }
 
