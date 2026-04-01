@@ -287,7 +287,7 @@ async function loadRemoteStateInto(state) {
   }
 
   if (Array.isArray(entryRows)) {
-    state.entries = entryRows
+    const remoteEntries = entryRows
       .map((row) =>
         normalizeEntry({
           id: row.id,
@@ -301,6 +301,33 @@ async function loadRemoteStateInto(state) {
       )
       .filter(Boolean)
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // Safety: never replace local entries with an empty remote result.
+    // If remote returns 0 entries but we have local entries, keep the local
+    // ones and push them up to Supabase so they aren't lost.
+    if (remoteEntries.length === 0 && state.entries.length > 0) {
+      // Upload local entries that aren't in the remote yet
+      try {
+        const localClient = getSupabaseClient();
+        const localUser = user;
+        for (const entry of state.entries) {
+          const entryPayload = {
+            id: entry.id,
+            user_id: localUser.id,
+            type: entry.type,
+            timestamp: entry.timestamp,
+            amount: entry.type === "dose" ? entry.amount : null,
+            tablet_count: (entry.type === "dose" || entry.type === "refill" || entry.type === "adjustment") ? entry.tabletCount : null,
+            mg_per_tablet: entry.type === "dose" ? entry.mgPerTablet : null,
+            note: entry.note || null,
+          };
+          await localClient.from("journal_entries").upsert(entryPayload, { onConflict: "id", ignoreDuplicates: true });
+        }
+      } catch { /* non-critical: local data preserved either way */ }
+      // Keep local entries — don't overwrite with empty remote
+    } else {
+      state.entries = remoteEntries;
+    }
   }
 
   if (ouraRows) {
