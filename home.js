@@ -258,43 +258,59 @@ function renderWeekSparkline() {
   const dailyLimit = (state.settings.dailyTabletLimit || 3) * (state.settings.mgPerTablet || 10);
   const maxVal = Math.max(...days.map(d => d.total), dailyLimit, 1);
 
-  // SVG layout: 7 bars, each 8px wide, 3px gap, viewBox 80×38
-  const VW = 80, VH = 38, barH_max = 28, barW = 8, gap = 3;
-  const totalW = 7 * barW + 6 * gap; // 74
-  const startX = (VW - totalW) / 2;  // 3
+  const VW = 84, VH = 46, barH_max = 34, barW = 10, gap = 2;
+  const totalW = 7 * barW + 6 * gap; // 82
+  const startX = (VW - totalW) / 2;  // 1
+  const baseY = VH - 5;
+  const limitY = baseY - Math.round((dailyLimit / maxVal) * barH_max);
 
-  const limitY = VH - 2 - Math.round((dailyLimit / maxVal) * barH_max);
+  const defs = `<defs>
+    <linearGradient id="spk-blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b8e6f8"/>
+      <stop offset="100%" stop-color="#3e9cbd"/>
+    </linearGradient>
+    <linearGradient id="spk-today" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7dd4ee"/>
+      <stop offset="100%" stop-color="#1e7a9a"/>
+    </linearGradient>
+    <linearGradient id="spk-red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f7a0a0"/>
+      <stop offset="100%" stop-color="#c02020"/>
+    </linearGradient>
+  </defs>`;
 
   const barEls = days.map((day, i) => {
-    const h = day.total > 0 ? Math.max(3, Math.round((day.total / maxVal) * barH_max)) : 2;
     const x = startX + i * (barW + gap);
-    const y = VH - 2 - h;
     const isToday = i === 6;
-    const over = day.total > dailyLimit;
+    const over = day.total > dailyLimit && day.total > 0;
     const empty = day.total === 0;
-    const fill = empty
-      ? "rgba(180,180,180,0.28)"
-      : over
-        ? "#d43535"
-        : isToday
-          ? "#3a8aaa"
-          : "#5ab0d0";
-    return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="2" fill="${fill}"/>`;
+
+    if (empty) {
+      return `<rect x="${x}" y="${baseY - 3}" width="${barW}" height="3" rx="1.5" fill="rgba(150,150,150,0.18)"/>`;
+    }
+
+    const h = Math.max(8, Math.round((day.total / maxVal) * barH_max));
+    const y = baseY - h;
+    const gradId = over ? "spk-red" : isToday ? "spk-today" : "spk-blue";
+    // Rounded top only: full-rx rect + square-bottom overlay to flatten lower corners
+    return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="3" fill="url(#${gradId})"/>
+            <rect x="${x}" y="${y + Math.ceil(h / 2)}" width="${barW}" height="${Math.floor(h / 2)}" fill="url(#${gradId})"/>`;
   }).join("");
 
   const refLine = dailyLimit > 0
-    ? `<line x1="${startX}" y1="${limitY}" x2="${startX + totalW}" y2="${limitY}" stroke="#3a8aaa" stroke-width="1" stroke-dasharray="2,2" opacity="0.45"/>`
+    ? `<line x1="${startX}" y1="${limitY}" x2="${startX + totalW}" y2="${limitY}" stroke="#3a8aaa" stroke-width="1" stroke-dasharray="3,2" opacity="0.35"/>`
     : "";
 
+  const baseline = `<line x1="${startX}" y1="${baseY}" x2="${startX + totalW}" y2="${baseY}" stroke="rgba(100,100,100,0.12)" stroke-width="1"/>`;
+
   els.weekSparkline.innerHTML =
-    `<svg viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="xMidYMid meet">${refLine}${barEls}</svg>`;
+    `<svg viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="xMidYMid meet">${defs}${baseline}${refLine}${barEls}</svg>`;
 
   const daysWithDose = days.filter(d => d.total > 0);
-  if (daysWithDose.length === 0) {
-    els.weekSparklineLabel.textContent = "No doses yet";
-  } else {
-    const avg = Math.round(daysWithDose.reduce((s, d) => s + d.total, 0) / daysWithDose.length);
-    els.weekSparklineLabel.textContent = `avg ${avg} mg`;
+  if (els.weekSparklineLabel) {
+    els.weekSparklineLabel.textContent = daysWithDose.length === 0
+      ? "No doses yet"
+      : `avg ${Math.round(daysWithDose.reduce((s, d) => s + d.total, 0) / daysWithDose.length)} mg`;
   }
 }
 
