@@ -1627,7 +1627,7 @@ button.calendar-cell {
 .entry-editor-head,
 .entry-editor-item {
   display: grid;
-  grid-template-columns: minmax(0, 0.68fr) minmax(0, 0.34fr) minmax(0, 1.34fr) auto;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.7fr) minmax(0, 1.4fr) auto;
   gap: 0.36rem;
   align-items: center;
 }
@@ -1735,6 +1735,75 @@ button.calendar-cell {
 
 .entry-time-input {
   letter-spacing: -0.02em;
+}
+
+/* ── Entry type pills ───────────────────────────────────── */
+.entry-type-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  padding: 0.18rem 0.52rem;
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.entry-type-dose {
+  background: rgba(74, 174, 206, 0.15);
+  color: #1a6e94;
+  border: 1px solid rgba(74, 174, 206, 0.3);
+}
+
+.entry-type-refill {
+  background: rgba(45, 157, 120, 0.15);
+  color: #1a6e52;
+  border: 1px solid rgba(45, 157, 120, 0.3);
+}
+
+.entry-type-adjustment {
+  background: rgba(245, 158, 11, 0.13);
+  color: #8a5a00;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+}
+
+.entry-type-note {
+  background: rgba(120, 100, 80, 0.1);
+  color: #5a4838;
+  border: 1px solid rgba(120, 100, 80, 0.18);
+}
+
+/* ── Entry value + adjustment sign ─────────────────────── */
+.entry-editor-value {
+  min-width: 0;
+}
+
+.entry-editor-value-empty {
+  color: var(--muted);
+  font-size: 0.78rem;
+  opacity: 0.45;
+  text-align: center;
+}
+
+.entry-editor-value .entry-input {
+  text-align: center;
+  width: 100%;
+}
+
+.entry-adj-wrap {
+  display: flex;
+  gap: 0.2rem;
+  align-items: center;
+}
+
+.entry-adj-sign {
+  width: 2.4rem;
+  min-width: 2.4rem;
+  text-align: center;
+  padding: 0.28rem 0.1rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .entry-icon-button {

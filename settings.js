@@ -156,6 +156,13 @@ function saveStateAndSync(message) {
   setNotice(message, "success");
 }
 
+const ENTRY_TYPE_META = {
+  dose:       { label: "Dose",       emoji: "💊", color: "entry-type-dose",       hasValue: true,  valuePlaceholder: "tabs",  valueLabel: "Tabs" },
+  refill:     { label: "Rx Pickup",  emoji: "📦", color: "entry-type-refill",     hasValue: true,  valuePlaceholder: "tabs",  valueLabel: "Qty"  },
+  adjustment: { label: "Adjustment", emoji: "⚖️", color: "entry-type-adjustment", hasValue: true,  valuePlaceholder: "tabs",  valueLabel: "Adj"  },
+  note:       { label: "Note",       emoji: "📝", color: "entry-type-note",       hasValue: false, valuePlaceholder: "",      valueLabel: ""     },
+};
+
 function renderEntryEditor(showAll = false) {
   if (!els.entryEditorList || !els.entryEditorEmpty) return;
   const entries = [...state.entries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -163,47 +170,68 @@ function renderEntryEditor(showAll = false) {
   els.entryEditorList.innerHTML = "";
   if (!entries.length) return;
 
-  const LIMIT = 5;
+  const LIMIT = 10;
   const visible = showAll ? entries : entries.slice(0, LIMIT);
 
   const head = document.createElement("div");
   head.className = "entry-editor-head";
   head.innerHTML = `
-    <span>Time</span>
-    <span>Tabs</span>
+    <span>Type</span>
+    <span>Date / Time</span>
+    <span>Value</span>
     <span>Note</span>
-    <span>Actions</span>
+    <span></span>
   `;
   els.entryEditorList.appendChild(head);
 
   for (const entry of visible) {
+    const meta = ENTRY_TYPE_META[entry.type] || ENTRY_TYPE_META.note;
     const row = document.createElement("article");
     row.className = "entry-editor-item";
-    const doseValue = entry.type === "dose" ? Number(entry.tabletCount || 0) : "";
+    row.dataset.type = entry.type;
+
+    // Value field: tablet count for dose/refill, signed for adjustment, hidden for note
+    let valueHtml = "";
+    if (entry.type === "adjustment") {
+      const sign = Number(entry.tabletCount) >= 0 ? "+" : "−";
+      const absVal = Math.abs(Number(entry.tabletCount || 0));
+      valueHtml = `
+        <div class="entry-editor-value">
+          <div class="entry-adj-wrap">
+            <select class="entry-input entry-adj-sign" data-field="adjustmentSign">
+              <option value="1" ${Number(entry.tabletCount) >= 0 ? "selected" : ""}>+</option>
+              <option value="-1" ${Number(entry.tabletCount) < 0 ? "selected" : ""}>−</option>
+            </select>
+            <input class="entry-input" data-field="tabletCount" type="number" min="0" step="0.5" value="${absVal}" />
+          </div>
+        </div>`;
+    } else if (meta.hasValue) {
+      const val = Number(entry.tabletCount || 0);
+      valueHtml = `
+        <div class="entry-editor-value">
+          <input class="entry-input" data-field="tabletCount" type="number" min="0" step="0.5" value="${val}" placeholder="0" />
+        </div>`;
+    } else {
+      valueHtml = `<div class="entry-editor-value entry-editor-value-empty">—</div>`;
+    }
+
     row.innerHTML = `
+      <div class="entry-editor-type">
+        <span class="entry-type-pill ${meta.color}">${meta.emoji} ${meta.label}</span>
+      </div>
       <div class="entry-editor-time">
         <input class="entry-input entry-time-input" data-field="timestamp" type="text" inputmode="numeric" value="${formatCompactDateTimeValue(entry.timestamp)}" placeholder="M/D/YY HH:MM" />
       </div>
-      <div class="entry-editor-dose">
-        <input class="entry-input" data-field="tabletCount" type="number" min="0" step="0.25" value="${doseValue}" ${entry.type === "note" ? "disabled" : ""} />
-      </div>
+      ${valueHtml}
       <div class="entry-editor-note">
-        <input class="entry-input" data-field="note" type="text" value="${String(entry.note || "").replace(/"/g, "&quot;")}" placeholder="Note" />
+        <input class="entry-input" data-field="note" type="text" value="${String(entry.note || "").replace(/"/g, "&quot;")}" placeholder="${entry.type === "note" ? "Note text" : "Optional note"}" />
       </div>
       <div class="entry-editor-actions">
         <button class="ghost-button entry-icon-button entry-save-button" type="button" data-id="${entry.id}" aria-label="Save entry" title="Save">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M5 4h11l3 3v13H5z"></path>
-            <path d="M8 4v6h8V4"></path>
-            <path d="M9 17h6"></path>
-          </svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 4h11l3 3v13H5z"></path><path d="M8 4v6h8V4"></path><path d="M9 17h6"></path></svg>
         </button>
         <button class="delete-button entry-icon-button entry-delete-button" type="button" data-id="${entry.id}" aria-label="Delete entry" title="Delete">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M4 7h16"></path>
-            <path d="M9 7V4h6v3"></path>
-            <path d="M8 7l1 12h6l1-12"></path>
-          </svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M8 7l1 12h6l1-12"></path></svg>
         </button>
       </div>
     `;
@@ -213,7 +241,7 @@ function renderEntryEditor(showAll = false) {
   if (!showAll && entries.length > LIMIT) {
     const btn = document.createElement("button");
     btn.className = "ghost-button compact-action-button";
-    btn.style.marginTop = "0.4rem";
+    btn.style.cssText = "margin: 0.5rem auto; display: block;";
     btn.type = "button";
     btn.textContent = `Show all ${entries.length} entries`;
     btn.addEventListener("click", () => renderEntryEditor(true));
@@ -229,6 +257,7 @@ function saveEntryFromRow(button) {
 
   const timestampInput = row.querySelector('[data-field="timestamp"]');
   const tabletInput = row.querySelector('[data-field="tabletCount"]');
+  const signInput = row.querySelector('[data-field="adjustmentSign"]');
   const noteInput = row.querySelector('[data-field="note"]');
   const nextTimestamp = parseCompactDateTimeValue(timestampInput?.value || "");
   const nextNote = String(noteInput?.value || "").trim();
@@ -243,6 +272,21 @@ function saveEntryFromRow(button) {
     entry.tabletCount = nextTabletCount;
     entry.mgPerTablet = mgPerTablet;
     entry.amount = nextTabletCount * mgPerTablet;
+  } else if (entry.type === "refill") {
+    const nextTabletCount = Number.parseFloat(tabletInput?.value || "");
+    if (!Number.isFinite(nextTabletCount) || nextTabletCount < 0) {
+      setNotice("Refill rows need a valid tablet count.", "error");
+      return;
+    }
+    entry.tabletCount = nextTabletCount;
+  } else if (entry.type === "adjustment") {
+    const absVal = Number.parseFloat(tabletInput?.value || "");
+    const sign = Number(signInput?.value ?? 1);
+    if (!Number.isFinite(absVal) || absVal < 0) {
+      setNotice("Adjustment rows need a valid tablet count.", "error");
+      return;
+    }
+    entry.tabletCount = sign * absVal;
   }
 
   entry.timestamp = nextTimestamp;
