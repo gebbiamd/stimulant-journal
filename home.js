@@ -13,9 +13,10 @@ const els = {
   doseForm: document.querySelector("#doseForm"),
   doseAmount: document.querySelector("#doseAmount"),
   doseTime: document.querySelector("#doseTime"),
+  dateTimeField: document.querySelector("#dateTimeField"),
+  useCurrentTime: document.querySelector("#useCurrentTime"),
   doseNote: document.querySelector("#doseNote"),
   doseMgHint: document.querySelector("#doseMgHint"),
-  nowButton: document.querySelector("#nowButton"),
   syncOuraHomeButton: document.querySelector("#syncOuraHomeButton"),
   doseUnitLabel: document.querySelector("#doseUnitLabel"),
   headerCard: document.querySelector(".header-card"),
@@ -480,6 +481,17 @@ function renderMiniTrend() {
 
 // ── Entry type picker ─────────────────────────────────────────────────
 let currentEntryType = "dose";
+let adjustmentSign = 1; // 1 = add, -1 = remove
+
+function getEntryTimestamp() {
+  return els.useCurrentTime?.checked ? new Date().toISOString() : (els.doseTime?.value || new Date().toISOString());
+}
+
+function updateAdjustmentLabel() {
+  if (els.doseAmountLabel && currentEntryType === "adjustment") {
+    els.doseAmountLabel.textContent = adjustmentSign > 0 ? "Tablets to add" : "Tablets to remove";
+  }
+}
 
 function updateEntryTypeUi() {
   document.querySelectorAll("#entryTypePicker .entry-type-btn").forEach((btn) => {
@@ -488,12 +500,15 @@ function updateEntryTypeUi() {
   const showQuantity = currentEntryType === "dose" || currentEntryType === "refill" || currentEntryType === "adjustment";
   if (els.doseQuantityFields) els.doseQuantityFields.classList.toggle("hidden", !showQuantity);
   if (els.doseAmountLabel) {
-    const labels = { dose: "Tablets taken", refill: "Tablets received", adjustment: "Tablets to add" };
-    els.doseAmountLabel.textContent = labels[currentEntryType] || "Tablets";
+    const labels = { dose: "Tablets taken", refill: "Tablets received" };
+    els.doseAmountLabel.textContent = labels[currentEntryType] || "";
+    if (currentEntryType === "adjustment") updateAdjustmentLabel();
   }
   if (els.doseMgHint) els.doseMgHint.style.display = currentEntryType === "dose" ? "" : "none";
   const noteField = document.querySelector(".entry-note-field");
   if (noteField) noteField.classList.toggle("hidden", currentEntryType !== "note");
+  const signToggle = document.querySelector("#adjustSignToggle");
+  if (signToggle) signToggle.classList.toggle("hidden", currentEntryType !== "adjustment");
 }
 
 function renderRecent() {
@@ -851,9 +866,22 @@ function render() {
   renderPaceGauge();
 }
 
-els.nowButton.addEventListener("click", () => {
-  setDateTimeInputNow(els.doseTime);
-  setNotice("Dose timestamp set to the current time.", "success");
+// Use current time checkbox
+els.useCurrentTime?.addEventListener("change", () => {
+  const showPicker = !els.useCurrentTime.checked;
+  if (els.dateTimeField) els.dateTimeField.classList.toggle("hidden", !showPicker);
+  if (showPicker) setDateTimeInputNow(els.doseTime);
+});
+
+// Adjustment sign toggle
+document.querySelectorAll("#adjustSignToggle .adjust-sign-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    adjustmentSign = Number(btn.dataset.sign);
+    document.querySelectorAll("#adjustSignToggle .adjust-sign-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.sign === btn.dataset.sign);
+    });
+    updateAdjustmentLabel();
+  });
 });
 els.syncOuraHomeButton?.addEventListener("click", async () => {
   setBusy(els.syncOuraHomeButton, "Syncing Oura...", true);
@@ -932,6 +960,7 @@ els.doseForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const tabletCount = Number.parseFloat(els.doseAmount?.value);
   const note = els.doseNote.value.trim();
+  const timestamp = getEntryTimestamp();
   const submitButton = els.doseForm.querySelector('button[type="submit"]');
   setBusy(submitButton, "Saving...", true);
 
@@ -939,39 +968,42 @@ els.doseForm.addEventListener("submit", (event) => {
   if (currentEntryType === "refill") {
     const count = Number.isFinite(tabletCount) && tabletCount > 0 ? tabletCount : 0;
     if (!count && !note) { setBusy(submitButton, "Saving...", false); return; }
-    saveRefillEntry(state, count, els.doseTime.value, note);
+    saveRefillEntry(state, count, timestamp, note);
     message = `Rx pickup logged · ${count} tablets.`;
   } else if (currentEntryType === "adjustment") {
     const count = Number.isFinite(tabletCount) && tabletCount > 0 ? tabletCount : 0;
     if (!count) { setBusy(submitButton, "Saving...", false); return; }
-    saveAdjustmentEntry(state, count, els.doseTime.value, note);
-    message = `Added ${count} tablet${count !== 1 ? "s" : ""} to supply.`;
+    saveAdjustmentEntry(state, count * adjustmentSign, timestamp, note);
+    message = adjustmentSign > 0
+      ? `Added ${count} tablet${count !== 1 ? "s" : ""} to supply.`
+      : `Removed ${count} tablet${count !== 1 ? "s" : ""} from supply.`;
   } else if (currentEntryType === "note") {
     if (!note) { setBusy(submitButton, "Saving...", false); return; }
-    saveNoteEntry(state, els.doseTime.value, note);
+    saveNoteEntry(state, timestamp, note);
     message = "Note saved.";
   } else {
     // dose
     const hasDose = Number.isFinite(tabletCount) && tabletCount > 0;
     if (!hasDose && !note) { setBusy(submitButton, "Saving...", false); return; }
     if (hasDose) {
-      saveDoseEntry(state, tabletCount, els.doseTime.value, note);
+      saveDoseEntry(state, tabletCount, timestamp, note);
       message = "Dose entry saved.";
     } else {
-      saveNoteEntry(state, els.doseTime.value, note);
+      saveNoteEntry(state, timestamp, note);
       message = "Note saved without a dose.";
     }
   }
 
   els.doseForm.reset();
-  setDateTimeInputNow(els.doseTime);
+  // Reset checkbox to "use current time" and hide date picker
+  if (els.useCurrentTime) els.useCurrentTime.checked = true;
+  if (els.dateTimeField) els.dateTimeField.classList.add("hidden");
   updateEntryTypeUi();
   render();
   setNotice(message, "success");
   setBusy(submitButton, "Saving...", false);
 });
 
-setDateTimeInputNow(els.doseTime);
 updateEntryTypeUi();
 renderInstallPrompt(els.installButton);
 aiChatMessages = loadAiChatMessages();
