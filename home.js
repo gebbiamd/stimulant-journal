@@ -63,6 +63,10 @@ const els = {
   entryTypePicker: document.querySelector("#entryTypePicker"),
   doseQuantityFields: document.querySelector("#doseQuantityFields"),
   doseAmountLabel: document.querySelector("#doseAmountLabel"),
+  doseSliderWrap: document.querySelector("#doseSliderWrap"),
+  doseSlider: document.querySelector("#doseSlider"),
+  doseSliderDisplay: document.querySelector("#doseSliderDisplay"),
+  doseNumberWrap: document.querySelector("#doseNumberWrap"),
 };
 
 function loadAiChatMessages() {
@@ -487,6 +491,13 @@ function getEntryTimestamp() {
   return els.useCurrentTime?.checked ? new Date().toISOString() : (els.doseTime?.value || new Date().toISOString());
 }
 
+function updateSliderDisplay() {
+  const v = parseFloat(els.doseSlider?.value ?? 0);
+  if (els.doseSliderDisplay) els.doseSliderDisplay.textContent = v % 1 === 0 ? String(v) : v.toFixed(1);
+  // keep hidden doseAmount in sync so form submit reads correctly
+  if (els.doseAmount) els.doseAmount.value = v > 0 ? String(v) : "";
+}
+
 function updateAdjustmentLabel() {
   if (els.doseAmountLabel && currentEntryType === "adjustment") {
     els.doseAmountLabel.textContent = adjustmentSign > 0 ? "Tablets to add" : "Tablets to remove";
@@ -499,12 +510,17 @@ function updateEntryTypeUi() {
   });
   const showQuantity = currentEntryType === "dose" || currentEntryType === "refill" || currentEntryType === "adjustment";
   if (els.doseQuantityFields) els.doseQuantityFields.classList.toggle("hidden", !showQuantity);
+
+  const isDose = currentEntryType === "dose";
+  if (els.doseSliderWrap) els.doseSliderWrap.classList.toggle("hidden", !isDose);
+  if (els.doseNumberWrap) els.doseNumberWrap.classList.toggle("hidden", isDose);
+
   if (els.doseAmountLabel) {
     const labels = { dose: "Tablets taken", refill: "Tablets received" };
     els.doseAmountLabel.textContent = labels[currentEntryType] || "";
     if (currentEntryType === "adjustment") updateAdjustmentLabel();
   }
-  if (els.doseMgHint) els.doseMgHint.style.display = currentEntryType === "dose" ? "" : "none";
+  if (els.doseMgHint) els.doseMgHint.style.display = "none"; // mg hint removed from form
   const noteField = document.querySelector(".entry-note-field");
   if (noteField) noteField.classList.toggle("hidden", currentEntryType !== "note");
   const signToggle = document.querySelector("#adjustSignToggle");
@@ -866,6 +882,9 @@ function render() {
   renderPaceGauge();
 }
 
+// Dose slider
+els.doseSlider?.addEventListener("input", updateSliderDisplay);
+
 // Use current time checkbox
 els.useCurrentTime?.addEventListener("change", () => {
   const showPicker = !els.useCurrentTime.checked;
@@ -995,7 +1014,8 @@ els.doseForm.addEventListener("submit", (event) => {
   }
 
   els.doseForm.reset();
-  // Reset checkbox to "use current time" and hide date picker
+  // Reset slider and checkbox
+  if (els.doseSlider) { els.doseSlider.value = "0"; updateSliderDisplay(); }
   if (els.useCurrentTime) els.useCurrentTime.checked = true;
   if (els.dateTimeField) els.dateTimeField.classList.add("hidden");
   updateEntryTypeUi();

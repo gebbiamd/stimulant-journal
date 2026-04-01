@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest?v=72" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=84" />
+    <link rel="stylesheet" href="./styles.css?v=85" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -191,22 +191,28 @@
           <button class="entry-type-btn" data-type="adjustment" type="button">Adjust qty</button>
         </div>
         <form id="doseForm" class="stack-form home-entry-form compact-settings-form">
-          <div id="doseQuantityFields">
-            <label class="entry-field">
-              <span id="doseAmountLabel">Tablets taken</span>
-              <div class="input-with-unit">
-                <input
-                  id="doseAmount"
-                  name="doseAmount"
-                  type="number"
-                  inputmode="decimal"
-                  min="0"
-                  step="0.5"
-                  placeholder="0"
-                />
-                <span id="doseUnitLabel" class="unit-label">tabs</span>
+          <div id="doseQuantityFields" class="dose-qty-section">
+            <span id="doseAmountLabel" class="dose-qty-heading">Tablets taken</span>
+            <!-- Slider UI — dose type only -->
+            <div id="doseSliderWrap" class="dose-slider-wrap">
+              <div class="dose-slider-readout">
+                <strong id="doseSliderDisplay">0</strong><span class="dose-slider-unit"> tabs</span>
               </div>
-            </label>
+              <input id="doseSlider" type="range" min="0" max="6" step="0.5" value="0" />
+            </div>
+            <!-- Compact number input — refill / adjustment -->
+            <div id="doseNumberWrap" class="dose-number-wrap hidden">
+              <input
+                id="doseAmount"
+                name="doseAmount"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="0.5"
+                placeholder="0"
+              />
+              <span id="doseUnitLabel" class="dose-number-unit">tabs</span>
+            </div>
           </div>
           <div id="adjustSignToggle" class="adjust-sign-toggle hidden">
             <button class="adjust-sign-btn active" data-sign="1" type="button">+ Add</button>
@@ -353,6 +359,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./journal-core.js?v=82"></script>
-    <script src="./home.js?v=88"></script>
+    <script src="./home.js?v=89"></script>
   </body>
 </html>

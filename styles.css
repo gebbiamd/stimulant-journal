@@ -789,7 +789,8 @@ select {
 }
 
 .home-entry-form {
-  gap: 0.55rem;
+  gap: 0.65rem;
+  align-items: center;
 }
 
 .home-entry-form input,
@@ -939,19 +940,14 @@ textarea {
 }
 
 .entry-submit-row {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  gap: 0.65rem;
-  align-items: center;
+  display: flex;
+  justify-content: center;
 }
 
-.entry-submit-row .ghost-button,
 .entry-submit-row .primary-button {
-  min-width: 0;
-}
-
-.entry-now-button {
-  white-space: nowrap;
+  min-width: 10rem;
+  max-width: 16rem;
+  width: 100%;
 }
 
 .entry-type-picker {
@@ -984,14 +980,84 @@ textarea {
   background: rgba(140, 90, 40, 0.07);
 }
 
+.dose-qty-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.dose-qty-heading {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(80, 50, 10, 0.5);
+}
+
+.dose-slider-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.dose-slider-readout {
+  line-height: 1;
+}
+
+.dose-slider-readout strong {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #4a2d00;
+}
+
+.dose-slider-unit {
+  font-size: 0.9rem;
+  color: rgba(80, 50, 10, 0.55);
+  font-weight: 500;
+}
+
+#doseSlider {
+  width: 100%;
+  height: 6px;
+  accent-color: rgba(160, 100, 10, 0.85);
+  cursor: pointer;
+}
+
+.dose-number-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dose-number-wrap input {
+  width: 5.5rem;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 600;
+  padding: 0.45rem 0.6rem;
+  border-radius: 12px;
+}
+
+.dose-number-unit {
+  font-size: 0.85rem;
+  color: rgba(80, 50, 10, 0.55);
+  font-weight: 500;
+}
+
 .use-current-time-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   font-size: 0.82rem;
   color: rgba(80, 50, 10, 0.7);
   cursor: pointer;
-  margin: 0.25rem 0 0.1rem;
+  margin: 0.1rem 0;
 }
 
 .use-current-time-row input[type="checkbox"] {
