@@ -59,6 +59,9 @@ const els = {
   paceGaugeMonthSub: document.querySelector("#paceGaugeMonthSub"),
   paceGaugeMonthChip: document.querySelector("#paceGaugeMonthChip"),
   paceGauge7dChip: document.querySelector("#paceGauge7dChip"),
+  entryTypePicker: document.querySelector("#entryTypePicker"),
+  doseQuantityFields: document.querySelector("#doseQuantityFields"),
+  doseAmountLabel: document.querySelector("#doseAmountLabel"),
 };
 
 function loadAiChatMessages() {
@@ -475,16 +478,33 @@ function renderMiniTrend() {
   els.miniTrendLegend.textContent = `Estimated active level now: ${formatNumber(currentLevel)} ${unitLabel(state)} • peak over last 48h: ${formatNumber(peakLevel)} ${unitLabel(state)} • shaded bands show ${hasOuraOverlay ? "actual Oura sleep" : "night hours"} • half-life: ${formatNumber(state.settings.decayHalfLifeHours || defaultState.settings.decayHalfLifeHours)}h`;
 }
 
+// ── Entry type picker ─────────────────────────────────────────────────
+let currentEntryType = "dose";
+
+function updateEntryTypeUi() {
+  document.querySelectorAll("#entryTypePicker .entry-type-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.type === currentEntryType);
+  });
+  const showQuantity = currentEntryType === "dose" || currentEntryType === "refill";
+  if (els.doseQuantityFields) els.doseQuantityFields.classList.toggle("hidden", !showQuantity);
+  if (els.doseAmountLabel) {
+    els.doseAmountLabel.textContent = currentEntryType === "refill" ? "Tablets received" : "Tablets taken";
+  }
+  if (els.doseMgHint) els.doseMgHint.style.display = currentEntryType === "dose" ? "" : "none";
+  const noteField = document.querySelector(".entry-note-field");
+  if (noteField) noteField.classList.toggle("hidden", currentEntryType !== "note");
+}
+
 function renderRecent() {
   const cutoff = Date.now() - DAY_MS * 2;
-  const items = getDoseEntries(state)
+  const items = state.entries
+    .filter((entry) => entry.type !== "note" || entry.note)
     .filter((entry) => new Date(entry.timestamp).getTime() >= cutoff)
     .slice(0, 10);
-  els.recentList.innerHTML = "";
   els.recentList.innerHTML = `
     <div class="recent-table-head" aria-hidden="true">
       <span>Date / time</span>
-      <span>Dose</span>
+      <span>Entry</span>
     </div>
   `;
   els.recentEmpty.classList.toggle("hidden", items.length > 0);
@@ -492,7 +512,15 @@ function renderRecent() {
   for (const entry of items) {
     const fragment = els.activityItemTemplate.content.cloneNode(true);
     const date = new Date(entry.timestamp);
-    fragment.querySelector(".history-dose").textContent = `${tabletLabel(entry.tabletCount || 0)} • ${formatNumber(entry.amount)} ${unitLabel(state)}`;
+    let doseText;
+    if (entry.type === "refill") {
+      doseText = `💊 Rx pickup · ${entry.tabletCount || 0} tabs`;
+    } else if (entry.type === "note") {
+      doseText = `📝 ${entry.note || "Note"}`;
+    } else {
+      doseText = `${tabletLabel(entry.tabletCount || 0)} · ${formatNumber(entry.amount)} ${unitLabel(state)}`;
+    }
+    fragment.querySelector(".history-dose").textContent = doseText;
     fragment.querySelector(".history-time").textContent = date.toLocaleString(undefined, {
       hour: "numeric",
       minute: "2-digit",
@@ -889,27 +917,54 @@ els.aiChatForm?.addEventListener("submit", async (event) => {
     setBusy(els.aiChatSendButton, "Send", false);
   }
 });
+// Entry type picker button clicks
+document.querySelectorAll("#entryTypePicker .entry-type-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    currentEntryType = btn.dataset.type;
+    updateEntryTypeUi();
+  });
+});
+
 els.doseForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  const tabletCount = Number.parseFloat(els.doseAmount.value);
+  const tabletCount = Number.parseFloat(els.doseAmount?.value);
   const note = els.doseNote.value.trim();
-  const hasDose = Number.isFinite(tabletCount) && tabletCount > 0;
-  if (!hasDose && !note) return;
   const submitButton = els.doseForm.querySelector('button[type="submit"]');
   setBusy(submitButton, "Saving...", true);
-  if (hasDose) {
-    saveDoseEntry(state, tabletCount, els.doseTime.value, note);
-  } else {
+
+  let message;
+  if (currentEntryType === "refill") {
+    const count = Number.isFinite(tabletCount) && tabletCount > 0 ? tabletCount : 0;
+    if (!count && !note) { setBusy(submitButton, "Saving...", false); return; }
+    saveRefillEntry(state, count, els.doseTime.value, note);
+    message = `Rx pickup logged · ${count} tablets.`;
+  } else if (currentEntryType === "note") {
+    if (!note) { setBusy(submitButton, "Saving...", false); return; }
     saveNoteEntry(state, els.doseTime.value, note);
+    message = "Note saved.";
+  } else {
+    // dose
+    const hasDose = Number.isFinite(tabletCount) && tabletCount > 0;
+    if (!hasDose && !note) { setBusy(submitButton, "Saving...", false); return; }
+    if (hasDose) {
+      saveDoseEntry(state, tabletCount, els.doseTime.value, note);
+      message = "Dose entry saved.";
+    } else {
+      saveNoteEntry(state, els.doseTime.value, note);
+      message = "Note saved without a dose.";
+    }
   }
+
   els.doseForm.reset();
   setDateTimeInputNow(els.doseTime);
+  updateEntryTypeUi();
   render();
-  setNotice(hasDose ? "Dose entry saved." : "Note saved without a dose.", "success");
+  setNotice(message, "success");
   setBusy(submitButton, "Saving...", false);
 });
 
 setDateTimeInputNow(els.doseTime);
+updateEntryTypeUi();
 renderInstallPrompt(els.installButton);
 aiChatMessages = loadAiChatMessages();
 renderAiChat();

@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest?v=72" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=82" />
+    <link rel="stylesheet" href="./styles.css?v=83" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -181,13 +181,18 @@
         <div class="section-header">
           <div>
             <p class="eyebrow">Log Entry</p>
-            <h2>✍️ Add tablets or just a note</h2>
+            <h2>✍️ Log entry</h2>
           </div>
         </div>
+        <div class="entry-type-picker" id="entryTypePicker">
+          <button class="entry-type-btn active" data-type="dose" type="button">Dose taken</button>
+          <button class="entry-type-btn" data-type="note" type="button">Note</button>
+          <button class="entry-type-btn" data-type="refill" type="button">Rx pickup</button>
+        </div>
         <form id="doseForm" class="stack-form home-entry-form compact-settings-form">
-          <div class="split-fields entry-split-fields">
+          <div class="split-fields entry-split-fields" id="doseQuantityFields">
             <label class="entry-field">
-              Tablets taken
+              <span id="doseAmountLabel">Tablets taken</span>
               <div class="input-with-unit">
                 <input
                   id="doseAmount"
@@ -340,7 +345,7 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=80"></script>
-    <script src="./home.js?v=84"></script>
+    <script src="./journal-core.js?v=81"></script>
+    <script src="./home.js?v=86"></script>
   </body>
 </html>
