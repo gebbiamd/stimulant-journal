@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sparkline Mockup</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #ede0ca;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .chip {
+      background: rgba(255,255,255,0.80);
+      border-radius: 16px;
+      padding: 0.7rem 0.9rem 0.65rem;
+      border: 1px solid rgba(255,255,255,0.6);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      width: 200px;
+    }
+    .chip-label { font-size: 0.75rem; color: #666; font-weight: 500; }
+    .chip-sub   { font-size: 0.65rem; color: #999; }
+    svg { width: 100%; height: auto; display: block; margin: 0.2rem 0; }
+  </style>
+</head>
+<body>
+  <div class="chip">
+    <div class="chip-label">This week</div>
+    <svg viewBox="0 0 84 56">
+      <defs>
+        <linearGradient id="g-blue" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#caeefa"/>
+          <stop offset="100%" stop-color="#4aaece"/>
+        </linearGradient>
+        <linearGradient id="g-today" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#90ddf0"/>
+          <stop offset="100%" stop-color="#1a80a8"/>
+        </linearGradient>
+        <linearGradient id="g-red" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fbbcbc"/>
+          <stop offset="100%" stop-color="#cc2828"/>
+        </linearGradient>
+      </defs>
+
+      <!-- baseline -->
+      <line x1="1" y1="43" x2="83" y2="43" stroke="rgba(0,0,0,0.08)" stroke-width="1"/>
+      <!-- limit line -->
+      <line x1="1" y1="13" x2="83" y2="13" stroke="#4aaece" stroke-width="1" stroke-dasharray="3,2" opacity="0.3"/>
+
+      <!-- Rounded-top-only bars via path: M x,y+r a r,r 0 0 1 r,-r h w-2r a r,r 0 0 1 r,r V y+h H x Z -->
+      <!-- Day data: W 20, Th 14, F 30, Sa 18, Su 38, M 10, Tu(today) 0 -->
+      <!-- W -->
+      <path d="M 1,26 a 3,3 0 0 1 3,-3 h 4 a 3,3 0 0 1 3,3 V 43 H 1 Z" fill="url(#g-blue)"/>
+      <!-- Th -->
+      <path d="M 13,32 a 3,3 0 0 1 3,-3 h 4 a 3,3 0 0 1 3,3 V 43 H 13 Z" fill="url(#g-blue)"/>
+      <!-- F over -->
+      <path d="M 25,16 a 3,3 0 0 1 3,-3 h 4 a 3,3 0 0 1 3,3 V 43 H 25 Z" fill="url(#g-red)"/>
+      <!-- Sa -->
+      <path d="M 37,28 a 3,3 0 0 1 3,-3 h 4 a 3,3 0 0 1 3,3 V 43 H 37 Z" fill="url(#g-blue)"/>
+      <!-- Su over -->
+      <path d="M 49,8 a 3,3 0 0 1 3,-3 h 4 a 3,3 0 0 1 3,3 V 43 H 49 Z" fill="url(#g-red)"/>
+      <!-- M -->
+      <path d="M 61,36 a 3,3 0 0 1 3,-3 h 4 a 3,3 0 0 1 3,3 V 43 H 61 Z" fill="url(#g-blue)"/>
+      <!-- Tu today — empty stub -->
+      <rect x="73" y="41" width="10" height="2" rx="1" fill="rgba(150,150,150,0.2)"/>
+
+      <!-- Day labels -->
+      <text x="6"  y="52" text-anchor="middle" font-size="6" fill="rgba(120,100,80,0.5)" font-family="system-ui">W</text>
+      <text x="18" y="52" text-anchor="middle" font-size="6" fill="rgba(120,100,80,0.5)" font-family="system-ui">Th</text>
+      <text x="30" y="52" text-anchor="middle" font-size="6" fill="rgba(120,100,80,0.5)" font-family="system-ui">F</text>
+      <text x="42" y="52" text-anchor="middle" font-size="6" fill="rgba(120,100,80,0.5)" font-family="system-ui">Sa</text>
+      <text x="54" y="52" text-anchor="middle" font-size="6" fill="rgba(120,100,80,0.5)" font-family="system-ui">Su</text>
+      <text x="66" y="52" text-anchor="middle" font-size="6" fill="rgba(120,100,80,0.5)" font-family="system-ui">M</text>
+      <text x="78" y="52" text-anchor="middle" font-size="6" fill="rgba(120,100,80,0.65)" font-weight="600" font-family="system-ui">Tu</text>
+    </svg>
+    <div class="chip-sub">avg 22 mg</div>
+  </div>
+</body>
+</html>

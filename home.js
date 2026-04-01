@@ -257,51 +257,56 @@ function renderWeekSparkline() {
   const days = getTotalsByDay(state, 7);
   const dailyLimit = (state.settings.dailyTabletLimit || 3) * (state.settings.mgPerTablet || 10);
   const maxVal = Math.max(...days.map(d => d.total), dailyLimit, 1);
+  const DAY_LABELS = ["Su", "M", "Tu", "W", "Th", "F", "Sa"];
 
-  const VW = 84, VH = 46, barH_max = 34, barW = 10, gap = 2;
+  const VW = 84, VH = 56, barH_max = 34, barW = 10, gap = 2, rx = 3;
   const totalW = 7 * barW + 6 * gap; // 82
   const startX = (VW - totalW) / 2;  // 1
-  const baseY = VH - 5;
+  const baseY = 43;
   const limitY = baseY - Math.round((dailyLimit / maxVal) * barH_max);
 
   const defs = `<defs>
     <linearGradient id="spk-blue" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#b8e6f8"/>
-      <stop offset="100%" stop-color="#3e9cbd"/>
+      <stop offset="0%" stop-color="#caeefa"/>
+      <stop offset="100%" stop-color="#4aaece"/>
     </linearGradient>
     <linearGradient id="spk-today" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#7dd4ee"/>
-      <stop offset="100%" stop-color="#1e7a9a"/>
+      <stop offset="0%" stop-color="#90ddf0"/>
+      <stop offset="100%" stop-color="#1a80a8"/>
     </linearGradient>
     <linearGradient id="spk-red" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f7a0a0"/>
-      <stop offset="100%" stop-color="#c02020"/>
+      <stop offset="0%" stop-color="#fbbcbc"/>
+      <stop offset="100%" stop-color="#cc2828"/>
     </linearGradient>
   </defs>`;
 
   const barEls = days.map((day, i) => {
     const x = startX + i * (barW + gap);
+    const cx = x + barW / 2;
     const isToday = i === 6;
     const over = day.total > dailyLimit && day.total > 0;
     const empty = day.total === 0;
+    const dayLabel = DAY_LABELS[day.date.getDay()];
+    const labelWeight = isToday ? 'font-weight="600"' : '';
+    const labelOpacity = isToday ? "0.65" : "0.45";
+    const label = `<text x="${cx}" y="53" text-anchor="middle" font-size="6" fill="rgba(120,90,60,${labelOpacity})" font-family="system-ui,sans-serif" ${labelWeight}>${dayLabel}</text>`;
 
     if (empty) {
-      return `<rect x="${x}" y="${baseY - 3}" width="${barW}" height="3" rx="1.5" fill="rgba(150,150,150,0.18)"/>`;
+      return `<rect x="${x}" y="${baseY - 2}" width="${barW}" height="2" rx="1" fill="rgba(150,150,150,0.18)"/>${label}`;
     }
 
     const h = Math.max(8, Math.round((day.total / maxVal) * barH_max));
     const y = baseY - h;
     const gradId = over ? "spk-red" : isToday ? "spk-today" : "spk-blue";
-    // Rounded top only: full-rx rect + square-bottom overlay to flatten lower corners
-    return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="3" fill="url(#${gradId})"/>
-            <rect x="${x}" y="${y + Math.ceil(h / 2)}" width="${barW}" height="${Math.floor(h / 2)}" fill="url(#${gradId})"/>`;
+    // Rounded-top-only bar via path (no seam artifact)
+    const bar = `<path d="M ${x},${y + rx} a ${rx},${rx} 0 0 1 ${rx},${-rx} h ${barW - 2 * rx} a ${rx},${rx} 0 0 1 ${rx},${rx} V ${baseY} H ${x} Z" fill="url(#${gradId})"/>`;
+    return bar + label;
   }).join("");
 
   const refLine = dailyLimit > 0
-    ? `<line x1="${startX}" y1="${limitY}" x2="${startX + totalW}" y2="${limitY}" stroke="#3a8aaa" stroke-width="1" stroke-dasharray="3,2" opacity="0.35"/>`
+    ? `<line x1="${startX}" y1="${limitY}" x2="${startX + totalW}" y2="${limitY}" stroke="#4aaece" stroke-width="1" stroke-dasharray="3,2" opacity="0.3"/>`
     : "";
-
-  const baseline = `<line x1="${startX}" y1="${baseY}" x2="${startX + totalW}" y2="${baseY}" stroke="rgba(100,100,100,0.12)" stroke-width="1"/>`;
+  const baseline = `<line x1="${startX}" y1="${baseY}" x2="${startX + totalW}" y2="${baseY}" stroke="rgba(0,0,0,0.08)" stroke-width="1"/>`;
 
   els.weekSparkline.innerHTML =
     `<svg viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="xMidYMid meet">${defs}${baseline}${refLine}${barEls}</svg>`;
