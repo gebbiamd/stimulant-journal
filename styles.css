@@ -954,6 +954,36 @@ textarea {
   white-space: nowrap;
 }
 
+.entry-type-picker {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+}
+
+.entry-type-btn {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(140, 90, 40, 0.18);
+  background: transparent;
+  color: rgba(100, 60, 20, 0.6);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.entry-type-btn.active {
+  background: rgba(180, 120, 20, 0.15);
+  border-color: rgba(180, 120, 20, 0.35);
+  color: #5a3d00;
+  font-weight: 600;
+}
+
+.entry-type-btn:hover:not(.active) {
+  background: rgba(140, 90, 40, 0.07);
+}
+
 .entry-field {
   min-width: 0;
 }

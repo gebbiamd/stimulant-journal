@@ -72,6 +72,15 @@ function normalizeEntry(entry) {
       note: String(entry.note || "").trim(),
     };
   }
+  if (entry.type === "refill") {
+    return {
+      id: entry.id || crypto.randomUUID(),
+      type: "refill",
+      tabletCount: Number(entry.tabletCount ?? entry.tablet_count) || 0,
+      timestamp,
+      note: String(entry.note || "").trim(),
+    };
+  }
   const tabletCount =
     entry.tabletCount !== undefined && entry.tabletCount !== null
       ? Number(entry.tabletCount) || 0
@@ -342,7 +351,7 @@ async function syncStateToSupabase(state) {
     type: entry.type,
     timestamp: entry.timestamp,
     amount: entry.type === "dose" ? entry.amount : null,
-    tablet_count: entry.type === "dose" ? entry.tabletCount : null,
+    tablet_count: (entry.type === "dose" || entry.type === "refill") ? entry.tabletCount : null,
     mg_per_tablet: entry.type === "dose" ? entry.mgPerTablet : null,
     note: entry.note || "",
   }));
@@ -439,7 +448,7 @@ function unitLabel(state) {
 }
 
 function getDoseEntries(state) {
-  return state.entries.filter((entry) => entry.type !== "note");
+  return state.entries.filter((entry) => entry.type === "dose");
 }
 
 function getNoteEntries(state) {
@@ -559,14 +568,25 @@ function getRollingAverage(state, days) {
 }
 
 function getCurrentMonthTabletUsage(state) {
+  // Refill-based tracking: anchor supply to the last logged Rx pickup
+  const refillEntries = state.entries
+    .filter((e) => e.type === "refill")
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  if (refillEntries.length > 0) {
+    const lastRefill = refillEntries[0];
+    const refillTimestamp = new Date(lastRefill.timestamp);
+    const startingCount = Number(lastRefill.tabletCount) || 0;
+    const used = state.entries
+      .filter((e) => e.type === "dose" && new Date(e.timestamp) >= refillTimestamp)
+      .reduce((sum, e) => sum + Number(e.tabletCount || 0), 0);
+    return { used, planned: startingCount, remaining: Math.max(startingCount - used, 0) };
+  }
+
+  // Fall back to calendar month + settings when no refill has been logged
   const totalTablets = getCurrentMonthDoseEntries(state).reduce((sum, entry) => sum + Number(entry.tabletCount || 0), 0);
   const planned = Number(state.settings.monthlyTablets) || 0;
-  const used = totalTablets;
-  return {
-    used,
-    planned,
-    remaining: Math.max(planned - used, 0),
-  };
+  return { used: totalTablets, planned, remaining: Math.max(planned - totalTablets, 0) };
 }
 
 function getRefillStatus(state) {
@@ -723,6 +743,19 @@ function saveNoteEntry(state, timestamp, note) {
   state.entries.push({
     id: crypto.randomUUID(),
     type: "note",
+    timestamp: parseTimestamp(timestamp),
+    note: String(note || "").trim(),
+  });
+  state.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  persistState(state);
+  queueRemoteSync(state);
+}
+
+function saveRefillEntry(state, tabletCount, timestamp, note) {
+  state.entries.push({
+    id: crypto.randomUUID(),
+    type: "refill",
+    tabletCount: Number(tabletCount) || 0,
     timestamp: parseTimestamp(timestamp),
     note: String(note || "").trim(),
   });
