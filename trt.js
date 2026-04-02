@@ -50,6 +50,7 @@ function populateCompoundSelect() {
     opt.textContent = `${c.name} (${c.mgPerMl} mg/mL)`;
     opt.dataset.mgPerMl = c.mgPerMl;
     opt.dataset.halfLifeHours = c.halfLifeHours;
+    opt.dataset.absorptionHalfLifeHours = c.absorptionHalfLifeHours || 0;
     opt.dataset.name = c.name;
     els.trtCompoundSelect.appendChild(opt);
   }
@@ -64,6 +65,7 @@ function getSelectedCompound() {
     name: opt.dataset.name,
     mgPerMl: Number(opt.dataset.mgPerMl) || 200,
     halfLifeHours: Number(opt.dataset.halfLifeHours) || 192,
+    absorptionHalfLifeHours: Number(opt.dataset.absorptionHalfLifeHours) || 0,
   };
 }
 
@@ -334,7 +336,7 @@ els.trtDoseForm?.addEventListener("submit", (event) => {
     : (els.trtDoseTime?.value || new Date().toISOString());
   const note = els.trtDoseNote?.value?.trim() || "";
 
-  saveTrtDoseEntry(state, compound.id, compound.name, ml, mg, compound.halfLifeHours, timestamp, note);
+  saveTrtDoseEntry(state, compound.id, compound.name, ml, mg, compound.halfLifeHours, compound.absorptionHalfLifeHours, timestamp, note);
 
   // Reset form
   if (els.trtMlInput) els.trtMlInput.value = "";

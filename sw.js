@@ -1,4 +1,4 @@
-const CACHE_NAME = "stimulant-journal-v107";
+const CACHE_NAME = "stimulant-journal-v108";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,11 +7,11 @@ const ASSETS = [
   "./trt.html",
   "./login.html",
   "./styles.css?v=92",
-  "./journal-core.js?v=92",
+  "./journal-core.js?v=93",
   "./home.js?v=93",
   "./summary.js?v=74",
-  "./settings.js?v=82",
-  "./trt.js?v=1",
+  "./settings.js?v=83",
+  "./trt.js?v=2",
   "./login.js?v=1",
   "./manifest.webmanifest?v=72",
   "./icon.svg",

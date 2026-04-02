@@ -365,7 +365,8 @@ function renderTrtCompounds() {
     row.innerHTML = `
       <div class="trt-compound-fields">
         <label>Name<input class="entry-input" data-field="name" type="text" value="${compound.name}" /></label>
-        <label>Half-life (hours)<input class="entry-input" data-field="halfLifeHours" type="number" min="1" step="1" value="${compound.halfLifeHours}" /></label>
+        <label>Elim. half-life (h)<input class="entry-input" data-field="halfLifeHours" type="number" min="1" step="1" value="${compound.halfLifeHours}" /></label>
+        <label>Abs. half-life (h)<input class="entry-input" data-field="absorptionHalfLifeHours" type="number" min="1" step="1" value="${compound.absorptionHalfLifeHours || ""}" placeholder="optional" /></label>
         <label>mg/mL<input class="entry-input" data-field="mgPerMl" type="number" min="1" step="1" value="${compound.mgPerMl}" /></label>
       </div>
       <button class="delete-button entry-icon-button trt-delete-compound" type="button" data-id="${compound.id}" aria-label="Delete compound" title="Delete">
@@ -383,10 +384,11 @@ function collectTrtCompounds() {
   for (const row of rows) {
     const name = row.querySelector('[data-field="name"]').value.trim();
     const halfLifeHours = Number(row.querySelector('[data-field="halfLifeHours"]').value) || 192;
+    const absorptionHalfLifeHours = Number(row.querySelector('[data-field="absorptionHalfLifeHours"]').value) || 0;
     const mgPerMl = Number(row.querySelector('[data-field="mgPerMl"]').value) || 200;
     const deleteBtn = row.querySelector(".trt-delete-compound");
     const id = deleteBtn?.dataset.id || name.toLowerCase().replace(/\s+/g, "-");
-    if (name) compounds.push({ id, name, halfLifeHours, mgPerMl });
+    if (name) compounds.push({ id, name, halfLifeHours, absorptionHalfLifeHours, mgPerMl });
   }
   return compounds;
 }

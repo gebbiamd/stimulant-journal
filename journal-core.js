@@ -28,8 +28,8 @@ const defaultState = {
     refillIntervalDays: 30,
     refillRequestLeadDays: 7,
     trtCompounds: [
-      { id: "test-cyp", name: "Testosterone Cypionate", halfLifeHours: 192, mgPerMl: 200 },
-      { id: "test-enan", name: "Testosterone Enanthate", halfLifeHours: 108, mgPerMl: 250 },
+      { id: "test-cyp", name: "Testosterone Cypionate", halfLifeHours: 192, absorptionHalfLifeHours: 36, mgPerMl: 200 },
+      { id: "test-enan", name: "Testosterone Enanthate", halfLifeHours: 108, absorptionHalfLifeHours: 20, mgPerMl: 250 },
     ],
     trtStockMl: 0,
     trtStockVials: 0,
@@ -109,6 +109,7 @@ function normalizeEntry(entry) {
       ml,
       mg,
       halfLifeHours: Number(entry.halfLifeHours ?? entry.half_life_hours) || 0,
+      absorptionHalfLifeHours: Number(entry.absorptionHalfLifeHours ?? entry.absorption_half_life_hours) || 0,
       note: String(entry.note || "").trim(),
     };
   }
@@ -311,6 +312,7 @@ async function loadRemoteStateInto(state) {
         compound_name: entry.compoundName || null,
         ml: entry.ml ?? null,
         half_life_hours: entry.halfLifeHours ?? null,
+        absorption_half_life_hours: entry.absorptionHalfLifeHours ?? null,
         vials: entry.vials ?? null,
       }));
       await client.from("journal_entries").upsert(pushPayload, { onConflict: "id" });
@@ -372,6 +374,7 @@ async function loadRemoteStateInto(state) {
           compoundName: row.compound_name,
           ml: row.ml,
           halfLifeHours: row.half_life_hours,
+          absorptionHalfLifeHours: row.absorption_half_life_hours,
           vials: row.vials,
         })
       )
@@ -403,6 +406,7 @@ async function loadRemoteStateInto(state) {
             compound_name: entry.compoundName || null,
             ml: entry.ml ?? null,
             half_life_hours: entry.halfLifeHours ?? null,
+            absorption_half_life_hours: entry.absorptionHalfLifeHours ?? null,
             vials: entry.vials ?? null,
           };
           await localClient.from("journal_entries").upsert(entryPayload, { onConflict: "id", ignoreDuplicates: false });
@@ -483,6 +487,7 @@ async function syncStateToSupabase(state) {
     compound_name: entry.compoundName || null,
     ml: entry.ml ?? null,
     half_life_hours: entry.halfLifeHours ?? null,
+    absorption_half_life_hours: entry.absorptionHalfLifeHours ?? null,
     vials: entry.vials ?? null,
   }));
 
@@ -912,7 +917,7 @@ function saveAdjustmentEntry(state, tabletCount, timestamp, note) {
   queueRemoteSync(state);
 }
 
-function saveTrtDoseEntry(state, compoundId, compoundName, ml, mg, halfLifeHours, timestamp, note) {
+function saveTrtDoseEntry(state, compoundId, compoundName, ml, mg, halfLifeHours, absorptionHalfLifeHours, timestamp, note) {
   state.entries.push({
     id: crypto.randomUUID(),
     type: "trt-dose",
@@ -921,6 +926,7 @@ function saveTrtDoseEntry(state, compoundId, compoundName, ml, mg, halfLifeHours
     ml: Number(ml),
     mg: Number(mg),
     halfLifeHours: Number(halfLifeHours),
+    absorptionHalfLifeHours: Number(absorptionHalfLifeHours) || 0,
     timestamp: parseTimestamp(timestamp),
     note: String(note || "").trim(),
   });
@@ -981,16 +987,36 @@ function getTrtSerumLevelSeries(state, startMs, endMs, points = 100) {
     for (const dose of trtDoses) {
       const doseTime = new Date(dose.timestamp).getTime();
       if (doseTime > timestamp) continue;
-      const halfLife = Number(dose.halfLifeHours) || 192;
-      const decayConstant = Math.log(2) / Math.max(halfLife, 0.1);
       const elapsedHours = (timestamp - doseTime) / (60 * 60 * 1000);
+
       // Recompute mg from ml × mgPerMl if mg is missing (e.g. zeroed by old sync bug)
       let mg = Number(dose.mg) || 0;
       if (!mg && dose.ml) {
         const comp = compounds.find((c) => c.id === dose.compoundId || c.name === dose.compoundName);
         if (comp) mg = Number(dose.ml) * Number(comp.mgPerMl);
       }
-      level += mg * Math.exp(-decayConstant * elapsedHours);
+
+      const ke = Math.log(2) / Math.max(Number(dose.halfLifeHours) || 192, 0.1);
+      // Look up absorption half-life: from dose entry, or from compound settings
+      let absHL = Number(dose.absorptionHalfLifeHours) || 0;
+      if (!absHL) {
+        const comp = compounds.find((c) => c.id === dose.compoundId || c.name === dose.compoundName);
+        absHL = Number(comp?.absorptionHalfLifeHours) || 0;
+      }
+
+      if (absHL > 0) {
+        // Two-compartment: level(t) = dose × (ka / (ka - ke)) × (e^(-ke·t) - e^(-ka·t))
+        const ka = Math.log(2) / absHL;
+        if (Math.abs(ka - ke) < 1e-6) {
+          // Edge case ka ≈ ke: L'Hôpital limit → dose × ke × t × e^(-ke·t)
+          level += mg * ke * elapsedHours * Math.exp(-ke * elapsedHours);
+        } else {
+          level += mg * (ka / (ka - ke)) * (Math.exp(-ke * elapsedHours) - Math.exp(-ka * elapsedHours));
+        }
+      } else {
+        // Fallback: simple exponential decay (no absorption data)
+        level += mg * Math.exp(-ke * elapsedHours);
+      }
     }
     series.push({ timestamp, level });
   }
