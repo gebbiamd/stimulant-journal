@@ -2199,25 +2199,25 @@ details.ai-section-recs {
   height: 2.4rem;
   flex-shrink: 0;
   border-radius: 50%;
-  border: 1.5px solid rgba(184,115,51,0.3);
-  background: rgba(184,115,51,0.12);
-  color: var(--copper-dark);
+  border: 1.5px solid rgba(60,60,60,0.3);
+  background: rgba(40,40,40,0.10);
+  color: #333;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 200ms ease;
+  transition: scale 200ms ease, background 200ms ease, border-color 200ms ease;
   padding: 0;
 }
 
 .refresh-circle-btn:hover {
-  background: rgba(184,115,51,0.22);
-  border-color: rgba(184,115,51,0.5);
-  transform: scale(1.1);
+  background: rgba(40,40,40,0.18);
+  border-color: rgba(60,60,60,0.5);
+  scale: 1.1;
 }
 
 .refresh-circle-btn:active {
-  transform: scale(0.95);
+  scale: 0.95;
 }
 
 .refresh-circle-btn svg {
