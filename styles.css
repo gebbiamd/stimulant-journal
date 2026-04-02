@@ -2244,48 +2244,6 @@ details.ai-section-recs {
   }
 }
 
-.refresh-circle-btn {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 50%;
-  border: none;
-  background: #333;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 200ms ease;
-  padding: 0;
-  flex-shrink: 0;
-}
-
-.refresh-circle-btn:hover {
-  background: #555;
-  transform: scale(1.1);
-}
-
-.refresh-circle-btn:active {
-  transform: scale(0.95);
-}
-
-.refresh-circle-btn svg {
-  width: 1.2rem;
-  height: 1.2rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.refresh-circle-btn.spinning svg {
-  animation: refresh-spin 1s linear infinite;
-}
-
 .hidden {
   display: none;
 }
