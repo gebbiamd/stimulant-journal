@@ -966,6 +966,7 @@ function getTrtDoseEntries(state) {
 }
 
 function getTrtSerumLevelSeries(state, startMs, endMs, points = 100) {
+  const compounds = state.settings.trtCompounds || [];
   const trtDoses = getTrtDoseEntries(state).filter((entry) => {
     const doseTime = new Date(entry.timestamp).getTime();
     // Include doses from up to 6 half-lives before the window
@@ -983,7 +984,13 @@ function getTrtSerumLevelSeries(state, startMs, endMs, points = 100) {
       const halfLife = Number(dose.halfLifeHours) || 192;
       const decayConstant = Math.log(2) / Math.max(halfLife, 0.1);
       const elapsedHours = (timestamp - doseTime) / (60 * 60 * 1000);
-      level += Number(dose.mg) * Math.exp(-decayConstant * elapsedHours);
+      // Recompute mg from ml × mgPerMl if mg is missing (e.g. zeroed by old sync bug)
+      let mg = Number(dose.mg) || 0;
+      if (!mg && dose.ml) {
+        const comp = compounds.find((c) => c.id === dose.compoundId || c.name === dose.compoundName);
+        if (comp) mg = Number(dose.ml) * Number(comp.mgPerMl);
+      }
+      level += mg * Math.exp(-decayConstant * elapsedHours);
     }
     series.push({ timestamp, level });
   }
