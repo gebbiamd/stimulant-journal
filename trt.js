@@ -24,8 +24,6 @@ const els = {
   trtRestockMl: document.querySelector("#trtRestockMl"),
   trtRestockVials: document.querySelector("#trtRestockVials"),
   trtAdjustMl: document.querySelector("#trtAdjustMl"),
-  trtRecentList: document.querySelector("#trtRecentList"),
-  trtRecentEmpty: document.querySelector("#trtRecentEmpty"),
 };
 
 let currentRange = "month";
@@ -293,42 +291,11 @@ function renderStock() {
   if (els.trtRefillAlert) els.trtRefillAlert.classList.toggle("hidden", !stock.needsRefill);
 }
 
-// ── Recent injections ────────────────────────────────────────────────
-function renderRecent() {
-  const doses = getTrtDoseEntries(state)
-    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-    .slice(0, 20);
-
-  if (els.trtRecentEmpty) els.trtRecentEmpty.classList.toggle("hidden", doses.length > 0);
-  if (!els.trtRecentList) return;
-
-  // Keep the header row, clear the rest
-  const header = els.trtRecentList.querySelector(".recent-table-head");
-  const headerClone = header?.cloneNode(true);
-  els.trtRecentList.innerHTML = "";
-  if (headerClone) els.trtRecentList.appendChild(headerClone);
-
-  for (const dose of doses) {
-    const row = document.createElement("article");
-    row.className = "recent-row trt-recent-row";
-    const date = new Date(dose.timestamp);
-    const dateStr = date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    const timeStr = date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-    row.innerHTML = `
-      <p class="history-time">${dateStr} ${timeStr}</p>
-      <span class="history-compound">${dose.compoundName || "Unknown"}</span>
-      <strong class="history-dose">${dose.ml} mL · ${dose.mg} mg</strong>
-    `;
-    els.trtRecentList.appendChild(row);
-  }
-}
-
 // ── Main render ──────────────────────────────────────────────────────
 function render() {
   populateCompoundSelect();
   renderSerumChart();
   renderStock();
-  renderRecent();
 }
 
 // ── Event listeners ──────────────────────────────────────────────────

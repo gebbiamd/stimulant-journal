@@ -2958,18 +2958,6 @@ details.ai-section-recs {
   gap: 0.5rem;
 }
 
-.trt-recent-row {
-  grid-template-columns: 1fr 1fr auto;
-}
-
-.history-compound {
-  font-size: 0.82rem;
-  color: var(--muted, #5a4838);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* ── TRT Settings Compound Editor ───────────────────────────────────── */
 
 .trt-compound-list {
