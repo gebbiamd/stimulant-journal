@@ -37,6 +37,7 @@ create table if not exists public.user_settings (
   trt_stock_ml numeric not null default 0,
   trt_stock_vials numeric not null default 0,
   trt_refill_threshold_ml numeric not null default 2,
+  trt_planner_schedules text not null default '[]',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

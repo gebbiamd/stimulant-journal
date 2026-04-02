@@ -36,6 +36,7 @@ const defaultState = {
     trtStockMl: 0,
     trtStockVials: 0,
     trtRefillThresholdMl: 2,
+    trtPlannerSchedules: [],
   },
   integrations: {
     oura: {
@@ -376,6 +377,9 @@ async function loadRemoteStateInto(state) {
       trtStockMl: Number(settingsRows.trt_stock_ml ?? defaultState.settings.trtStockMl),
       trtStockVials: Number(settingsRows.trt_stock_vials ?? defaultState.settings.trtStockVials),
       trtRefillThresholdMl: Number(settingsRows.trt_refill_threshold_ml ?? defaultState.settings.trtRefillThresholdMl),
+      trtPlannerSchedules: (() => {
+        try { return JSON.parse(settingsRows.trt_planner_schedules || "[]"); } catch { return []; }
+      })(),
     };
   }
 
@@ -510,6 +514,7 @@ async function syncStateToSupabase(state) {
     trt_stock_ml: state.settings.trtStockMl || 0,
     trt_stock_vials: state.settings.trtStockVials || 0,
     trt_refill_threshold_ml: state.settings.trtRefillThresholdMl || 2,
+    trt_planner_schedules: JSON.stringify(state.settings.trtPlannerSchedules || []),
   };
 
   // Never re-upload entries that are pending deletion

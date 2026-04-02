@@ -1,4 +1,4 @@
-const CACHE_NAME = "stimulant-journal-v120";
+const CACHE_NAME = "stimulant-journal-v121";
 const ASSETS = [
   "./",
   "./index.html",
