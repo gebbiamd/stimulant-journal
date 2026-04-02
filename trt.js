@@ -94,17 +94,19 @@ function renderSerumChart() {
   if (!els.trtSerumChart) return;
   const { start, end, now } = getRangeMs();
   const series = getTrtSerumLevelSeries(state, start, end, 140);
-  const width = 400;
   const chartTop = 10;
   const chartBottom = 220;
   const chartHeight = chartBottom - chartTop;
-  const chartLeft = 40;
-  const chartRight = 390;
+  const chartLeft = 4;
+  const chartRight = 398;
   const chartWidth = chartRight - chartLeft;
 
   // Find max level for scaling — at least 200 so empty charts look right
   const maxDataLevel = Math.max(...series.map((s) => s.level), 0);
-  const maxLevel = Math.max(maxDataLevel * 1.1, 200);
+  const rawMax = Math.max(maxDataLevel * 1.1, 200);
+  // Round up to nearest clean step so axis ticks align
+  const yStep = rawMax <= 300 ? 25 : rawMax <= 600 ? 50 : 100;
+  const maxLevel = Math.ceil(rawMax / yStep) * yStep;
 
   // Draw color bands
   const bands = TRT_SERUM_BANDS.map((band) => {
@@ -117,21 +119,19 @@ function renderSerumChart() {
     return `<rect x="${chartLeft}" y="${y1}" width="${chartWidth}" height="${h}" fill="${band.color}" />`;
   }).join("");
 
-  // Band labels on right edge
+  // Band labels inside chart (right-aligned)
   const bandLabels = TRT_SERUM_BANDS.map((band) => {
     const mid = (band.min + Math.min(band.max, maxLevel)) / 2;
     if (mid > maxLevel) return "";
     const y = chartBottom - (mid / maxLevel) * chartHeight;
-    return `<text x="${chartRight + 2}" y="${y + 3}" fill="${band.textColor}" font-size="8" font-weight="600" opacity="0.7">${band.label}</text>`;
+    return `<text x="${chartRight - 4}" y="${y + 3}" text-anchor="end" fill="${band.textColor}" font-size="8" font-weight="600" opacity="0.45">${band.label}</text>`;
   }).join("");
 
-  // Y-axis labels
-  const yTickCount = 4;
+  // Y-axis labels — use clean multiples of 25 or 50
   const yTicks = [];
-  for (let i = 0; i <= yTickCount; i++) {
-    const val = (maxLevel / yTickCount) * i;
+  for (let val = 0; val <= maxLevel; val += yStep) {
     const y = chartBottom - (val / maxLevel) * chartHeight;
-    yTicks.push(`<text x="${chartLeft - 4}" y="${y + 3}" text-anchor="end" fill="rgba(90,72,56,0.5)" font-size="9">${Math.round(val)}</text>`);
+    yTicks.push(`<text x="${chartLeft + 4}" y="${y - 4}" text-anchor="start" fill="rgba(90,72,56,0.45)" font-size="8">${val}</text>`);
     yTicks.push(`<line x1="${chartLeft}" y1="${y}" x2="${chartRight}" y2="${y}" stroke="rgba(90,72,56,0.08)" stroke-width="0.5" />`);
   }
 
