@@ -28,7 +28,7 @@ const els = {
   trtRecentEmpty: document.querySelector("#trtRecentEmpty"),
 };
 
-let currentRange = "week";
+let currentRange = "month";
 
 // ── Compound dropdown ────────────────────────────────────────────────
 function populateCompoundSelect() {
