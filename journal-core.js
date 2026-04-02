@@ -1013,7 +1013,16 @@ const TRT_SERUM_BANDS = [
 function deleteEntry(state, id) {
   state.entries = state.entries.filter((entry) => entry.id !== id);
   persistState(state);
-  queueRemoteSync(state);
+  // Delete from Supabase so it doesn't reappear on next pull
+  (async () => {
+    try {
+      const client = getSupabaseClient();
+      const user = await refreshAuthState(state);
+      if (user) {
+        await client.from("journal_entries").delete().eq("id", id).eq("user_id", user.id);
+      }
+    } catch { /* local delete still succeeded */ }
+  })();
 }
 
 function exportData(state) {
