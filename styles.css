@@ -2202,6 +2202,7 @@ details.ai-section-recs {
   border: 1.5px solid rgba(60,60,60,0.3);
   background: rgba(40,40,40,0.10);
   color: #333;
+  color-scheme: light;
   cursor: pointer;
   display: flex;
   align-items: center;
