@@ -1,0 +1,1 @@
+- [Test account](project_test_account.md) — Supabase test account (claude@claude.ai) for dev/testing
