@@ -2982,6 +2982,86 @@ details.ai-section-recs {
   gap: 0.5rem;
 }
 
+/* ── TRT Dose Planner ──────────────────────────────────────────────── */
+
+.trt-planner-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.trt-planner-ml {
+  width: 5rem;
+}
+
+.trt-planner-freq-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.trt-planner-freq-row input {
+  width: 3.5rem;
+}
+
+.trt-planner-freq-row span {
+  font-size: 0.85rem;
+  color: var(--muted, #5a4838);
+  white-space: nowrap;
+}
+
+.trt-planner-schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.trt-planner-schedule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(124,92,191,0.08);
+  border: 1px solid rgba(124,92,191,0.15);
+}
+
+.trt-planner-schedule-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.trt-planner-schedule-info strong {
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trt-planner-schedule-info span {
+  font-size: 0.75rem;
+  color: var(--muted, #5a4838);
+}
+
+.trt-planner-delete-btn {
+  padding: 0.25rem 0.5rem !important;
+  min-width: 0 !important;
+  font-size: 0.85rem;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.trt-planner-delete-btn:hover {
+  opacity: 1;
+  color: var(--danger, #ef5b72);
+}
+
 /* ── TRT Settings Compound Editor ───────────────────────────────────── */
 
 .trt-compound-list {

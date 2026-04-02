@@ -116,6 +116,48 @@
         </form>
       </section>
 
+      <!-- Dose Planner -->
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Plan</p>
+            <h2>🗓️ Dose planner</h2>
+          </div>
+        </div>
+        <svg id="trtPlannerChart" class="trt-serum-chart" viewBox="0 0 400 240" aria-label="Planned dose projection chart"></svg>
+        <div class="trt-range-toggle" id="trtPlannerRangeToggle">
+          <button class="trt-range-btn" data-range="week" type="button">Week</button>
+          <button class="trt-range-btn active" data-range="month" type="button">Month</button>
+          <button class="trt-range-btn" data-range="3month" type="button">3 Months</button>
+        </div>
+        <div id="trtPlannerLegend" class="trend-legend"></div>
+
+        <div id="trtPlannerScheduleList" class="trt-planner-schedule-list"></div>
+
+        <form id="trtPlannerForm" class="stack-form compact-settings-form" novalidate>
+          <label>
+            Compound
+            <select id="trtPlannerCompoundSelect" class="entry-input"></select>
+          </label>
+          <div class="trt-planner-row">
+            <label>
+              mL
+              <input id="trtPlannerMlInput" name="plannerMl" type="number" inputmode="decimal" min="0" step="0.05" placeholder="0.00" />
+            </label>
+            <label>
+              Every
+              <div class="trt-planner-freq-row">
+                <input id="trtPlannerFreqDays" type="number" inputmode="numeric" min="1" step="1" value="3" placeholder="3" />
+                <span>days</span>
+              </div>
+            </label>
+          </div>
+          <div class="entry-submit-row">
+            <button class="primary-button" type="submit">Add Schedule</button>
+          </div>
+        </form>
+      </section>
+
     </main>
 
     <nav class="tab-bar" aria-label="Primary">
@@ -169,7 +211,7 @@
     <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=95"></script>
-    <script src="./trt.js?v=7"></script>
+    <script src="./journal-core.js?v=96"></script>
+    <script src="./trt.js?v=8"></script>
   </body>
 </html>
