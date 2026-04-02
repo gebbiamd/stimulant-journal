@@ -1774,6 +1774,36 @@ button.calendar-cell {
   border: 1px solid rgba(120, 100, 80, 0.18);
 }
 
+.entry-type-trt-dose {
+  background: rgba(139, 69, 19, 0.14);
+  color: #6b3410;
+  border: 1px solid rgba(139, 69, 19, 0.3);
+}
+
+.entry-type-trt-restock {
+  background: rgba(107, 142, 35, 0.14);
+  color: #3d5a0a;
+  border: 1px solid rgba(107, 142, 35, 0.3);
+}
+
+.entry-type-trt-adj {
+  background: rgba(160, 82, 45, 0.13);
+  color: #6b3a1a;
+  border: 1px solid rgba(160, 82, 45, 0.28);
+}
+
+.entry-compound-hint {
+  font-size: 0.58rem;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
+  line-height: 1.2;
+}
+
 /* ── Entry value + adjustment sign ─────────────────────── */
 .entry-editor-value {
   min-width: 0;

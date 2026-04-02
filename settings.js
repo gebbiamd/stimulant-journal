@@ -163,10 +163,13 @@ function saveStateAndSync(message) {
 }
 
 const ENTRY_TYPE_META = {
-  dose:       { label: "Dose",       emoji: "💊", color: "entry-type-dose",       hasValue: true,  valuePlaceholder: "tabs",  valueLabel: "Tabs" },
-  refill:     { label: "Rx Pickup",  emoji: "📦", color: "entry-type-refill",     hasValue: true,  valuePlaceholder: "tabs",  valueLabel: "Qty"  },
-  adjustment: { label: "Adjustment", emoji: "⚖️", color: "entry-type-adjustment", hasValue: true,  valuePlaceholder: "tabs",  valueLabel: "Adj"  },
-  note:       { label: "Note",       emoji: "📝", color: "entry-type-note",       hasValue: false, valuePlaceholder: "",      valueLabel: ""     },
+  dose:             { label: "Dose",        emoji: "💊", color: "entry-type-dose",       hasValue: true,  valuePlaceholder: "tabs",  valueLabel: "Tabs",  isTrt: false },
+  refill:           { label: "Rx Pickup",   emoji: "📦", color: "entry-type-refill",     hasValue: true,  valuePlaceholder: "tabs",  valueLabel: "Qty",   isTrt: false },
+  adjustment:       { label: "Adjustment",  emoji: "⚖️", color: "entry-type-adjustment", hasValue: true,  valuePlaceholder: "tabs",  valueLabel: "Adj",   isTrt: false },
+  note:             { label: "Note",        emoji: "📝", color: "entry-type-note",       hasValue: false, valuePlaceholder: "",      valueLabel: "",      isTrt: false },
+  "trt-dose":       { label: "TRT Dose",    emoji: "💉", color: "entry-type-trt-dose",   hasValue: true,  valuePlaceholder: "mL",    valueLabel: "mL",    isTrt: true  },
+  "trt-restock":    { label: "TRT Restock", emoji: "📦", color: "entry-type-trt-restock",hasValue: true,  valuePlaceholder: "mL",    valueLabel: "mL",    isTrt: true  },
+  "trt-adjustment": { label: "TRT Adjust",  emoji: "⚖️", color: "entry-type-trt-adj",   hasValue: true,  valuePlaceholder: "mL",    valueLabel: "mL",    isTrt: true  },
 };
 
 function renderEntryEditor(showAll = false) {
@@ -196,10 +199,9 @@ function renderEntryEditor(showAll = false) {
     row.className = "entry-editor-item";
     row.dataset.type = entry.type;
 
-    // Value field: tablet count for dose/refill, signed for adjustment, hidden for note
+    // Value field: tablet count for stim, ml for TRT, signed for adjustments, hidden for note
     let valueHtml = "";
     if (entry.type === "adjustment") {
-      const sign = Number(entry.tabletCount) >= 0 ? "+" : "−";
       const absVal = Math.abs(Number(entry.tabletCount || 0));
       valueHtml = `
         <div class="entry-editor-value">
@@ -210,6 +212,26 @@ function renderEntryEditor(showAll = false) {
             </select>
             <input class="entry-input" data-field="tabletCount" type="number" min="0" step="0.5" value="${absVal}" />
           </div>
+        </div>`;
+    } else if (entry.type === "trt-adjustment") {
+      const absVal = Math.abs(Number(entry.ml || 0));
+      valueHtml = `
+        <div class="entry-editor-value">
+          <div class="entry-adj-wrap">
+            <select class="entry-input entry-adj-sign" data-field="adjustmentSign">
+              <option value="1" ${Number(entry.ml) >= 0 ? "selected" : ""}>+</option>
+              <option value="-1" ${Number(entry.ml) < 0 ? "selected" : ""}>−</option>
+            </select>
+            <input class="entry-input" data-field="ml" type="number" min="0" step="0.01" value="${absVal}" placeholder="mL" />
+          </div>
+        </div>`;
+    } else if (meta.isTrt && meta.hasValue) {
+      const val = Number(entry.ml || 0);
+      const compoundHint = entry.compoundName ? `<span class="entry-compound-hint">${entry.compoundName}</span>` : "";
+      valueHtml = `
+        <div class="entry-editor-value">
+          ${compoundHint}
+          <input class="entry-input" data-field="ml" type="number" min="0" step="0.01" value="${val}" placeholder="mL" />
         </div>`;
     } else if (meta.hasValue) {
       const val = Number(entry.tabletCount || 0);
@@ -268,7 +290,21 @@ function saveEntryFromRow(button) {
   const nextTimestamp = parseCompactDateTimeValue(timestampInput?.value || "");
   const nextNote = String(noteInput?.value || "").trim();
 
-  if (entry.type === "dose") {
+  const meta = ENTRY_TYPE_META[entry.type] || ENTRY_TYPE_META.note;
+  if (meta.isTrt) {
+    const mlInput = row.querySelector('[data-field="ml"]');
+    const nextMl = Number.parseFloat(mlInput?.value || "");
+    if (!Number.isFinite(nextMl) || nextMl < 0) {
+      setNotice("TRT rows need a valid mL amount.", "error");
+      return;
+    }
+    if (entry.type === "trt-adjustment") {
+      const sign = Number(signInput?.value ?? 1);
+      entry.ml = sign * nextMl;
+    } else {
+      entry.ml = nextMl;
+    }
+  } else if (entry.type === "dose") {
     const nextTabletCount = Number.parseFloat(tabletInput?.value || "");
     if (!Number.isFinite(nextTabletCount) || nextTabletCount < 0) {
       setNotice("Dose rows need a valid tablet amount.", "error");
