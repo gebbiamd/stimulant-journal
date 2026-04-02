@@ -17,7 +17,6 @@ const els = {
   useCurrentTime: document.querySelector("#useCurrentTime"),
   doseNote: document.querySelector("#doseNote"),
   doseMgHint: document.querySelector("#doseMgHint"),
-  syncOuraHomeButton: document.querySelector("#syncOuraHomeButton"),
   doseUnitLabel: document.querySelector("#doseUnitLabel"),
   headerCard: document.querySelector(".header-card"),
   tabletTrack: document.querySelector("#tabletTrack"),
@@ -936,23 +935,6 @@ document.querySelectorAll("#adjustSignToggle .adjust-sign-btn").forEach((btn) =>
     updateAdjustmentLabel();
   });
 });
-els.syncOuraHomeButton?.addEventListener("click", async () => {
-  setBusy(els.syncOuraHomeButton, "Syncing Oura...", true);
-  setNotice("Syncing recent Oura sleep data...", "warning");
-  try {
-    const { warnings } = await syncOuraSleep(state);
-    render();
-    renderRecoveryContext();
-    const notice = warnings.length > 0
-      ? `Oura synced (${warnings.join(", ")} unavailable).`
-      : "Oura sleep data synced.";
-    setNotice(notice, warnings.length > 0 ? "warning" : "success");
-  } catch (error) {
-    setNotice(error.message, "error");
-  } finally {
-    setBusy(els.syncOuraHomeButton, "Syncing Oura...", false);
-  }
-});
 els.generateSummaryButton?.addEventListener("click", async () => {
   setBusy(els.generateSummaryButton, "Generating...", true);
   setNotice("Generating AI summary...", "warning");
@@ -1127,15 +1109,18 @@ function updateConnSheet() {
   const ouraConnected = !!(state.integrations?.oura?.lastSyncAt || state.integrations?.oura?.accessToken);
   const ouraToggleBtn = document.querySelector("#connOuraToggle");
   const ouraFormEl = document.querySelector("#connOuraForm");
+  const ouraSyncBtn = document.querySelector("#connOuraSyncBtn");
   if (ouraConnected) {
     setConnRowStatus(ouraRow, ouraDot, "green");
     const lastSync = state.integrations?.oura?.lastSyncAt;
     ouraDetail.textContent = lastSync ? `Last synced ${new Date(lastSync).toLocaleDateString()}` : "Connected";
     if (ouraToggleBtn && ouraFormEl?.classList.contains("hidden")) ouraToggleBtn.textContent = "Manage";
+    if (ouraSyncBtn) ouraSyncBtn.classList.remove("hidden");
   } else {
     setConnRowStatus(ouraRow, ouraDot, "red");
     ouraDetail.textContent = "Not connected";
     if (ouraToggleBtn && ouraFormEl?.classList.contains("hidden")) ouraToggleBtn.textContent = "Set up";
+    if (ouraSyncBtn) ouraSyncBtn.classList.add("hidden");
   }
 
   // OpenAI
@@ -1175,6 +1160,27 @@ connSupabaseAction?.addEventListener("click", async () => {
     window.location.href = "./login.html";
   }
 });
+// ── Oura sync button ─────────────────────────────────────────────
+const connOuraSyncBtn = document.querySelector("#connOuraSyncBtn");
+connOuraSyncBtn?.addEventListener("click", async () => {
+  setBusy(connOuraSyncBtn, "Syncing...", true);
+  setNotice("Syncing recent Oura sleep data...", "warning");
+  try {
+    const { warnings } = await syncOuraSleep(state);
+    render();
+    renderRecoveryContext();
+    updateConnSheet();
+    const notice = warnings.length > 0
+      ? `Oura synced (${warnings.join(", ")} unavailable).`
+      : "Oura sleep data synced.";
+    setNotice(notice, warnings.length > 0 ? "warning" : "success");
+  } catch (error) {
+    setNotice(error.message, "error");
+  } finally {
+    setBusy(connOuraSyncBtn, "Syncing...", false);
+  }
+});
+
 // ── Oura inline form ──────────────────────────────────────────────
 const connOuraToggle = document.querySelector("#connOuraToggle");
 const connOuraForm = document.querySelector("#connOuraForm");
