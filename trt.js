@@ -52,7 +52,7 @@ function populateCompoundSelect() {
     opt.dataset.halfLifeHours = c.halfLifeHours;
     opt.dataset.absorptionHalfLifeHours = c.absorptionHalfLifeHours || 0;
     opt.dataset.name = c.name;
-    if (c.id === "test-cyp") opt.selected = true;
+    if (c.name.toLowerCase() === "test c") opt.selected = true;
     els.trtCompoundSelect.appendChild(opt);
   }
   updateMgPreview();
