@@ -56,9 +56,12 @@ const els = {
   aiChatSendButton: document.querySelector("#aiChatSendButton"),
   activityItemTemplate: document.querySelector("#activityItemTemplate"),
   paceGaugeMo: document.querySelector("#paceGaugeMo"),
+  paceGaugeRx: document.querySelector("#paceGaugeRx"),
   paceGauge7d: document.querySelector("#paceGauge7d"),
   paceGaugeMonthSub: document.querySelector("#paceGaugeMonthSub"),
   paceGaugeMonthChip: document.querySelector("#paceGaugeMonthChip"),
+  paceGaugeRxSub: document.querySelector("#paceGaugeRxSub"),
+  paceGaugeRxChip: document.querySelector("#paceGaugeRxChip"),
   paceGauge7dChip: document.querySelector("#paceGauge7dChip"),
   entryTypePicker: document.querySelector("#entryTypePicker"),
   doseQuantityFields: document.querySelector("#doseQuantityFields"),
@@ -809,7 +812,20 @@ function drawPaceGauge(svgEl, value) {
       font-family="'Avenir Next',system-ui,sans-serif">${t}</text>`;
   }
 
-  // Needle
+  // Value label (rendered before needle so needle sits on top)
+  h += `<text x="${CX}" y="${CY - 24}" text-anchor="middle"
+    font-size="34" font-weight="800" fill="#1a1a2e"
+    font-family="'Avenir Next Condensed','Franklin Gothic Medium',system-ui,sans-serif">${v.toFixed(1)}</text>`;
+  h += `<text x="${CX}" y="${CY - 6}" text-anchor="middle"
+    font-size="7.5" fill="#9e9e9e" letter-spacing="0.07em" font-weight="700"
+    font-family="'Avenir Next',system-ui,sans-serif">MG / DAY</text>`;
+
+  // Needle (on top of value label)
+  h += `<defs>
+    <filter id="ndl-shadow" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="1.5" dy="2.5" stdDeviation="2.5" flood-color="rgba(0,0,0,0.5)"/>
+    </filter>
+  </defs>`;
   const na = toRad(valToAngle(v));
   const [tipX, tipY] = [+(CX + NL * Math.cos(na)).toFixed(2), +(CY - NL * Math.sin(na)).toFixed(2)];
   const bw = 3.2;
@@ -818,18 +834,9 @@ function drawPaceGauge(svgEl, value) {
     `${+(CX - Math.sin(na) * bw).toFixed(2)},${+(CY - Math.cos(na) * bw).toFixed(2)}`,
     `${tipX},${tipY}`,
   ].join(' ');
-  h += `<polygon points="${npts}" fill="rgba(0,0,0,0.14)" transform="translate(1.5,2)"/>`;
-  h += `<polygon points="${npts}" fill="#2a1810"/>`;
-  h += `<circle cx="${CX}" cy="${CY}" r="8" fill="#2a1810"/>`;
+  h += `<polygon points="${npts}" fill="#2a1810" filter="url(#ndl-shadow)"/>`;
+  h += `<circle cx="${CX}" cy="${CY}" r="8" fill="#2a1810" filter="url(#ndl-shadow)"/>`;
   h += `<circle cx="${CX}" cy="${CY}" r="3.5" fill="rgba(255,255,255,0.62)"/>`;
-
-  // Value label
-  h += `<text x="${CX}" y="${CY - 24}" text-anchor="middle"
-    font-size="34" font-weight="800" fill="#1a1a2e"
-    font-family="'Avenir Next Condensed','Franklin Gothic Medium',system-ui,sans-serif">${v.toFixed(1)}</text>`;
-  h += `<text x="${CX}" y="${CY - 6}" text-anchor="middle"
-    font-size="7.5" fill="#9e9e9e" letter-spacing="0.07em" font-weight="700"
-    font-family="'Avenir Next',system-ui,sans-serif">MG / DAY</text>`;
 
   svgEl.innerHTML = h;
 }
@@ -838,34 +845,60 @@ function renderPaceGauge() {
   const entries = getDoseEntries(state);
   const now = new Date();
 
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const daysElapsed = Math.max(1, (now - monthStart) / 86400000);
-  const monthTotal = entries
-    .filter(e => new Date(e.timestamp) >= monthStart)
+  // 30-day rolling average
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
+  const thirtyDayTotal = entries
+    .filter(e => new Date(e.timestamp) >= thirtyDaysAgo)
     .reduce((s, e) => s + Number(e.amount), 0);
-  const monthlyPace = monthTotal / daysElapsed;
+  const thirtyDayAvg = thirtyDayTotal / 30;
 
+  // Since last Rx refill
+  const refillEntries = state.entries
+    .filter(e => e.type === 'refill')
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  let rxAvg = 0;
+  let rxSubLabel = 'No Rx logged';
+  if (refillEntries.length > 0) {
+    const lastRefill = new Date(refillEntries[0].timestamp);
+    const daysSinceRefill = Math.max(1, (now - lastRefill) / 86400000);
+    const rxTotal = entries
+      .filter(e => new Date(e.timestamp) >= lastRefill)
+      .reduce((s, e) => s + Number(e.amount), 0);
+    rxAvg = rxTotal / daysSinceRefill;
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    rxSubLabel = `Since ${monthNames[lastRefill.getMonth()]} ${lastRefill.getDate()}`;
+  }
+
+  // 7-day rolling average
   const weekAgo = now.getTime() - 7 * 86400000;
   const weekTotal = entries
     .filter(e => new Date(e.timestamp).getTime() >= weekAgo)
     .reduce((s, e) => s + Number(e.amount), 0);
   const weeklyAvg = weekTotal / 7;
 
-  drawPaceGauge(els.paceGaugeMo, monthlyPace);
+  drawPaceGauge(els.paceGaugeMo, thirtyDayAvg);
+  drawPaceGauge(els.paceGaugeRx, rxAvg);
   drawPaceGauge(els.paceGauge7d, weeklyAvg);
 
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   if (els.paceGaugeMonthSub) {
-    els.paceGaugeMonthSub.textContent = `${monthNames[now.getMonth()]} · ${Math.floor(daysElapsed)} of ${daysInMonth} days`;
+    els.paceGaugeMonthSub.textContent = 'Rolling average';
+  }
+  if (els.paceGaugeRxSub) {
+    els.paceGaugeRxSub.textContent = rxSubLabel;
   }
 
-  const moZone = getPaceZone(monthlyPace);
+  const moZone = getPaceZone(thirtyDayAvg);
+  const rxZone = getPaceZone(rxAvg);
   const wkZone = getPaceZone(weeklyAvg);
   if (els.paceGaugeMonthChip) {
     els.paceGaugeMonthChip.textContent = moZone.label;
     els.paceGaugeMonthChip.style.color = moZone.color;
     els.paceGaugeMonthChip.style.background = moZone.bg;
+  }
+  if (els.paceGaugeRxChip) {
+    els.paceGaugeRxChip.textContent = rxZone.label;
+    els.paceGaugeRxChip.style.color = rxZone.color;
+    els.paceGaugeRxChip.style.background = rxZone.bg;
   }
   if (els.paceGauge7dChip) {
     els.paceGauge7dChip.textContent = wkZone.label;
