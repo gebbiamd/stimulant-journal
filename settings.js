@@ -172,9 +172,23 @@ const ENTRY_TYPE_META = {
   "trt-adjustment": { label: "TRT Adjust",  emoji: "⚖️", color: "entry-type-trt-adj",   hasValue: true,  valuePlaceholder: "mL",    valueLabel: "mL",    isTrt: true  },
 };
 
+let entryFilter = "stim"; // "stim" or "trt"
+
+document.querySelector("#entryFilterToggle")?.addEventListener("click", (event) => {
+  const btn = event.target.closest(".entry-filter-btn");
+  if (!btn || btn.dataset.filter === entryFilter) return;
+  entryFilter = btn.dataset.filter;
+  document.querySelectorAll(".entry-filter-btn").forEach((b) => b.classList.toggle("active", b.dataset.filter === entryFilter));
+  renderEntryEditor();
+});
+
 function renderEntryEditor(showAll = false) {
   if (!els.entryEditorList || !els.entryEditorEmpty) return;
-  const entries = [...state.entries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  const allEntries = [...state.entries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  const entries = allEntries.filter((e) => {
+    const meta = ENTRY_TYPE_META[e.type];
+    return entryFilter === "trt" ? meta?.isTrt : !meta?.isTrt;
+  });
   els.entryEditorEmpty.classList.toggle("hidden", entries.length > 0);
   els.entryEditorList.innerHTML = "";
   if (!entries.length) return;

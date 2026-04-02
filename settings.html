@@ -7,7 +7,7 @@
     <link rel="manifest" href="./manifest.webmanifest?v=72" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=91" />
+    <link rel="stylesheet" href="./styles.css?v=92" />
     <title>Settings | Stimulant Journal</title>
   </head>
   <body data-page="settings">
@@ -27,7 +27,11 @@
         </div>
         <div class="stack-form compact-settings-form">
           <div class="entry-editor-toolbar">
-            <button id="reloadEntriesButton" class="ghost-button" type="button">Reload Entries</button>
+            <div class="entry-filter-toggle" id="entryFilterToggle">
+              <button class="entry-filter-btn active" data-filter="stim" type="button">💊 Stimulant</button>
+              <button class="entry-filter-btn" data-filter="trt" type="button">💉 Testosterone</button>
+            </div>
+            <button id="reloadEntriesButton" class="ghost-button" type="button">Reload</button>
           </div>
           <div id="entryEditorEmpty" class="empty-state hidden">No entries saved yet.</div>
           <div id="entryEditorList" class="entry-editor-list"></div>
@@ -207,7 +211,7 @@
     <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./journal-core.js?v=87"></script>
-    <script src="./settings.js?v=81"></script>
+    <script src="./journal-core.js?v=89"></script>
+    <script src="./settings.js?v=82"></script>
   </body>
 </html>
