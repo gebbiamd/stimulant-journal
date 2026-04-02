@@ -44,6 +44,7 @@ function populateCompoundSelect() {
     els.trtCompoundSelect.appendChild(opt);
     return;
   }
+  const defaultId = state.settings.trtDefaultCompoundId || "";
   for (const c of compounds) {
     const opt = document.createElement("option");
     opt.value = c.id;
@@ -52,7 +53,7 @@ function populateCompoundSelect() {
     opt.dataset.halfLifeHours = c.halfLifeHours;
     opt.dataset.absorptionHalfLifeHours = c.absorptionHalfLifeHours || 0;
     opt.dataset.name = c.name;
-    if (c.name.toLowerCase() === "test c") opt.selected = true;
+    if (c.id === defaultId) opt.selected = true;
     els.trtCompoundSelect.appendChild(opt);
   }
   updateMgPreview();

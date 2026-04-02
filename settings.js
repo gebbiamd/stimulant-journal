@@ -354,6 +354,7 @@ function saveEntryFromRow(button) {
 function renderTrtCompounds() {
   if (!els.trtCompoundList) return;
   const compounds = state.settings.trtCompounds || [];
+  const defaultId = state.settings.trtDefaultCompoundId || "";
   els.trtCompoundList.innerHTML = "";
   if (els.trtStockMl) els.trtStockMl.value = state.settings.trtStockMl || 0;
   if (els.trtStockVials) els.trtStockVials.value = state.settings.trtStockVials || 0;
@@ -363,6 +364,10 @@ function renderTrtCompounds() {
     const row = document.createElement("div");
     row.className = "trt-compound-row";
     row.innerHTML = `
+      <label class="trt-default-radio" title="Set as default">
+        <input type="radio" name="trtDefaultCompound" value="${compound.id}" ${compound.id === defaultId ? "checked" : ""} />
+        <span class="trt-default-label">Default</span>
+      </label>
       <div class="trt-compound-fields">
         <label>Name<input class="entry-input" data-field="name" type="text" value="${compound.name}" /></label>
         <label>Elim. half-life (h)<input class="entry-input" data-field="halfLifeHours" type="number" min="1" step="1" value="${compound.halfLifeHours}" /></label>
@@ -393,8 +398,14 @@ function collectTrtCompounds() {
   return compounds;
 }
 
+function getSelectedDefaultCompoundId() {
+  const checked = els.trtCompoundList?.querySelector('input[name="trtDefaultCompound"]:checked');
+  return checked?.value || "";
+}
+
 function saveTrtSettingsNow() {
   state.settings.trtCompounds = collectTrtCompounds();
+  state.settings.trtDefaultCompoundId = getSelectedDefaultCompoundId();
   state.settings.trtStockMl = Number(els.trtStockMl?.value) || 0;
   state.settings.trtStockVials = Number(els.trtStockVials?.value) || 0;
   state.settings.trtRefillThresholdMl = Number(els.trtRefillThresholdMl?.value) || 2;
@@ -412,15 +423,20 @@ els.addTrtCompound?.addEventListener("click", () => {
 els.trtCompoundList?.addEventListener("click", (event) => {
   const deleteBtn = event.target.closest(".trt-delete-compound");
   if (!deleteBtn) return;
-  state.settings.trtCompounds = (state.settings.trtCompounds || []).filter((c) => c.id !== deleteBtn.dataset.id);
+  const removedId = deleteBtn.dataset.id;
+  state.settings.trtCompounds = (state.settings.trtCompounds || []).filter((c) => c.id !== removedId);
+  if (state.settings.trtDefaultCompoundId === removedId) state.settings.trtDefaultCompoundId = "";
   renderTrtCompounds();
   saveTrtSettingsNow();
   setNotice("Compound removed.", "warning");
 });
 
-// Auto-save compounds on any field change
+// Auto-save compounds & default on any field/radio change
 els.trtCompoundList?.addEventListener("input", () => {
   saveTrtSettingsNow();
+});
+els.trtCompoundList?.addEventListener("change", (event) => {
+  if (event.target.name === "trtDefaultCompound") saveTrtSettingsNow();
 });
 
 // Auto-save stock fields on change
@@ -451,6 +467,7 @@ els.settingsForm?.addEventListener("submit", (event) => {
     refillIntervalDays: Number.parseInt(els.refillIntervalDays.value, 10) || defaultState.settings.refillIntervalDays,
     refillRequestLeadDays: Number.parseInt(els.refillRequestLeadDays.value, 10) || defaultState.settings.refillRequestLeadDays,
     trtCompounds: state.settings.trtCompounds || defaultState.settings.trtCompounds,
+    trtDefaultCompoundId: state.settings.trtDefaultCompoundId || "",
     trtStockMl: state.settings.trtStockMl || 0,
     trtStockVials: state.settings.trtStockVials || 0,
     trtRefillThresholdMl: state.settings.trtRefillThresholdMl || 2,

@@ -2974,9 +2974,34 @@ details.ai-section-recs {
   border: 1px solid rgba(90,72,56,0.08);
 }
 
+.trt-default-radio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  align-self: center;
+  cursor: pointer;
+}
+
+.trt-default-radio input[type="radio"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--orb-one, #b87333);
+  margin: 0;
+}
+
+.trt-default-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted, #5a4838);
+}
+
 .trt-compound-fields {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 0.5rem;
   flex: 1;
 }

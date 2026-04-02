@@ -31,6 +31,7 @@ const defaultState = {
       { id: "test-cyp", name: "Testosterone Cypionate", halfLifeHours: 192, absorptionHalfLifeHours: 36, mgPerMl: 200 },
       { id: "test-enan", name: "Testosterone Enanthate", halfLifeHours: 108, absorptionHalfLifeHours: 20, mgPerMl: 250 },
     ],
+    trtDefaultCompoundId: "test-cyp",
     trtStockMl: 0,
     trtStockVials: 0,
     trtRefillThresholdMl: 2,
