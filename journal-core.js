@@ -98,14 +98,16 @@ function normalizeEntry(entry) {
     };
   }
   if (entry.type === "trt-dose") {
+    const ml = Number(entry.ml) || 0;
+    const mg = Number(entry.mg) || Number(entry.amount) || 0;
     return {
       id: entry.id || crypto.randomUUID(),
       type: "trt-dose",
       timestamp,
       compoundId: entry.compoundId ?? entry.compound_id ?? "",
       compoundName: entry.compoundName ?? entry.compound_name ?? "",
-      ml: Number(entry.ml) || 0,
-      mg: Number(entry.mg) || 0,
+      ml,
+      mg,
       halfLifeHours: Number(entry.halfLifeHours ?? entry.half_life_hours) || 0,
       note: String(entry.note || "").trim(),
     };
