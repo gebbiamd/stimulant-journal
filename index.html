@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest?v=72" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=88" />
+    <link rel="stylesheet" href="./styles.css?v=89" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -28,7 +28,17 @@
       <div id="connectionsOverlay" class="sheet-overlay hidden" aria-hidden="true"></div>
       <div id="connectionsSheet" class="bottom-sheet hidden" role="dialog" aria-label="Connections">
         <div class="sheet-handle"></div>
-        <h2 class="sheet-title">Connections</h2>
+        <div style="position: relative;">
+          <h2 class="sheet-title">Connections</h2>
+          <button id="refreshButton" class="refresh-circle-btn" type="button" aria-label="Refresh to get latest data">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+              <path d="M3 21v-5h5"/>
+            </svg>
+          </button>
+        </div>
 
         <div class="conn-row" id="connSupabaseRow">
           <div class="conn-dot" id="connSupabaseDot"></div>
@@ -39,10 +49,6 @@
           <button class="ghost-button conn-action" id="connSupabaseAction" type="button">Sign In</button>
         </div>
 
-        <!-- Sign-in link (shown when not authenticated) -->
-        <div id="connSignInPrompt" class="conn-signin-prompt hidden">
-          <a href="./login.html" class="nav-button emphasis-button conn-signin-link">Sign in to sync →</a>
-        </div>
 
         <div class="conn-row" id="connOuraRow">
           <div class="conn-dot" id="connOuraDot"></div>
@@ -301,13 +307,6 @@
       </section>
 
     </main>
-
-    <button id="refreshButton" class="refresh-button" type="button" aria-label="Refresh to get latest data">
-      <svg viewBox="0 0 24 24" focusable="false">
-        <path d="M1 4v6h6M23 20v-6h-6"></path>
-        <path d="M20.754 5.145A9 9 0 0 0 3.9 15.9M3.246 18.855A9 9 0 0 0 20.1 8.1"></path>
-      </svg>
-    </button>
 
     <nav class="tab-bar" aria-label="Primary">
       <a class="tab-link is-active" href="./index.html" aria-current="page">
