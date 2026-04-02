@@ -52,6 +52,7 @@ function populateCompoundSelect() {
     opt.dataset.halfLifeHours = c.halfLifeHours;
     opt.dataset.absorptionHalfLifeHours = c.absorptionHalfLifeHours || 0;
     opt.dataset.name = c.name;
+    if (c.name === "test C") opt.selected = true;
     els.trtCompoundSelect.appendChild(opt);
   }
   updateMgPreview();
