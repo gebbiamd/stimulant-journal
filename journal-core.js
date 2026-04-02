@@ -301,10 +301,15 @@ async function loadRemoteStateInto(state) {
         user_id: user.id,
         type: entry.type,
         timestamp: entry.timestamp,
-        amount: entry.type === "dose" ? entry.amount : null,
+        amount: entry.type === "dose" ? entry.amount : (entry.type === "trt-dose" ? entry.mg : null),
         tablet_count: (entry.type === "dose" || entry.type === "refill" || entry.type === "adjustment") ? entry.tabletCount : null,
         mg_per_tablet: entry.type === "dose" ? entry.mgPerTablet : null,
         note: entry.note || "",
+        compound_id: entry.compoundId || null,
+        compound_name: entry.compoundName || null,
+        ml: entry.ml ?? null,
+        half_life_hours: entry.halfLifeHours ?? null,
+        vials: entry.vials ?? null,
       }));
       await client.from("journal_entries").upsert(pushPayload, { onConflict: "id" });
     } catch { /* non-critical: pull still proceeds */ }
