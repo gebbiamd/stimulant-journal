@@ -302,18 +302,21 @@ async function loadRemoteStateInto(state) {
       .filter(Boolean)
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    // Safety: never replace local entries with an empty remote result.
-    // If remote returns 0 entries but we have local entries, keep the local
-    // ones and push them up to Supabase so they aren't lost.
-    if (remoteEntries.length === 0 && state.entries.length > 0) {
-      // Upload local entries that aren't in the remote yet
+    // Merge strategy: remote is the source of truth for entries that exist there,
+    // but any local-only entries (e.g. saved just before this pull, or a failed
+    // push) are rescued — added back into state and uploaded to Supabase so they
+    // are never silently lost by a race between push and pull.
+    const remoteIds = new Set(remoteEntries.map((e) => e.id));
+    const localOnlyEntries = state.entries.filter((e) => !remoteIds.has(e.id));
+
+    if (localOnlyEntries.length > 0) {
+      // Upload the rescued entries so Supabase gets them
       try {
         const localClient = getSupabaseClient();
-        const localUser = user;
-        for (const entry of state.entries) {
+        for (const entry of localOnlyEntries) {
           const entryPayload = {
             id: entry.id,
-            user_id: localUser.id,
+            user_id: user.id,
             type: entry.type,
             timestamp: entry.timestamp,
             amount: entry.type === "dose" ? entry.amount : null,
@@ -321,13 +324,14 @@ async function loadRemoteStateInto(state) {
             mg_per_tablet: entry.type === "dose" ? entry.mgPerTablet : null,
             note: entry.note || null,
           };
-          await localClient.from("journal_entries").upsert(entryPayload, { onConflict: "id", ignoreDuplicates: true });
+          await localClient.from("journal_entries").upsert(entryPayload, { onConflict: "id", ignoreDuplicates: false });
         }
-      } catch { /* non-critical: local data preserved either way */ }
-      // Keep local entries — don't overwrite with empty remote
-    } else {
-      state.entries = remoteEntries;
+      } catch { /* non-critical: entries kept in local state regardless */ }
     }
+
+    // Merge: remote entries + any local-only entries not yet in remote
+    const merged = [...remoteEntries, ...localOnlyEntries];
+    state.entries = merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   }
 
   if (ouraRows) {
