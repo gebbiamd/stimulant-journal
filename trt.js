@@ -93,7 +93,8 @@ function getRangeMs() {
 function renderSerumChart() {
   if (!els.trtSerumChart) return;
   const { start, end, now } = getRangeMs();
-  const series = getTrtSerumLevelSeries(state, start, end, 140);
+  const scale = getTrtWeeklyScaleFactor(state);
+  const series = getTrtSerumLevelSeries(state, start, end, 140).map((p) => ({ ...p, level: p.level * scale }));
   const chartTop = 10;
   const chartBottom = 220;
   const chartHeight = chartBottom - chartTop;
@@ -101,11 +102,11 @@ function renderSerumChart() {
   const chartRight = 398;
   const chartWidth = chartRight - chartLeft;
 
-  // Find max level for scaling — at least 200 so empty charts look right
+  // Find max level for scaling — at least 150 so empty charts look right
   const maxDataLevel = Math.max(...series.map((s) => s.level), 0);
-  const rawMax = Math.max(maxDataLevel * 1.1, 200);
+  const rawMax = Math.max(maxDataLevel * 1.1, 150);
   // Round up to nearest clean step so axis ticks align
-  const yStep = rawMax <= 300 ? 25 : rawMax <= 600 ? 50 : 100;
+  const yStep = rawMax <= 200 ? 25 : rawMax <= 400 ? 50 : 100;
   const maxLevel = Math.ceil(rawMax / yStep) * yStep;
 
   // Draw color bands
@@ -229,9 +230,9 @@ function renderSerumChart() {
   const peakLevel = Math.max(...pastSeries.map((s) => s.level), 0);
   const troughLevel = pastSeries.length ? Math.min(...pastSeries.filter((s) => s.level > 0).map((s) => s.level)) : 0;
   if (els.trtSerumLegend) {
-    const parts = [`Current: ${currentLevel.toFixed(0)} mg`];
-    if (peakLevel > 0) parts.push(`peak: ${peakLevel.toFixed(0)} mg`);
-    if (troughLevel > 0 && troughLevel < Infinity) parts.push(`trough: ${troughLevel.toFixed(0)} mg`);
+    const parts = [`Current: ${currentLevel.toFixed(0)} mg/wk eq.`];
+    if (peakLevel > 0) parts.push(`peak: ${peakLevel.toFixed(0)}`);
+    if (troughLevel > 0 && troughLevel < Infinity) parts.push(`trough: ${troughLevel.toFixed(0)}`);
     els.trtSerumLegend.textContent = parts.join(" · ");
   }
 }

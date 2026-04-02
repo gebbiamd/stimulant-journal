@@ -405,7 +405,7 @@ async function loadRemoteStateInto(state) {
     // This prevents deleted entries from being resurrected by a sync that
     // completes before the Supabase delete has landed.
     const deletedIds = getDeletedIds();
-    remoteEntries = remoteEntries.filter((e) => !deletedIds.has(e.id));
+    const filteredRemoteEntries = remoteEntries.filter((e) => !deletedIds.has(e.id));
 
     // Also clean up Supabase for any tombstoned entries that came back from remote
     if (deletedIds.size > 0) {
@@ -423,7 +423,7 @@ async function loadRemoteStateInto(state) {
     // but any local-only entries (e.g. saved just before this pull, or a failed
     // push) are rescued — added back into state and uploaded to Supabase so they
     // are never silently lost by a race between push and pull.
-    const remoteIds = new Set(remoteEntries.map((e) => e.id));
+    const remoteIds = new Set(filteredRemoteEntries.map((e) => e.id));
     const localOnlyEntries = state.entries.filter((e) => !remoteIds.has(e.id) && !deletedIds.has(e.id));
 
     if (localOnlyEntries.length > 0) {
@@ -453,7 +453,7 @@ async function loadRemoteStateInto(state) {
     }
 
     // Merge: remote entries + any local-only entries not yet in remote
-    const merged = [...remoteEntries, ...localOnlyEntries];
+    const merged = [...filteredRemoteEntries, ...localOnlyEntries];
     state.entries = merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   }
 
@@ -1075,19 +1075,32 @@ function getTrtStockStatus(state) {
 // Color zone for TRT serum levels (mg active in body)
 function getTrtSerumZone(level) {
   if (level <= 0) return { zone: "none", color: "transparent" };
-  if (level <= 200) return { zone: "low", color: "rgba(39,130,255,0.25)" };       // blue
-  if (level <= 400) return { zone: "optimal", color: "rgba(45,157,120,0.25)" };    // green
-  if (level <= 600) return { zone: "high", color: "rgba(245,158,11,0.20)" };       // yellow
-  if (level <= 800) return { zone: "elevated", color: "rgba(249,115,22,0.25)" };   // orange
+  if (level <= 100) return { zone: "low", color: "rgba(39,130,255,0.25)" };       // blue
+  if (level <= 200) return { zone: "optimal", color: "rgba(45,157,120,0.25)" };    // green
+  if (level <= 300) return { zone: "high", color: "rgba(245,158,11,0.20)" };       // yellow
+  if (level <= 500) return { zone: "elevated", color: "rgba(249,115,22,0.25)" };   // orange
   return { zone: "supra", color: "rgba(239,91,114,0.25)" };                        // red
 }
 
+// Returns a factor to convert raw mg-active to "mg/week equivalent".
+// At steady state with weekly dosing, average level = dose / (ke × τ),
+// so multiplying mg-active by (ke × τ) gives the weekly-dose equivalent.
+function getTrtWeeklyScaleFactor(state) {
+  const compounds = state.settings.trtCompounds || [];
+  const halfLife = (compounds.length > 0 ? Number(compounds[0].halfLifeHours) : 0) || 192;
+  const ke = Math.log(2) / halfLife;
+  const tau = 168; // hours per week
+  return ke * tau;
+}
+
+// Bands in "mg/week equivalent" — calibrated so the 200 line reflects the
+// estimated steady-state average serum level for someone dosing 200 mg/week.
 const TRT_SERUM_BANDS = [
-  { min: 0,   max: 200, color: "rgba(39,130,255,0.18)",    label: "Low",      textColor: "#2782ff" },
-  { min: 200, max: 400, color: "rgba(45,157,120,0.18)",    label: "Optimal",  textColor: "#2d9d78" },
-  { min: 400, max: 600, color: "rgba(245,158,11,0.15)",    label: "High",     textColor: "#f59e0b" },
-  { min: 600, max: 800, color: "rgba(249,115,22,0.18)",    label: "Elevated", textColor: "#f97316" },
-  { min: 800, max: Infinity, color: "rgba(239,91,114,0.18)", label: "Supra",  textColor: "#ef5b72" },
+  { min: 0,   max: 100, color: "rgba(39,130,255,0.18)",    label: "Low",      textColor: "#2782ff" },
+  { min: 100, max: 200, color: "rgba(45,157,120,0.18)",    label: "Optimal",  textColor: "#2d9d78" },
+  { min: 200, max: 300, color: "rgba(245,158,11,0.15)",    label: "High",     textColor: "#f59e0b" },
+  { min: 300, max: 500, color: "rgba(249,115,22,0.18)",    label: "Elevated", textColor: "#f97316" },
+  { min: 500, max: Infinity, color: "rgba(239,91,114,0.18)", label: "Supra",  textColor: "#ef5b72" },
 ];
 
 function deleteEntry(state, id) {
