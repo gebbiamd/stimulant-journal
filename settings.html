@@ -116,9 +116,10 @@
         <div class="stack-form compact-settings-form">
           <div id="trtCompoundList" class="trt-compound-list"></div>
           <button id="addTrtCompound" class="ghost-button compact-action-button" type="button">+ Add compound</button>
+          <p class="field-hint muted" style="text-align:center; margin: 0.25rem 0;">Changes save automatically</p>
           <details class="settings-disclosure">
             <summary><span>📦 TRT stock settings</span></summary>
-            <div class="settings-grid settings-grid-advanced">
+            <div class="settings-grid settings-grid-advanced" id="trtStockFields">
               <label>
                 Current stock (mL)
                 <input id="trtStockMl" name="trtStockMl" type="number" min="0" step="0.1" />
@@ -133,7 +134,6 @@
               </label>
             </div>
           </details>
-          <button id="saveTrtSettings" class="nav-button emphasis-button compact-action-button" type="button">Save TRT Settings</button>
         </div>
       </section>
 

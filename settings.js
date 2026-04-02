@@ -40,7 +40,6 @@ const els = {
   ouraDisconnectButton: document.querySelector("#ouraDisconnectButton"),
   trtCompoundList: document.querySelector("#trtCompoundList"),
   addTrtCompound: document.querySelector("#addTrtCompound"),
-  saveTrtSettings: document.querySelector("#saveTrtSettings"),
   trtStockMl: document.querySelector("#trtStockMl"),
   trtStockVials: document.querySelector("#trtStockVials"),
   trtRefillThresholdMl: document.querySelector("#trtRefillThresholdMl"),
@@ -342,6 +341,15 @@ function collectTrtCompounds() {
   return compounds;
 }
 
+function saveTrtSettingsNow() {
+  state.settings.trtCompounds = collectTrtCompounds();
+  state.settings.trtStockMl = Number(els.trtStockMl?.value) || 0;
+  state.settings.trtStockVials = Number(els.trtStockVials?.value) || 0;
+  state.settings.trtRefillThresholdMl = Number(els.trtRefillThresholdMl?.value) || 2;
+  persistState(state);
+  queueRemoteSync(state);
+}
+
 els.addTrtCompound?.addEventListener("click", () => {
   const compounds = state.settings.trtCompounds || [];
   compounds.push({ id: crypto.randomUUID(), name: "", halfLifeHours: 192, mgPerMl: 200 });
@@ -354,17 +362,18 @@ els.trtCompoundList?.addEventListener("click", (event) => {
   if (!deleteBtn) return;
   state.settings.trtCompounds = (state.settings.trtCompounds || []).filter((c) => c.id !== deleteBtn.dataset.id);
   renderTrtCompounds();
+  saveTrtSettingsNow();
   setNotice("Compound removed.", "warning");
 });
 
-els.saveTrtSettings?.addEventListener("click", () => {
-  state.settings.trtCompounds = collectTrtCompounds();
-  state.settings.trtStockMl = Number(els.trtStockMl?.value) || 0;
-  state.settings.trtStockVials = Number(els.trtStockVials?.value) || 0;
-  state.settings.trtRefillThresholdMl = Number(els.trtRefillThresholdMl?.value) || 2;
-  persistState(state);
-  queueRemoteSync(state);
-  setNotice("TRT settings saved.", "success");
+// Auto-save compounds on any field change
+els.trtCompoundList?.addEventListener("input", () => {
+  saveTrtSettingsNow();
+});
+
+// Auto-save stock fields on change
+document.querySelector("#trtStockFields")?.addEventListener("input", () => {
+  saveTrtSettingsNow();
 });
 
 els.settingsForm?.addEventListener("submit", (event) => {
