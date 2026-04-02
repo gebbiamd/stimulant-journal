@@ -100,8 +100,7 @@ function getRangeMs() {
 function renderSerumChart() {
   if (!els.trtSerumChart) return;
   const { start, end, now } = getRangeMs();
-  const scale = getTrtWeeklyScaleFactor(state);
-  const series = getTrtSerumLevelSeries(state, start, end, 140).map((p) => ({ ...p, level: p.level * scale }));
+  const series = getTrtSerumLevelSeries(state, start, end, 140);
   const chartTop = 10;
   const chartBottom = 220;
   const chartHeight = chartBottom - chartTop;
@@ -343,16 +342,17 @@ function getPlannerSerumSeries(plannerDoses, startMs, endMs, points = 140) {
       const elapsedHours = (timestamp - doseTime) / (60 * 60 * 1000);
       const mg = dose.mg;
       const ke = Math.log(2) / Math.max(dose.halfLifeHours || 192, 0.1);
+      const weeklyScale = ke * 168;
       const absHL = dose.absorptionHalfLifeHours || 0;
       if (absHL > 0) {
         const ka = Math.log(2) / absHL;
         if (Math.abs(ka - ke) < 1e-6) {
-          level += mg * ke * elapsedHours * Math.exp(-ke * elapsedHours);
+          level += mg * ke * elapsedHours * Math.exp(-ke * elapsedHours) * weeklyScale;
         } else {
-          level += mg * (ka / (ka - ke)) * (Math.exp(-ke * elapsedHours) - Math.exp(-ka * elapsedHours));
+          level += mg * (ka / (ka - ke)) * (Math.exp(-ke * elapsedHours) - Math.exp(-ka * elapsedHours)) * weeklyScale;
         }
       } else {
-        level += mg * Math.exp(-ke * elapsedHours);
+        level += mg * Math.exp(-ke * elapsedHours) * weeklyScale;
       }
     }
     series.push({ timestamp, level });
@@ -363,7 +363,6 @@ function getPlannerSerumSeries(plannerDoses, startMs, endMs, points = 140) {
 function renderPlannerChart() {
   if (!els.trtPlannerChart) return;
   const { start, end, now } = getPlannerRangeMs();
-  const scale = getTrtWeeklyScaleFactor(state);
   // Combine real historical doses with future planned doses
   const futureDoses = generateFuturePlannerDoses(start, end);
   const realDoses = getTrtDoseEntries(state).map((e) => ({
@@ -376,7 +375,7 @@ function renderPlannerChart() {
     compoundName: e.compoundName,
   }));
   const allDoses = [...realDoses, ...futureDoses];
-  const series = getPlannerSerumSeries(allDoses, start, end, 140).map((p) => ({ ...p, level: p.level * scale }));
+  const series = getPlannerSerumSeries(allDoses, start, end, 140);
 
   const chartTop = 10, chartBottom = 220, chartHeight = chartBottom - chartTop;
   const chartLeft = 4, chartRight = 398, chartWidth = chartRight - chartLeft;
