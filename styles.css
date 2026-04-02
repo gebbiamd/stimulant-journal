@@ -1848,6 +1848,30 @@ button.calendar-cell {
   border: 1px solid rgba(160, 82, 45, 0.28);
 }
 
+.entry-type-trt-compound-a {
+  background: rgba(30, 100, 180, 0.14);
+  color: #1a4f8a;
+  border: 1px solid rgba(30, 100, 180, 0.3);
+}
+
+.entry-type-trt-compound-b {
+  background: rgba(140, 50, 140, 0.14);
+  color: #6b2068;
+  border: 1px solid rgba(140, 50, 140, 0.3);
+}
+
+.entry-type-trt-compound-c {
+  background: rgba(180, 90, 20, 0.14);
+  color: #8a4510;
+  border: 1px solid rgba(180, 90, 20, 0.3);
+}
+
+.entry-type-trt-compound-d {
+  background: rgba(20, 130, 100, 0.14);
+  color: #0a6350;
+  border: 1px solid rgba(20, 130, 100, 0.3);
+}
+
 .entry-compound-hint {
   font-size: 0.58rem;
   color: var(--muted);

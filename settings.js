@@ -172,6 +172,19 @@ const ENTRY_TYPE_META = {
   "trt-adjustment": { label: "TRT Adjust",  emoji: "⚖️", color: "entry-type-trt-adj",   hasValue: true,  valuePlaceholder: "mL",    valueLabel: "mL",    isTrt: true  },
 };
 
+const TRT_COMPOUND_COLORS = [
+  "entry-type-trt-compound-a",
+  "entry-type-trt-compound-b",
+  "entry-type-trt-compound-c",
+  "entry-type-trt-compound-d",
+];
+
+function getTrtCompoundColor(compoundName) {
+  const compounds = (state.settings.trtCompounds || []).map((c) => c.name);
+  const idx = compounds.indexOf(compoundName);
+  return TRT_COMPOUND_COLORS[idx >= 0 ? idx % TRT_COMPOUND_COLORS.length : 0];
+}
+
 let entryFilter = "stim"; // "stim" or "trt"
 
 document.querySelector("#entryFilterToggle")?.addEventListener("click", (event) => {
@@ -257,9 +270,16 @@ function renderEntryEditor(showAll = false) {
       valueHtml = `<div class="entry-editor-value entry-editor-value-empty">—</div>`;
     }
 
+    const pillLabel = entry.type === "trt-dose" && entry.compoundName
+      ? entry.compoundName
+      : meta.label;
+    const pillColor = entry.type === "trt-dose" && entry.compoundName
+      ? getTrtCompoundColor(entry.compoundName)
+      : meta.color;
+
     row.innerHTML = `
       <div class="entry-editor-type">
-        <span class="entry-type-pill ${meta.color}">${meta.emoji} ${meta.label}</span>
+        <span class="entry-type-pill ${pillColor}">${meta.emoji} ${pillLabel}</span>
       </div>
       <div class="entry-editor-time">
         <input class="entry-input entry-time-input" data-field="timestamp" type="text" inputmode="numeric" value="${formatCompactDateTimeValue(entry.timestamp)}" placeholder="M/D/YY HH:MM" />
