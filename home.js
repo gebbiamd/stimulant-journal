@@ -423,10 +423,11 @@ function renderMiniTrend() {
       return `<line x1="${x}" y1="${chartBottom}" x2="${x}" y2="${chartBottom + 6}" stroke="rgba(88,112,143,0.18)" stroke-width="1" />`;
     })
     .join("");
-  els.miniTrendAxis.innerHTML = axisTicks
+  const axisLabels = axisTicks
     .map((tick) => {
-      const left = ((tick.timestamp - windowStart) / (now - windowStart)) * 100;
-      return `<span style="left:${left}%">${tick.label}</span>`;
+      const ratio = (tick.timestamp - windowStart) / (now - windowStart);
+      const x = 20 + ratio * (width - 40);
+      return `<text x="${x}" y="${chartBottom + 18}" text-anchor="middle" fill="rgba(88,112,143,0.6)" font-size="10" font-weight="600">${tick.label}</text>`;
     })
     .join("");
   const doseMarkers = getDoseEntries(state)
@@ -477,6 +478,7 @@ function renderMiniTrend() {
     <polygon points="${area}" fill="url(#decayArea)"></polygon>
     <polyline points="${points}" fill="none" stroke="#2782ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
     ${ticks}
+    ${axisLabels}
   `;
 
   const currentLevel = levels[levels.length - 1]?.level || 0;
