@@ -1075,10 +1075,10 @@ function getTrtStockStatus(state) {
 // Color zone for TRT serum levels (mg active in body)
 function getTrtSerumZone(level) {
   if (level <= 0) return { zone: "none", color: "transparent" };
-  if (level <= 100) return { zone: "low", color: "rgba(39,130,255,0.25)" };       // blue
-  if (level <= 200) return { zone: "optimal", color: "rgba(45,157,120,0.25)" };    // green
-  if (level <= 300) return { zone: "high", color: "rgba(245,158,11,0.20)" };       // yellow
-  if (level <= 500) return { zone: "elevated", color: "rgba(249,115,22,0.25)" };   // orange
+  if (level <= 100) return { zone: "low", color: "rgba(39,130,255,0.25)" };        // blue
+  if (level <= 250) return { zone: "trt", color: "rgba(45,157,120,0.25)" };        // green
+  if (level <= 500) return { zone: "moderate", color: "rgba(245,158,11,0.20)" };   // yellow
+  if (level <= 800) return { zone: "anabolic", color: "rgba(249,115,22,0.25)" };   // orange
   return { zone: "supra", color: "rgba(239,91,114,0.25)" };                        // red
 }
 
@@ -1097,10 +1097,10 @@ function getTrtWeeklyScaleFactor(state) {
 // estimated steady-state average serum level for someone dosing 200 mg/week.
 const TRT_SERUM_BANDS = [
   { min: 0,   max: 100, color: "rgba(39,130,255,0.18)",    label: "Low",      textColor: "#2782ff" },
-  { min: 100, max: 200, color: "rgba(45,157,120,0.18)",    label: "Optimal",  textColor: "#2d9d78" },
-  { min: 200, max: 300, color: "rgba(245,158,11,0.15)",    label: "High",     textColor: "#f59e0b" },
-  { min: 300, max: 500, color: "rgba(249,115,22,0.18)",    label: "Elevated", textColor: "#f97316" },
-  { min: 500, max: Infinity, color: "rgba(239,91,114,0.18)", label: "Supra",  textColor: "#ef5b72" },
+  { min: 100, max: 250, color: "rgba(45,157,120,0.18)",    label: "TRT",      textColor: "#2d9d78" },
+  { min: 250, max: 500, color: "rgba(245,158,11,0.15)",    label: "Moderate", textColor: "#f59e0b" },
+  { min: 500, max: 800, color: "rgba(249,115,22,0.18)",    label: "Anabolic", textColor: "#f97316" },
+  { min: 800, max: Infinity, color: "rgba(239,91,114,0.18)", label: "Supra",  textColor: "#ef5b72" },
 ];
 
 function deleteEntry(state, id) {
