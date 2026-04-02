@@ -941,6 +941,28 @@ function renderAll() {
 }
 
 renderAll();
+
+// ── Refresh button (hard refresh with cache clear) ──────────────────
+const refreshButton = document.querySelector("#refreshButton");
+if (refreshButton) {
+  refreshButton.addEventListener("click", async () => {
+    refreshButton.classList.add("spinning");
+    refreshButton.disabled = true;
+
+    try {
+      // Clear all caches
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+    } catch (err) {
+      console.error("Cache clear error:", err);
+    }
+
+    // Hard refresh page with cache-busting parameter
+    const timestamp = Date.now();
+    window.location.href = window.location.pathname + "?refresh=" + timestamp;
+  });
+}
+
 (async () => {
   try {
     await loadRemoteStateInto(state);
