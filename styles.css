@@ -2194,12 +2194,9 @@ details.ai-section-recs {
 }
 
 .refresh-circle-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 0;
   width: 2.4rem;
   height: 2.4rem;
+  flex-shrink: 0;
   border-radius: 50%;
   border: 1.5px solid rgba(184,115,51,0.3);
   background: rgba(184,115,51,0.12);
@@ -2210,17 +2207,16 @@ details.ai-section-recs {
   justify-content: center;
   transition: all 200ms ease;
   padding: 0;
-  flex-shrink: 0;
 }
 
 .refresh-circle-btn:hover {
   background: rgba(184,115,51,0.22);
   border-color: rgba(184,115,51,0.5);
-  transform: translateY(-50%) scale(1.1);
+  transform: scale(1.1);
 }
 
 .refresh-circle-btn:active {
-  transform: translateY(-50%) scale(0.95);
+  transform: scale(0.95);
 }
 
 .refresh-circle-btn svg {
