@@ -82,15 +82,16 @@ function updateMgPreview() {
 // ── Serum Level Chart ────────────────────────────────────────────────
 function getRangeMs() {
   const now = Date.now();
-  if (currentRange === "week") return { start: now - 7 * DAY_MS, end: now };
-  if (currentRange === "month") return { start: now - 30 * DAY_MS, end: now };
-  return { start: now - 90 * DAY_MS, end: now };
+  const pastDays = currentRange === "week" ? 7 : currentRange === "month" ? 30 : 90;
+  const pastMs = pastDays * DAY_MS;
+  const futureMs = pastMs * 0.15;
+  return { start: now - pastMs, end: now + futureMs, now };
 }
 
 function renderSerumChart() {
   if (!els.trtSerumChart) return;
-  const { start, end } = getRangeMs();
-  const series = getTrtSerumLevelSeries(state, start, end, 120);
+  const { start, end, now } = getRangeMs();
+  const series = getTrtSerumLevelSeries(state, start, end, 140);
   const width = 400;
   const chartTop = 10;
   const chartBottom = 220;
@@ -132,17 +133,41 @@ function renderSerumChart() {
     yTicks.push(`<line x1="${chartLeft}" y1="${y}" x2="${chartRight}" y2="${y}" stroke="rgba(90,72,56,0.08)" stroke-width="0.5" />`);
   }
 
-  // Plot the serum curve
+  // Plot the serum curve — split into past (green) and future (gray)
   let points = "";
   let area = "";
+  const nowX = chartLeft + ((now - start) / (end - start)) * chartWidth;
   if (series.length > 0) {
-    const pts = series.map((item) => {
-      const x = chartLeft + ((item.timestamp - start) / (end - start)) * chartWidth;
-      const y = chartBottom - (Math.min(item.level, maxLevel) / maxLevel) * chartHeight;
-      return `${x},${y}`;
-    }).join(" ");
-    points = `<polyline points="${pts}" fill="none" stroke="#2d9d78" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`;
-    area = `<polygon points="${chartLeft},${chartBottom} ${pts} ${chartRight},${chartBottom}" fill="url(#trtSerumGrad)" />`;
+    const mapped = series.map((item) => ({
+      x: chartLeft + ((item.timestamp - start) / (end - start)) * chartWidth,
+      y: chartBottom - (Math.min(item.level, maxLevel) / maxLevel) * chartHeight,
+      ts: item.timestamp,
+    }));
+
+    // Find the boundary point at "now" by interpolation
+    const pastPts = mapped.filter((p) => p.ts <= now);
+    const futurePts = mapped.filter((p) => p.ts > now);
+
+    // Build past line (green)
+    if (pastPts.length > 0) {
+      // Add interpolated "now" point if future data exists
+      const pastWithNow = [...pastPts];
+      if (futurePts.length > 0) {
+        pastWithNow.push({ x: nowX, y: futurePts[0].y, ts: now });
+      }
+      const ptsStr = pastWithNow.map((p) => `${p.x},${p.y}`).join(" ");
+      points += `<polyline points="${ptsStr}" fill="none" stroke="#2d9d78" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`;
+      const lastPastX = pastWithNow[pastWithNow.length - 1].x;
+      area += `<polygon points="${chartLeft},${chartBottom} ${ptsStr} ${lastPastX},${chartBottom}" fill="url(#trtSerumGrad)" />`;
+    }
+
+    // Build future line (gray)
+    if (futurePts.length > 0) {
+      const futureWithNow = [{ x: nowX, y: futurePts[0].y, ts: now }, ...futurePts];
+      const ptsStr = futureWithNow.map((p) => `${p.x},${p.y}`).join(" ");
+      points += `<polyline points="${ptsStr}" fill="none" stroke="rgba(120,120,120,0.6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" />`;
+      area += `<polygon points="${nowX},${chartBottom} ${ptsStr} ${chartRight},${chartBottom}" fill="url(#trtSerumGradFuture)" />`;
+    }
   }
 
   // Dose markers
@@ -177,6 +202,10 @@ function renderSerumChart() {
         <stop offset="0%" stop-color="rgba(45,157,120,0.28)" />
         <stop offset="100%" stop-color="rgba(45,157,120,0.03)" />
       </linearGradient>
+      <linearGradient id="trtSerumGradFuture" x1="0%" x2="0%" y1="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(120,120,120,0.15)" />
+        <stop offset="100%" stop-color="rgba(120,120,120,0.02)" />
+      </linearGradient>
     </defs>
     <line x1="${chartLeft}" y1="${chartBottom}" x2="${chartRight}" y2="${chartBottom}" stroke="rgba(90,72,56,0.15)" stroke-width="1.4" />
     ${bands}
@@ -185,15 +214,18 @@ function renderSerumChart() {
     ${doseMarkers}
     ${area}
     ${points}
+    <line x1="${nowX}" y1="${chartTop}" x2="${nowX}" y2="${chartBottom}" stroke="rgba(90,72,56,0.25)" stroke-width="1" stroke-dasharray="4 3" />
     ${xTickMarks}
     ${xTickLabels}
   `;
 
 
   // Legend
-  const currentLevel = series.length ? series[series.length - 1].level : 0;
-  const peakLevel = Math.max(...series.map((s) => s.level), 0);
-  const troughLevel = series.length ? Math.min(...series.filter((s) => s.level > 0).map((s) => s.level)) : 0;
+  // "Current" = level at now, not at end of future projection
+  const pastSeries = series.filter((s) => s.timestamp <= now);
+  const currentLevel = pastSeries.length ? pastSeries[pastSeries.length - 1].level : 0;
+  const peakLevel = Math.max(...pastSeries.map((s) => s.level), 0);
+  const troughLevel = pastSeries.length ? Math.min(...pastSeries.filter((s) => s.level > 0).map((s) => s.level)) : 0;
   if (els.trtSerumLegend) {
     const parts = [`Current: ${currentLevel.toFixed(0)} mg`];
     if (peakLevel > 0) parts.push(`peak: ${peakLevel.toFixed(0)} mg`);
@@ -206,7 +238,7 @@ function getSerumXTicks(startMs, endMs) {
   const range = endMs - startMs;
   const ticks = [];
 
-  if (range <= 8 * DAY_MS) {
+  if (range <= 10 * DAY_MS) {
     // Week view: daily ticks
     const cursor = new Date(startMs);
     cursor.setHours(0, 0, 0, 0);
@@ -219,7 +251,7 @@ function getSerumXTicks(startMs, endMs) {
       }
       cursor.setDate(cursor.getDate() + 1);
     }
-  } else if (range <= 35 * DAY_MS) {
+  } else if (range <= 40 * DAY_MS) {
     // Month view: weekly ticks
     const cursor = new Date(startMs);
     cursor.setHours(0, 0, 0, 0);
