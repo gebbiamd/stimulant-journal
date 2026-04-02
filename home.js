@@ -522,7 +522,8 @@ function updateEntryTypeUi() {
   }
   if (els.doseMgHint) els.doseMgHint.style.display = "none"; // mg hint removed from form
   const noteField = document.querySelector(".entry-note-field");
-  if (noteField) noteField.classList.toggle("hidden", currentEntryType !== "note");
+  const showNote = currentEntryType === "note" || currentEntryType === "refill" || currentEntryType === "adjustment";
+  if (noteField) noteField.classList.toggle("hidden", !showNote);
   const signToggle = document.querySelector("#adjustSignToggle");
   if (signToggle) signToggle.classList.toggle("hidden", currentEntryType !== "adjustment");
 }
@@ -986,12 +987,20 @@ els.doseForm.addEventListener("submit", (event) => {
   let message;
   if (currentEntryType === "refill") {
     const count = Number.isFinite(tabletCount) && tabletCount > 0 ? tabletCount : 0;
-    if (!count && !note) { setBusy(submitButton, "Saving...", false); return; }
+    if (!count) {
+      setNotice("Enter the number of tablets received.", "error");
+      setBusy(submitButton, "Saving...", false);
+      return;
+    }
     saveRefillEntry(state, count, timestamp, note);
     message = `Rx pickup logged · ${count} tablets.`;
   } else if (currentEntryType === "adjustment") {
     const count = Number.isFinite(tabletCount) && tabletCount > 0 ? tabletCount : 0;
-    if (!count) { setBusy(submitButton, "Saving...", false); return; }
+    if (!count) {
+      setNotice("Enter the number of tablets to adjust.", "error");
+      setBusy(submitButton, "Saving...", false);
+      return;
+    }
     saveAdjustmentEntry(state, count * adjustmentSign, timestamp, note);
     message = adjustmentSign > 0
       ? `Added ${count} tablet${count !== 1 ? "s" : ""} to supply.`
