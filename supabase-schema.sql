@@ -3,12 +3,17 @@ create extension if not exists pgcrypto;
 create table if not exists public.journal_entries (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  type text not null check (type in ('dose', 'note')),
+  type text not null check (type in ('dose', 'note', 'refill', 'adjustment', 'trt-dose', 'trt-restock', 'trt-adjustment')),
   timestamp timestamptz not null,
   amount numeric,
   tablet_count numeric,
   mg_per_tablet numeric,
   note text not null default '',
+  compound_id text,
+  compound_name text,
+  ml numeric,
+  half_life_hours numeric,
+  vials numeric,
   created_at timestamptz not null default now()
 );
 
@@ -28,6 +33,10 @@ create table if not exists public.user_settings (
   openai_relay_url text not null default '',
   openai_model text not null default 'gpt-5.4',
   oura_client_id text not null default '',
+  trt_compounds text not null default '[]',
+  trt_stock_ml numeric not null default 0,
+  trt_stock_vials numeric not null default 0,
+  trt_refill_threshold_ml numeric not null default 2,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

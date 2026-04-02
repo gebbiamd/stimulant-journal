@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#efe1c7" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="./manifest.webmanifest?v=72" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
+    <link rel="stylesheet" href="./styles.css?v=90" />
+    <title>TRT | Stimulant Journal</title>
+  </head>
+  <body data-page="trt">
+    <div class="background">
+      <div class="orb orb-one"></div>
+      <div class="orb orb-two"></div>
+      <div class="grid"></div>
+    </div>
+
+    <main class="app-shell">
+
+      <!-- Serum Level Chart -->
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Serum Level</p>
+            <h2>📈 Testosterone level</h2>
+          </div>
+        </div>
+        <svg id="trtSerumChart" class="trt-serum-chart" viewBox="0 0 440 240" aria-label="Testosterone serum level chart"></svg>
+        <div class="trt-range-toggle" id="trtRangeToggle">
+          <button class="trt-range-btn active" data-range="week" type="button">Week</button>
+          <button class="trt-range-btn" data-range="month" type="button">Month</button>
+          <button class="trt-range-btn" data-range="3month" type="button">3 Months</button>
+        </div>
+        <div id="trtSerumLegend" class="trend-legend"></div>
+      </section>
+
+      <!-- Dose Entry -->
+      <section class="card entry-card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Log</p>
+            <h2>💉 Log injection</h2>
+          </div>
+        </div>
+        <form id="trtDoseForm" class="stack-form compact-settings-form" novalidate>
+          <div class="trt-dose-row">
+            <label class="trt-dose-compound">
+              Compound
+              <select id="trtCompoundSelect" class="entry-input"></select>
+            </label>
+            <label class="trt-dose-ml">
+              mL
+              <input id="trtMlInput" name="trtMl" type="number" inputmode="decimal" min="0" step="0.05" placeholder="0.00" />
+            </label>
+            <div id="trtMgPreview" class="trt-mg-preview">= 0 mg</div>
+          </div>
+          <label class="entry-note-field">
+            Note
+            <textarea id="trtDoseNote" rows="2" maxlength="500" placeholder="Optional note"></textarea>
+          </label>
+          <label class="use-current-time-row">
+            <input type="checkbox" id="trtUseCurrentTime" checked />
+            Use current time
+          </label>
+          <label class="entry-field hidden" id="trtDateTimeField">
+            Date/time
+            <input id="trtDoseTime" type="datetime-local" />
+          </label>
+          <div class="entry-submit-row">
+            <button class="primary-button" type="submit">Save Injection</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Stock Tracking -->
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Inventory</p>
+            <h2>📦 Stock on hand</h2>
+          </div>
+        </div>
+        <div class="trt-stock-display">
+          <div class="trt-stock-metric">
+            <strong id="trtStockMlDisplay">0</strong>
+            <span>mL remaining</span>
+          </div>
+          <div class="trt-stock-metric">
+            <strong id="trtStockVialsDisplay">0</strong>
+            <span>vials</span>
+          </div>
+          <div id="trtRefillAlert" class="trt-refill-alert hidden">
+            ⚠️ Stock is low — time to reorder
+          </div>
+        </div>
+        <div class="trt-stock-actions">
+          <button id="trtRestockBtn" class="ghost-button" type="button">+ Restock</button>
+          <button id="trtAdjustBtn" class="ghost-button" type="button">± Adjust</button>
+        </div>
+        <form id="trtRestockForm" class="stack-form compact-settings-form hidden" novalidate>
+          <label>mL received<input id="trtRestockMl" type="number" min="0" step="0.1" placeholder="10" /></label>
+          <label>Vials received<input id="trtRestockVials" type="number" min="0" step="1" placeholder="1" /></label>
+          <div class="entry-submit-row">
+            <button class="primary-button" type="submit">Save Restock</button>
+          </div>
+        </form>
+        <form id="trtAdjustForm" class="stack-form compact-settings-form hidden" novalidate>
+          <label>Adjust mL (negative to subtract)<input id="trtAdjustMl" type="number" step="0.1" placeholder="-0.5" /></label>
+          <div class="entry-submit-row">
+            <button class="primary-button" type="submit">Save Adjustment</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Recent Injections -->
+      <section class="card recent-card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Recent</p>
+            <h2>🧾 Injection history</h2>
+          </div>
+        </div>
+        <div id="trtRecentEmpty" class="empty-state">No injections logged yet.</div>
+        <div id="trtRecentList" class="recent-table">
+          <div class="recent-table-head trt-recent-row" aria-hidden="true">
+            <span>Date / time</span>
+            <span>Compound</span>
+            <span>Dose</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <nav class="tab-bar" aria-label="Primary">
+      <a class="tab-link" href="./index.html">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M4 10.75 12 4l8 6.75V20a1 1 0 0 1-1 1h-4.75v-6h-4.5v6H5a1 1 0 0 1-1-1z"></path>
+          </svg>
+        </span>
+        <span class="tab-label">Home</span>
+      </a>
+      <a class="tab-link is-active" href="./trt.html" aria-current="page">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M19.5 4.5L18 3l-1.5 1.5L15 3l-4 4 1.5 1.5-7 7-2 5 5-2 7-7L16 13l4-4-1.5-1.5L20 6z"/>
+            <path d="M2 22l3-3"/>
+          </svg>
+        </span>
+        <span class="tab-label">TRT</span>
+      </a>
+      <a class="tab-link" href="./summary.html">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 10v6"></path>
+            <circle cx="12" cy="7.2" r="1"></circle>
+          </svg>
+        </span>
+        <span class="tab-label">More Info</span>
+      </a>
+      <a class="tab-link" href="./settings.html">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </span>
+        <span class="tab-label">Settings</span>
+      </a>
+      <a class="tab-link" href="./index.html#connections" aria-label="Connections">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+        </span>
+        <span class="tab-label">Connect</span>
+      </a>
+    </nav>
+
+    <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./journal-core.js?v=88"></script>
+    <script src="./trt.js?v=1"></script>
+  </body>
+</html>

@@ -27,6 +27,13 @@ const defaultState = {
     lastRefillDate: "",
     refillIntervalDays: 30,
     refillRequestLeadDays: 7,
+    trtCompounds: [
+      { id: "test-cyp", name: "Testosterone Cypionate", halfLifeHours: 192, mgPerMl: 200 },
+      { id: "test-enan", name: "Testosterone Enanthate", halfLifeHours: 108, mgPerMl: 250 },
+    ],
+    trtStockMl: 0,
+    trtStockVials: 0,
+    trtRefillThresholdMl: 2,
   },
   integrations: {
     oura: {
@@ -87,6 +94,38 @@ function normalizeEntry(entry) {
       type: "adjustment",
       tabletCount: Number(entry.tabletCount ?? entry.tablet_count) || 0,
       timestamp,
+      note: String(entry.note || "").trim(),
+    };
+  }
+  if (entry.type === "trt-dose") {
+    return {
+      id: entry.id || crypto.randomUUID(),
+      type: "trt-dose",
+      timestamp,
+      compoundId: entry.compoundId ?? entry.compound_id ?? "",
+      compoundName: entry.compoundName ?? entry.compound_name ?? "",
+      ml: Number(entry.ml) || 0,
+      mg: Number(entry.mg) || 0,
+      halfLifeHours: Number(entry.halfLifeHours ?? entry.half_life_hours) || 0,
+      note: String(entry.note || "").trim(),
+    };
+  }
+  if (entry.type === "trt-restock") {
+    return {
+      id: entry.id || crypto.randomUUID(),
+      type: "trt-restock",
+      timestamp,
+      ml: Number(entry.ml) || 0,
+      vials: Number(entry.vials) || 0,
+      note: String(entry.note || "").trim(),
+    };
+  }
+  if (entry.type === "trt-adjustment") {
+    return {
+      id: entry.id || crypto.randomUUID(),
+      type: "trt-adjustment",
+      timestamp,
+      ml: Number(entry.ml) || 0,
       note: String(entry.note || "").trim(),
     };
   }
@@ -302,6 +341,12 @@ async function loadRemoteStateInto(state) {
       openAiRelayUrl: settingsRows.openai_relay_url ?? defaultState.settings.openAiRelayUrl,
       openAiModel: settingsRows.openai_model ?? defaultState.settings.openAiModel,
       ouraClientId: settingsRows.oura_client_id ?? defaultState.settings.ouraClientId,
+      trtCompounds: (() => {
+        try { return JSON.parse(settingsRows.trt_compounds || "[]"); } catch { return defaultState.settings.trtCompounds; }
+      })(),
+      trtStockMl: Number(settingsRows.trt_stock_ml ?? defaultState.settings.trtStockMl),
+      trtStockVials: Number(settingsRows.trt_stock_vials ?? defaultState.settings.trtStockVials),
+      trtRefillThresholdMl: Number(settingsRows.trt_refill_threshold_ml ?? defaultState.settings.trtRefillThresholdMl),
     };
   }
 
@@ -316,6 +361,11 @@ async function loadRemoteStateInto(state) {
           tabletCount: row.tablet_count,
           mgPerTablet: row.mg_per_tablet,
           note: row.note,
+          compoundId: row.compound_id,
+          compoundName: row.compound_name,
+          ml: row.ml,
+          halfLifeHours: row.half_life_hours,
+          vials: row.vials,
         })
       )
       .filter(Boolean)
@@ -338,10 +388,15 @@ async function loadRemoteStateInto(state) {
             user_id: user.id,
             type: entry.type,
             timestamp: entry.timestamp,
-            amount: entry.type === "dose" ? entry.amount : null,
+            amount: entry.type === "dose" ? entry.amount : (entry.type === "trt-dose" ? entry.mg : null),
             tablet_count: (entry.type === "dose" || entry.type === "refill" || entry.type === "adjustment") ? entry.tabletCount : null,
             mg_per_tablet: entry.type === "dose" ? entry.mgPerTablet : null,
             note: entry.note || null,
+            compound_id: entry.compoundId || null,
+            compound_name: entry.compoundName || null,
+            ml: entry.ml ?? null,
+            half_life_hours: entry.halfLifeHours ?? null,
+            vials: entry.vials ?? null,
           };
           await localClient.from("journal_entries").upsert(entryPayload, { onConflict: "id", ignoreDuplicates: false });
         }
@@ -402,6 +457,10 @@ async function syncStateToSupabase(state) {
     openai_relay_url: state.settings.openAiRelayUrl,
     openai_model: state.settings.openAiModel,
     oura_client_id: state.settings.ouraClientId,
+    trt_compounds: JSON.stringify(state.settings.trtCompounds || []),
+    trt_stock_ml: state.settings.trtStockMl || 0,
+    trt_stock_vials: state.settings.trtStockVials || 0,
+    trt_refill_threshold_ml: state.settings.trtRefillThresholdMl || 2,
   };
 
   const entryPayload = state.entries.map((entry) => ({
@@ -409,10 +468,15 @@ async function syncStateToSupabase(state) {
     user_id: user.id,
     type: entry.type,
     timestamp: entry.timestamp,
-    amount: entry.type === "dose" ? entry.amount : null,
+    amount: entry.type === "dose" ? entry.amount : (entry.type === "trt-dose" ? entry.mg : null),
     tablet_count: (entry.type === "dose" || entry.type === "refill" || entry.type === "adjustment") ? entry.tabletCount : null,
     mg_per_tablet: entry.type === "dose" ? entry.mgPerTablet : null,
     note: entry.note || "",
+    compound_id: entry.compoundId || null,
+    compound_name: entry.compoundName || null,
+    ml: entry.ml ?? null,
+    half_life_hours: entry.halfLifeHours ?? null,
+    vials: entry.vials ?? null,
   }));
 
   const { error: settingsError } = await client.from("user_settings").upsert(settingsPayload, { onConflict: "user_id" });
@@ -840,6 +904,111 @@ function saveAdjustmentEntry(state, tabletCount, timestamp, note) {
   persistState(state);
   queueRemoteSync(state);
 }
+
+function saveTrtDoseEntry(state, compoundId, compoundName, ml, mg, halfLifeHours, timestamp, note) {
+  state.entries.push({
+    id: crypto.randomUUID(),
+    type: "trt-dose",
+    compoundId,
+    compoundName,
+    ml: Number(ml),
+    mg: Number(mg),
+    halfLifeHours: Number(halfLifeHours),
+    timestamp: parseTimestamp(timestamp),
+    note: String(note || "").trim(),
+  });
+  // Deduct from stock
+  state.settings.trtStockMl = Math.max((state.settings.trtStockMl || 0) - Number(ml), 0);
+  state.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  persistState(state);
+  queueRemoteSync(state);
+}
+
+function saveTrtRestockEntry(state, ml, vials, timestamp, note) {
+  state.entries.push({
+    id: crypto.randomUUID(),
+    type: "trt-restock",
+    ml: Number(ml),
+    vials: Number(vials),
+    timestamp: parseTimestamp(timestamp),
+    note: String(note || "").trim(),
+  });
+  state.settings.trtStockMl = (state.settings.trtStockMl || 0) + Number(ml);
+  state.settings.trtStockVials = (state.settings.trtStockVials || 0) + Number(vials);
+  state.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  persistState(state);
+  queueRemoteSync(state);
+}
+
+function saveTrtAdjustmentEntry(state, ml, timestamp, note) {
+  state.entries.push({
+    id: crypto.randomUUID(),
+    type: "trt-adjustment",
+    ml: Number(ml),
+    timestamp: parseTimestamp(timestamp),
+    note: String(note || "").trim(),
+  });
+  state.settings.trtStockMl = Math.max((state.settings.trtStockMl || 0) + Number(ml), 0);
+  state.entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  persistState(state);
+  queueRemoteSync(state);
+}
+
+function getTrtDoseEntries(state) {
+  return state.entries.filter((e) => e.type === "trt-dose");
+}
+
+function getTrtSerumLevelSeries(state, startMs, endMs, points = 100) {
+  const trtDoses = getTrtDoseEntries(state).filter((entry) => {
+    const doseTime = new Date(entry.timestamp).getTime();
+    // Include doses from up to 6 half-lives before the window
+    const maxHalfLife = Number(entry.halfLifeHours) || 192;
+    return doseTime >= startMs - 6 * maxHalfLife * 60 * 60 * 1000 && doseTime <= endMs;
+  });
+  const series = [];
+
+  for (let i = 0; i < points; i++) {
+    const timestamp = startMs + (i / (points - 1)) * (endMs - startMs);
+    let level = 0;
+    for (const dose of trtDoses) {
+      const doseTime = new Date(dose.timestamp).getTime();
+      if (doseTime > timestamp) continue;
+      const halfLife = Number(dose.halfLifeHours) || 192;
+      const decayConstant = Math.log(2) / Math.max(halfLife, 0.1);
+      const elapsedHours = (timestamp - doseTime) / (60 * 60 * 1000);
+      level += Number(dose.mg) * Math.exp(-decayConstant * elapsedHours);
+    }
+    series.push({ timestamp, level });
+  }
+
+  return series;
+}
+
+function getTrtStockStatus(state) {
+  const ml = state.settings.trtStockMl || 0;
+  const vials = state.settings.trtStockVials || 0;
+  const threshold = state.settings.trtRefillThresholdMl || 2;
+  const needsRefill = ml <= threshold;
+  return { ml, vials, threshold, needsRefill };
+}
+
+// Color zone for TRT serum levels (mg active in body)
+function getTrtSerumZone(level) {
+  if (level <= 0) return { zone: "none", color: "transparent" };
+  if (level <= 200) return { zone: "low", color: "rgba(39,130,255,0.25)" };       // blue
+  if (level <= 400) return { zone: "optimal", color: "rgba(45,157,120,0.25)" };    // green
+  if (level <= 600) return { zone: "high", color: "rgba(245,158,11,0.20)" };       // yellow
+  if (level <= 800) return { zone: "elevated", color: "rgba(249,115,22,0.25)" };   // orange
+  return { zone: "supra", color: "rgba(239,91,114,0.25)" };                        // red
+}
+
+const TRT_SERUM_BANDS = [
+  { min: 0,   max: 200, color: "rgba(39,130,255,0.18)",    label: "Low",      textColor: "#2782ff" },
+  { min: 200, max: 400, color: "rgba(45,157,120,0.18)",    label: "Optimal",  textColor: "#2d9d78" },
+  { min: 400, max: 600, color: "rgba(245,158,11,0.15)",    label: "High",     textColor: "#f59e0b" },
+  { min: 600, max: 800, color: "rgba(249,115,22,0.18)",    label: "Elevated", textColor: "#f97316" },
+  { min: 800, max: Infinity, color: "rgba(239,91,114,0.18)", label: "Supra",  textColor: "#ef5b72" },
+];
 
 function deleteEntry(state, id) {
   state.entries = state.entries.filter((entry) => entry.id !== id);

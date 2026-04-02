@@ -38,6 +38,12 @@ const els = {
   openAiStatus: document.querySelector("#openAiStatus"),
   ouraConnectButton: document.querySelector("#ouraConnectButton"),
   ouraDisconnectButton: document.querySelector("#ouraDisconnectButton"),
+  trtCompoundList: document.querySelector("#trtCompoundList"),
+  addTrtCompound: document.querySelector("#addTrtCompound"),
+  saveTrtSettings: document.querySelector("#saveTrtSettings"),
+  trtStockMl: document.querySelector("#trtStockMl"),
+  trtStockVials: document.querySelector("#trtStockVials"),
+  trtRefillThresholdMl: document.querySelector("#trtRefillThresholdMl"),
 };
 
 let ouraConnectionStatus = { connected: false, checked: false, error: "" };
@@ -108,6 +114,7 @@ function hydrate() {
     els.openAiStatus.textContent = state.settings.openAiRelayUrl ? "Relay configured" : "Relay not configured";
   }
   renderEntryEditor();
+  renderTrtCompounds();
 }
 
 async function refreshOuraConnectionStatus() {
@@ -294,6 +301,72 @@ function saveEntryFromRow(button) {
   saveStateAndSync("Entry updated.");
 }
 
+// ── TRT compound editor ──────────────────────────────────────────────
+function renderTrtCompounds() {
+  if (!els.trtCompoundList) return;
+  const compounds = state.settings.trtCompounds || [];
+  els.trtCompoundList.innerHTML = "";
+  if (els.trtStockMl) els.trtStockMl.value = state.settings.trtStockMl || 0;
+  if (els.trtStockVials) els.trtStockVials.value = state.settings.trtStockVials || 0;
+  if (els.trtRefillThresholdMl) els.trtRefillThresholdMl.value = state.settings.trtRefillThresholdMl || 2;
+
+  for (const compound of compounds) {
+    const row = document.createElement("div");
+    row.className = "trt-compound-row";
+    row.innerHTML = `
+      <div class="trt-compound-fields">
+        <label>Name<input class="entry-input" data-field="name" type="text" value="${compound.name}" /></label>
+        <label>Half-life (hours)<input class="entry-input" data-field="halfLifeHours" type="number" min="1" step="1" value="${compound.halfLifeHours}" /></label>
+        <label>mg/mL<input class="entry-input" data-field="mgPerMl" type="number" min="1" step="1" value="${compound.mgPerMl}" /></label>
+      </div>
+      <button class="delete-button entry-icon-button trt-delete-compound" type="button" data-id="${compound.id}" aria-label="Delete compound" title="Delete">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M8 7l1 12h6l1-12"></path></svg>
+      </button>
+    `;
+    els.trtCompoundList.appendChild(row);
+  }
+}
+
+function collectTrtCompounds() {
+  if (!els.trtCompoundList) return state.settings.trtCompounds || [];
+  const rows = els.trtCompoundList.querySelectorAll(".trt-compound-row");
+  const compounds = [];
+  for (const row of rows) {
+    const name = row.querySelector('[data-field="name"]').value.trim();
+    const halfLifeHours = Number(row.querySelector('[data-field="halfLifeHours"]').value) || 192;
+    const mgPerMl = Number(row.querySelector('[data-field="mgPerMl"]').value) || 200;
+    const deleteBtn = row.querySelector(".trt-delete-compound");
+    const id = deleteBtn?.dataset.id || name.toLowerCase().replace(/\s+/g, "-");
+    if (name) compounds.push({ id, name, halfLifeHours, mgPerMl });
+  }
+  return compounds;
+}
+
+els.addTrtCompound?.addEventListener("click", () => {
+  const compounds = state.settings.trtCompounds || [];
+  compounds.push({ id: crypto.randomUUID(), name: "", halfLifeHours: 192, mgPerMl: 200 });
+  state.settings.trtCompounds = compounds;
+  renderTrtCompounds();
+});
+
+els.trtCompoundList?.addEventListener("click", (event) => {
+  const deleteBtn = event.target.closest(".trt-delete-compound");
+  if (!deleteBtn) return;
+  state.settings.trtCompounds = (state.settings.trtCompounds || []).filter((c) => c.id !== deleteBtn.dataset.id);
+  renderTrtCompounds();
+  setNotice("Compound removed.", "warning");
+});
+
+els.saveTrtSettings?.addEventListener("click", () => {
+  state.settings.trtCompounds = collectTrtCompounds();
+  state.settings.trtStockMl = Number(els.trtStockMl?.value) || 0;
+  state.settings.trtStockVials = Number(els.trtStockVials?.value) || 0;
+  state.settings.trtRefillThresholdMl = Number(els.trtRefillThresholdMl?.value) || 2;
+  persistState(state);
+  queueRemoteSync(state);
+  setNotice("TRT settings saved.", "success");
+});
+
 els.settingsForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   state.settings = {
@@ -316,6 +389,10 @@ els.settingsForm?.addEventListener("submit", (event) => {
     ouraClientId: els.ouraClientId?.value?.trim() ?? state.settings.ouraClientId ?? "",
     refillIntervalDays: Number.parseInt(els.refillIntervalDays.value, 10) || defaultState.settings.refillIntervalDays,
     refillRequestLeadDays: Number.parseInt(els.refillRequestLeadDays.value, 10) || defaultState.settings.refillRequestLeadDays,
+    trtCompounds: state.settings.trtCompounds || defaultState.settings.trtCompounds,
+    trtStockMl: state.settings.trtStockMl || 0,
+    trtStockVials: state.settings.trtStockVials || 0,
+    trtRefillThresholdMl: state.settings.trtRefillThresholdMl || 2,
   };
   persistState(state);
   queueRemoteSync(state);
