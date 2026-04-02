@@ -1042,6 +1042,7 @@ function getTrtSerumLevelSeries(state, startMs, endMs, points = 100) {
       }
 
       const ke = Math.log(2) / Math.max(Number(dose.halfLifeHours) || 192, 0.1);
+      const weeklyScale = ke * 168; // per-dose scale: converts mg-active to mg/week equivalent
       // Look up absorption half-life: from dose entry, or from compound settings
       let absHL = Number(dose.absorptionHalfLifeHours) || 0;
       if (!absHL) {
@@ -1050,17 +1051,14 @@ function getTrtSerumLevelSeries(state, startMs, endMs, points = 100) {
       }
 
       if (absHL > 0) {
-        // Two-compartment: level(t) = dose × (ka / (ka - ke)) × (e^(-ke·t) - e^(-ka·t))
         const ka = Math.log(2) / absHL;
         if (Math.abs(ka - ke) < 1e-6) {
-          // Edge case ka ≈ ke: L'Hôpital limit → dose × ke × t × e^(-ke·t)
-          level += mg * ke * elapsedHours * Math.exp(-ke * elapsedHours);
+          level += mg * ke * elapsedHours * Math.exp(-ke * elapsedHours) * weeklyScale;
         } else {
-          level += mg * (ka / (ka - ke)) * (Math.exp(-ke * elapsedHours) - Math.exp(-ka * elapsedHours));
+          level += mg * (ka / (ka - ke)) * (Math.exp(-ke * elapsedHours) - Math.exp(-ka * elapsedHours)) * weeklyScale;
         }
       } else {
-        // Fallback: simple exponential decay (no absorption data)
-        level += mg * Math.exp(-ke * elapsedHours);
+        level += mg * Math.exp(-ke * elapsedHours) * weeklyScale;
       }
     }
     series.push({ timestamp, level });
