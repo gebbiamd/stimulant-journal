@@ -2,6 +2,7 @@
 
 const STORAGE_KEY = "stimulant-journal-data-v2";
 const LEGACY_STORAGE_KEY = "stimulant-journal-data-v1";
+const DELETED_IDS_KEY = "stimulant-journal-deleted-ids";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SUPABASE_URL = "https://fuobbnjqvdltxcmczwft.supabase.co";
 const SUPABASE_ANON_KEY =
@@ -178,6 +179,24 @@ function loadState() {
 
 function persistState(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function getDeletedIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(DELETED_IDS_KEY) || "[]"));
+  } catch { return new Set(); }
+}
+
+function addDeletedId(id) {
+  const ids = getDeletedIds();
+  ids.add(id);
+  localStorage.setItem(DELETED_IDS_KEY, JSON.stringify([...ids]));
+}
+
+function removeDeletedId(id) {
+  const ids = getDeletedIds();
+  ids.delete(id);
+  localStorage.setItem(DELETED_IDS_KEY, JSON.stringify([...ids]));
 }
 
 function showToast(message, tone = "info") {
@@ -382,12 +401,30 @@ async function loadRemoteStateInto(state) {
       .filter(Boolean)
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+    // Filter out any entries the user has deleted locally (tombstone set).
+    // This prevents deleted entries from being resurrected by a sync that
+    // completes before the Supabase delete has landed.
+    const deletedIds = getDeletedIds();
+    remoteEntries = remoteEntries.filter((e) => !deletedIds.has(e.id));
+
+    // Also clean up Supabase for any tombstoned entries that came back from remote
+    if (deletedIds.size > 0) {
+      (async () => {
+        try {
+          const delClient = getSupabaseClient();
+          for (const id of deletedIds) {
+            await delClient.from("journal_entries").delete().eq("id", id).eq("user_id", user.id);
+          }
+        } catch { /* will retry next sync */ }
+      })();
+    }
+
     // Merge strategy: remote is the source of truth for entries that exist there,
     // but any local-only entries (e.g. saved just before this pull, or a failed
     // push) are rescued — added back into state and uploaded to Supabase so they
     // are never silently lost by a race between push and pull.
     const remoteIds = new Set(remoteEntries.map((e) => e.id));
-    const localOnlyEntries = state.entries.filter((e) => !remoteIds.has(e.id));
+    const localOnlyEntries = state.entries.filter((e) => !remoteIds.has(e.id) && !deletedIds.has(e.id));
 
     if (localOnlyEntries.length > 0) {
       // Upload the rescued entries so Supabase gets them
@@ -475,7 +512,9 @@ async function syncStateToSupabase(state) {
     trt_refill_threshold_ml: state.settings.trtRefillThresholdMl || 2,
   };
 
-  const entryPayload = state.entries.map((entry) => ({
+  // Never re-upload entries that are pending deletion
+  const deletedIds = getDeletedIds();
+  const entryPayload = state.entries.filter((e) => !deletedIds.has(e.id)).map((entry) => ({
     id: entry.id,
     user_id: user.id,
     type: entry.type,
@@ -1053,16 +1092,18 @@ const TRT_SERUM_BANDS = [
 
 function deleteEntry(state, id) {
   state.entries = state.entries.filter((entry) => entry.id !== id);
+  addDeletedId(id);
   persistState(state);
-  // Delete from Supabase so it doesn't reappear on next pull
+  // Delete from Supabase, then clear the tombstone so it stops being filtered
   (async () => {
     try {
       const client = getSupabaseClient();
       const user = await refreshAuthState(state);
       if (user) {
         await client.from("journal_entries").delete().eq("id", id).eq("user_id", user.id);
+        removeDeletedId(id);
       }
-    } catch { /* local delete still succeeded */ }
+    } catch { /* tombstone stays until Supabase delete succeeds */ }
   })();
 }
 
