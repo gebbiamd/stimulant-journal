@@ -252,6 +252,25 @@ async function loadRemoteStateInto(state) {
   const user = await refreshAuthState(state);
   if (!user) return state;
 
+  // Push local entries to Supabase BEFORE pulling, so entries saved just before
+  // navigation (and whose async sync was cancelled by the browser) are not lost.
+  // Upsert is idempotent — safe to run on every load.
+  if (state.entries.length > 0) {
+    try {
+      const pushPayload = state.entries.map((entry) => ({
+        id: entry.id,
+        user_id: user.id,
+        type: entry.type,
+        timestamp: entry.timestamp,
+        amount: entry.type === "dose" ? entry.amount : null,
+        tablet_count: (entry.type === "dose" || entry.type === "refill" || entry.type === "adjustment") ? entry.tabletCount : null,
+        mg_per_tablet: entry.type === "dose" ? entry.mgPerTablet : null,
+        note: entry.note || "",
+      }));
+      await client.from("journal_entries").upsert(pushPayload, { onConflict: "id" });
+    } catch { /* non-critical: pull still proceeds */ }
+  }
+
   const [
     { data: settingsRows, error: settingsError },
     { data: entryRows, error: entriesError },
