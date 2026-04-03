@@ -31,6 +31,7 @@ const els = {
   trtPlannerCompoundSelect: document.querySelector("#trtPlannerCompoundSelect"),
   trtPlannerMlInput: document.querySelector("#trtPlannerMlInput"),
   trtPlannerFreqDays: document.querySelector("#trtPlannerFreqDays"),
+  trtPlannerMaxDoses: document.querySelector("#trtPlannerMaxDoses"),
   trtPlannerScheduleList: document.querySelector("#trtPlannerScheduleList"),
 };
 
@@ -313,9 +314,11 @@ function generateFuturePlannerDoses(startMs, endMs) {
     const absorptionHalfLifeHours = comp ? (comp.absorptionHalfLifeHours || 0) : (sched.absorptionHalfLifeHours || 0);
     const mg = sched.ml * mgPerMl;
     const freqMs = sched.frequencyDays * DAY_MS;
-    // First future dose starts from now, stepping by frequency
+    const maxDoses = sched.maxDoses || 0;
     let t = now;
+    let count = 0;
     while (t <= endMs) {
+      if (maxDoses > 0 && count >= maxDoses) break;
       doses.push({
         timestamp: new Date(t).toISOString(),
         mg,
@@ -325,6 +328,7 @@ function generateFuturePlannerDoses(startMs, endMs) {
         compoundId: sched.compoundId,
         compoundName: sched.compoundName,
       });
+      count++;
       t += freqMs;
     }
   }
@@ -425,7 +429,7 @@ function renderPlannerChart() {
       const pastWithNow = [...pastPts];
       if (futurePts.length > 0) pastWithNow.push({ x: nowX, y: futurePts[0].y, ts: now });
       const ptsStr = pastWithNow.map((p) => `${p.x},${p.y}`).join(" ");
-      points += `<polyline points="${ptsStr}" fill="none" stroke="rgba(120,120,120,0.6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />`;
+      points += `<polyline points="${ptsStr}" fill="none" stroke="#2d9d78" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`;
       const lastPastX = pastWithNow[pastWithNow.length - 1].x;
       area += `<polygon points="${chartLeft},${chartBottom} ${ptsStr} ${lastPastX},${chartBottom}" fill="url(#plannerGradPast)" />`;
     }
@@ -433,7 +437,7 @@ function renderPlannerChart() {
     if (futurePts.length > 0) {
       const futureWithNow = [{ x: nowX, y: futurePts[0].y, ts: now }, ...futurePts];
       const ptsStr = futureWithNow.map((p) => `${p.x},${p.y}`).join(" ");
-      points += `<polyline points="${ptsStr}" fill="none" stroke="#7c5cbf" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`;
+      points += `<polyline points="${ptsStr}" fill="none" stroke="rgba(120,120,120,0.6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" />`;
       area += `<polygon points="${nowX},${chartBottom} ${ptsStr} ${chartRight},${chartBottom}" fill="url(#plannerGradFuture)" />`;
     }
   }
@@ -458,7 +462,7 @@ function renderPlannerChart() {
     .map((d) => {
       const t = new Date(d.timestamp).getTime();
       const x = chartLeft + ((t - start) / (end - start)) * chartWidth;
-      return `<line x1="${x}" y1="${chartTop}" x2="${x}" y2="${chartBottom}" stroke="rgba(124,92,191,0.5)" stroke-width="1.5" stroke-dasharray="3 4" />`;
+      return `<line x1="${x}" y1="${chartTop}" x2="${x}" y2="${chartBottom}" stroke="rgba(120,120,120,0.4)" stroke-width="1.5" stroke-dasharray="3 4" />`;
     })
     .join("");
   const doseMarkers = realDoseMarkers + futureDoseMarkers;
@@ -476,12 +480,12 @@ function renderPlannerChart() {
   els.trtPlannerChart.innerHTML = `
     <defs>
       <linearGradient id="plannerGradPast" x1="0%" x2="0%" y1="0%" y2="100%">
-        <stop offset="0%" stop-color="rgba(120,120,120,0.15)" />
-        <stop offset="100%" stop-color="rgba(120,120,120,0.02)" />
+        <stop offset="0%" stop-color="rgba(45,157,120,0.28)" />
+        <stop offset="100%" stop-color="rgba(45,157,120,0.03)" />
       </linearGradient>
       <linearGradient id="plannerGradFuture" x1="0%" x2="0%" y1="0%" y2="100%">
-        <stop offset="0%" stop-color="rgba(124,92,191,0.28)" />
-        <stop offset="100%" stop-color="rgba(124,92,191,0.03)" />
+        <stop offset="0%" stop-color="rgba(120,120,120,0.15)" />
+        <stop offset="100%" stop-color="rgba(120,120,120,0.02)" />
       </linearGradient>
     </defs>
     <line x1="${chartLeft}" y1="${chartBottom}" x2="${chartRight}" y2="${chartBottom}" stroke="rgba(90,72,56,0.15)" stroke-width="1.4" />
@@ -551,7 +555,7 @@ function renderPlannerScheduleList() {
     return `<div class="trt-planner-schedule-row" data-id="${sched.id}">
       <div class="trt-planner-schedule-info">
         <strong>${name}</strong>
-        <span>${sched.ml} mL (${mg} mg) every ${sched.frequencyDays} day${sched.frequencyDays === 1 ? "" : "s"}</span>
+        <span>${sched.ml} mL (${mg} mg) every ${sched.frequencyDays} day${sched.frequencyDays === 1 ? "" : "s"}${sched.maxDoses ? ` × ${sched.maxDoses} doses` : ""}</span>
       </div>
       <button class="ghost-button trt-planner-delete-btn" type="button" aria-label="Remove schedule">✕</button>
     </div>`;
@@ -696,6 +700,7 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
     return;
   }
   const comp = (state.settings.trtCompounds || []).find((c) => c.id === opt.value);
+  const maxDosesVal = Number(els.trtPlannerMaxDoses?.value) || 0;
   const schedule = {
     id: crypto.randomUUID(),
     compoundId: opt.value,
@@ -705,6 +710,7 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
     halfLifeHours: comp ? comp.halfLifeHours : 192,
     absorptionHalfLifeHours: comp ? (comp.absorptionHalfLifeHours || 0) : 0,
     frequencyDays: freqDays,
+    maxDoses: maxDosesVal > 0 ? maxDosesVal : 0,
     startTimestamp: Date.now(),
   };
   if (!state.settings.trtPlannerSchedules) state.settings.trtPlannerSchedules = [];
@@ -713,9 +719,10 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
   queueRemoteSync(state);
 
   if (els.trtPlannerMlInput) els.trtPlannerMlInput.value = "";
+  if (els.trtPlannerMaxDoses) els.trtPlannerMaxDoses.value = "";
   renderPlannerChart();
   renderPlannerScheduleList();
-  showToast(`Added: ${comp ? comp.name : "Compound"} ${ml} mL every ${freqDays}d`, "success");
+  showToast(`Added: ${comp ? comp.name : "Compound"} ${ml} mL every ${freqDays}d${maxDosesVal > 0 ? ` × ${maxDosesVal}` : ""}`, "success");
 });
 
 // Planner schedule delete (event delegation)

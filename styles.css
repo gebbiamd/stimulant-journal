@@ -2986,29 +2986,22 @@ details.ai-section-recs {
 
 .trt-planner-row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 0.75rem;
   align-items: end;
 }
 
-.trt-planner-ml {
-  width: 5rem;
+.trt-planner-row > label {
+  text-align: center;
 }
 
-.trt-planner-freq-row {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+.trt-planner-row input {
+  text-align: center;
 }
 
-.trt-planner-freq-row input {
-  width: 3.5rem;
-}
-
-.trt-planner-freq-row span {
-  font-size: 0.85rem;
-  color: var(--muted, #5a4838);
-  white-space: nowrap;
+.trt-planner-unit {
+  font-weight: 400;
+  opacity: 0.6;
 }
 
 .trt-planner-schedule-list {
