@@ -695,8 +695,8 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
     return;
   }
   const freqDays = Number(els.trtPlannerFreqDays?.value) || 3;
-  if (freqDays < 1) {
-    showToast("Frequency must be at least 1 day.", "error");
+  if (freqDays < 0.5) {
+    showToast("Frequency must be at least 0.5 days.", "error");
     return;
   }
   const comp = (state.settings.trtCompounds || []).find((c) => c.id === opt.value);
