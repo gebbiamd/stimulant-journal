@@ -555,7 +555,7 @@ function renderPlannerScheduleList() {
     return `<div class="trt-planner-schedule-row" data-id="${sched.id}">
       <div class="trt-planner-schedule-info">
         <strong>${name}</strong>
-        <span>${sched.ml} mL (${mg} mg) every ${sched.frequencyDays} day${sched.frequencyDays === 1 ? "" : "s"}${sched.maxDoses ? ` × ${sched.maxDoses} doses` : ""}</span>
+        <span>${sched.ml} mL (${mg} mg) every ${sched.frequencyDays} day${sched.frequencyDays === 1 ? "" : "s"}${sched.maxDoses ? ` × ${sched.maxDoses} dose${sched.maxDoses === 1 ? "" : "s"}` : ""}</span>
       </div>
       <button class="ghost-button trt-planner-delete-btn" type="button" aria-label="Remove schedule">✕</button>
     </div>`;
@@ -701,11 +701,7 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
   }
   const comp = (state.settings.trtCompounds || []).find((c) => c.id === opt.value);
   const maxDosesRaw = els.trtPlannerMaxDoses?.value?.trim();
-  const maxDosesVal = maxDosesRaw === "" ? 0 : Number(maxDosesRaw);
-  if (maxDosesRaw !== "" && maxDosesVal < 1) {
-    showToast("Repeat must be at least 1, or leave blank for indefinite.", "error");
-    return;
-  }
+  const repeatVal = maxDosesRaw === "" ? null : Math.max(0, Math.floor(Number(maxDosesRaw)));
   const schedule = {
     id: crypto.randomUUID(),
     compoundId: opt.value,
@@ -715,7 +711,7 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
     halfLifeHours: comp ? comp.halfLifeHours : 192,
     absorptionHalfLifeHours: comp ? (comp.absorptionHalfLifeHours || 0) : 0,
     frequencyDays: freqDays,
-    maxDoses: maxDosesVal,
+    maxDoses: repeatVal !== null ? repeatVal + 1 : 0,
     startTimestamp: Date.now(),
   };
   if (!state.settings.trtPlannerSchedules) state.settings.trtPlannerSchedules = [];
@@ -727,7 +723,7 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
   if (els.trtPlannerMaxDoses) els.trtPlannerMaxDoses.value = "";
   renderPlannerChart();
   renderPlannerScheduleList();
-  showToast(`Added: ${comp ? comp.name : "Compound"} ${ml} mL every ${freqDays}d${maxDosesVal > 0 ? ` × ${maxDosesVal}` : ""}`, "success");
+  showToast(`Added: ${comp ? comp.name : "Compound"} ${ml} mL every ${freqDays}d${repeatVal !== null ? ` (${repeatVal === 0 ? "once" : repeatVal + 1 + " doses"})` : ""}`, "success");
 });
 
 // Planner schedule delete (event delegation)
