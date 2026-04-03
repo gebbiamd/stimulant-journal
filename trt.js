@@ -700,7 +700,12 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
     return;
   }
   const comp = (state.settings.trtCompounds || []).find((c) => c.id === opt.value);
-  const maxDosesVal = Number(els.trtPlannerMaxDoses?.value) || 0;
+  const maxDosesRaw = els.trtPlannerMaxDoses?.value?.trim();
+  const maxDosesVal = maxDosesRaw === "" ? 0 : Number(maxDosesRaw);
+  if (maxDosesRaw !== "" && maxDosesVal < 1) {
+    showToast("Repeat must be at least 1, or leave blank for indefinite.", "error");
+    return;
+  }
   const schedule = {
     id: crypto.randomUUID(),
     compoundId: opt.value,
@@ -710,7 +715,7 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
     halfLifeHours: comp ? comp.halfLifeHours : 192,
     absorptionHalfLifeHours: comp ? (comp.absorptionHalfLifeHours || 0) : 0,
     frequencyDays: freqDays,
-    maxDoses: maxDosesVal > 0 ? maxDosesVal : 0,
+    maxDoses: maxDosesVal,
     startTimestamp: Date.now(),
   };
   if (!state.settings.trtPlannerSchedules) state.settings.trtPlannerSchedules = [];
