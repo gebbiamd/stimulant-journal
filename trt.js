@@ -551,9 +551,6 @@ function renderPlannerScheduleList() {
     return;
   }
   const compounds = state.settings.trtCompounds || [];
-  const compoundOptions = compounds.map((c) =>
-    `<option value="${c.id}" data-mg-per-ml="${c.mgPerMl}">${c.name} (${c.mgPerMl} mg/mL)</option>`
-  ).join("");
 
   els.trtPlannerScheduleList.innerHTML = schedules.map((sched) => {
     const comp = compounds.find((c) => c.id === sched.compoundId);
@@ -563,21 +560,20 @@ function renderPlannerScheduleList() {
     const isEditing = editingScheduleId === sched.id;
     const repeatDisplay = sched.maxDoses ? sched.maxDoses - 1 || "" : "";
 
-    let html = `<div class="trt-planner-schedule-row${isEditing ? " editing" : ""}" data-id="${sched.id}">
-      <div class="trt-planner-schedule-info">
-        <strong>${name}</strong>
-        <span>${sched.ml} mL (${mg} mg) every ${sched.frequencyDays} day${sched.frequencyDays === 1 ? "" : "s"}${sched.maxDoses ? ` × ${sched.maxDoses} dose${sched.maxDoses === 1 ? "" : "s"}` : ""}${sched.delayDays ? ` (${sched.delayDays}d delay)` : ""}</span>
-      </div>
-      <button class="ghost-button trt-planner-edit-btn" type="button" aria-label="Edit schedule">✎</button>
-      <button class="ghost-button trt-planner-delete-btn" type="button" aria-label="Remove schedule">✕</button>
-    </div>`;
+    let html = `<div class="trt-planner-schedule-item${isEditing ? " editing" : ""}" data-id="${sched.id}">
+      <div class="trt-planner-schedule-row">
+        <div class="trt-planner-schedule-info">
+          <strong>${name}</strong>
+          <span>${sched.ml} mL (${mg} mg) every ${sched.frequencyDays} day${sched.frequencyDays === 1 ? "" : "s"}${sched.maxDoses ? ` × ${sched.maxDoses} dose${sched.maxDoses === 1 ? "" : "s"}` : ""}${sched.delayDays ? ` (${sched.delayDays}d delay)` : ""}</span>
+        </div>
+        <div class="trt-planner-schedule-actions">
+          <button class="ghost-button trt-planner-edit-btn" type="button" aria-label="Edit schedule">✎</button>
+          <button class="ghost-button trt-planner-delete-btn" type="button" aria-label="Remove schedule">✕</button>
+        </div>
+      </div>`;
 
     if (isEditing) {
-      html += `<div class="trt-planner-inline-edit" data-id="${sched.id}">
-        <label>
-          Compound
-          <select class="entry-input inline-edit-compound">${compoundOptions}</select>
-        </label>
+      html += `<div class="trt-planner-inline-edit">
         <div class="trt-planner-row">
           <label class="trt-planner-ml-label">Dose<input class="inline-edit-ml" type="number" inputmode="decimal" min="0" step="0.05" value="${sched.ml}" /></label>
           <label class="trt-planner-freq-label">Frequency<input class="inline-edit-freq" type="number" inputmode="decimal" min="0.5" step="0.5" value="${sched.frequencyDays}" /></label>
@@ -590,15 +586,10 @@ function renderPlannerScheduleList() {
         </div>
       </div>`;
     }
+    html += `</div>`;
     return html;
   }).join("");
 
-  // Set the correct compound selected in any open inline edit
-  if (editingScheduleId) {
-    const sched = schedules.find((s) => s.id === editingScheduleId);
-    const select = els.trtPlannerScheduleList.querySelector(".inline-edit-compound");
-    if (sched && select) select.value = sched.compoundId;
-  }
 }
 
 // ── Stock display ────────────────────────────────────────────────────
@@ -772,7 +763,7 @@ els.trtPlannerScheduleList?.addEventListener("click", (event) => {
   // Edit button — toggle inline edit
   const editBtn = event.target.closest(".trt-planner-edit-btn");
   if (editBtn) {
-    const row = editBtn.closest(".trt-planner-schedule-row");
+    const row = editBtn.closest(".trt-planner-schedule-item");
     const id = row?.dataset.id;
     if (!id) return;
     editingScheduleId = editingScheduleId === id ? null : id;
@@ -783,12 +774,12 @@ els.trtPlannerScheduleList?.addEventListener("click", (event) => {
   // Inline save
   const saveBtn = event.target.closest(".inline-edit-save");
   if (saveBtn) {
-    const editDiv = saveBtn.closest(".trt-planner-inline-edit");
-    const id = editDiv?.dataset.id;
+    const item = saveBtn.closest(".trt-planner-schedule-item");
+    const editDiv = item?.querySelector(".trt-planner-inline-edit");
+    const id = item?.dataset.id;
     if (!id) return;
     const idx = (state.settings.trtPlannerSchedules || []).findIndex((s) => s.id === id);
     if (idx === -1) return;
-    const compSelect = editDiv.querySelector(".inline-edit-compound");
     const ml = Number(editDiv.querySelector(".inline-edit-ml")?.value);
     const freqDays = Number(editDiv.querySelector(".inline-edit-freq")?.value);
     const repeatRaw = editDiv.querySelector(".inline-edit-repeat")?.value?.trim();
@@ -796,17 +787,10 @@ els.trtPlannerScheduleList?.addEventListener("click", (event) => {
     const delayDays = Number(editDiv.querySelector(".inline-edit-delay")?.value) || 0;
     if (!ml || ml <= 0) { showToast("Enter the volume in mL.", "error"); return; }
     if (!freqDays || freqDays < 0.5) { showToast("Frequency must be at least 0.5 days.", "error"); return; }
-    const compId = compSelect?.value;
-    const comp = (state.settings.trtCompounds || []).find((c) => c.id === compId);
     const existing = state.settings.trtPlannerSchedules[idx];
     state.settings.trtPlannerSchedules[idx] = {
       ...existing,
-      compoundId: compId,
-      compoundName: comp ? comp.name : existing.compoundName,
       ml,
-      mgPerMl: comp ? comp.mgPerMl : 200,
-      halfLifeHours: comp ? comp.halfLifeHours : 192,
-      absorptionHalfLifeHours: comp ? (comp.absorptionHalfLifeHours || 0) : 0,
       frequencyDays: freqDays,
       maxDoses: repeatVal !== null ? repeatVal + 1 : 0,
       delayDays,
@@ -830,7 +814,7 @@ els.trtPlannerScheduleList?.addEventListener("click", (event) => {
   // Delete button
   const btn = event.target.closest(".trt-planner-delete-btn");
   if (!btn) return;
-  const row = btn.closest(".trt-planner-schedule-row");
+  const row = btn.closest(".trt-planner-schedule-item");
   const id = row?.dataset.id;
   if (!id) return;
   if (editingScheduleId === id) editingScheduleId = null;

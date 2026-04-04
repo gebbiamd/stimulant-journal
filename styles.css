@@ -3011,15 +3011,26 @@ details.ai-section-recs {
   margin-bottom: 0.75rem;
 }
 
+.trt-planner-schedule-item {
+  border-radius: 10px;
+  background: rgba(124,92,191,0.08);
+  border: 1px solid rgba(124,92,191,0.15);
+  overflow: hidden;
+}
+
 .trt-planner-schedule-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.6rem 0.75rem;
-  border-radius: 10px;
-  background: rgba(124,92,191,0.08);
-  border: 1px solid rgba(124,92,191,0.15);
+}
+
+.trt-planner-schedule-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  flex-shrink: 0;
 }
 
 .trt-planner-schedule-info {
@@ -3042,52 +3053,64 @@ details.ai-section-recs {
   color: var(--muted, #5a4838);
 }
 
-.trt-planner-schedule-row.editing {
+.trt-planner-schedule-item.editing {
   border-color: var(--orb-one, #b87333);
-  background: rgba(184,115,51,0.12);
-  border-radius: 10px 10px 0 0;
-  margin-bottom: 0;
+  background: rgba(184,115,51,0.06);
 }
 
 .trt-planner-inline-edit {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border: 1px solid var(--orb-one, #b87333);
-  border-top: none;
-  border-radius: 0 0 10px 10px;
-  background: rgba(184,115,51,0.06);
-  margin-bottom: 0.5rem;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem 0.5rem;
+  border-top: 1px solid rgba(184,115,51,0.18);
+}
+
+.trt-planner-inline-edit .trt-planner-row {
+  gap: 0.4rem;
+}
+
+.trt-planner-inline-edit label {
+  font-size: 0.7rem;
+}
+
+.trt-planner-inline-edit input {
+  padding: 0.3rem 0.25rem;
+  font-size: 0.8rem;
+  height: auto;
 }
 
 .trt-planner-inline-edit .entry-submit-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
 }
 
 .trt-planner-inline-edit .inline-edit-save,
 .trt-planner-inline-edit .inline-edit-cancel {
-  width: 100%;
-  padding: 0.55rem 1rem;
-  border-radius: 10px;
-  font-size: 0.9rem;
+  padding: 0.35rem 1rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
   font-weight: 600;
 }
 
 .trt-planner-inline-edit .inline-edit-cancel {
-  border: 1.5px solid rgba(124,92,191,0.25);
-  background: rgba(255,255,255,0.5);
+  border: 1.5px solid rgba(124,92,191,0.2);
+  background: rgba(255,255,255,0.45);
 }
 
 .trt-planner-edit-btn,
 .trt-planner-delete-btn {
-  padding: 0.25rem 0.5rem !important;
+  padding: 0.25rem 0.4rem !important;
   min-width: 0 !important;
   font-size: 0.85rem;
   line-height: 1;
-  opacity: 0.6;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.trt-planner-edit-btn {
+  margin-right: -0.25rem;
 }
 
 .trt-planner-delete-btn:hover {
