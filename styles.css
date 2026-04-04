@@ -3029,7 +3029,7 @@ details.ai-section-recs {
 .trt-planner-schedule-actions {
   display: flex;
   align-items: center;
-  gap: 0.1rem;
+  gap: 0.35rem;
   flex-shrink: 0;
 }
 
@@ -3109,9 +3109,6 @@ details.ai-section-recs {
   flex-shrink: 0;
 }
 
-.trt-planner-edit-btn {
-  margin-right: -0.25rem;
-}
 
 .trt-planner-delete-btn:hover {
   opacity: 1;
