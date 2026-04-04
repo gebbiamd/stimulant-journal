@@ -3042,6 +3042,46 @@ details.ai-section-recs {
   color: var(--muted, #5a4838);
 }
 
+.trt-planner-schedule-row.editing {
+  border-color: var(--orb-one, #b87333);
+  background: rgba(184,115,51,0.12);
+  border-radius: 10px 10px 0 0;
+  margin-bottom: 0;
+}
+
+.trt-planner-inline-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--orb-one, #b87333);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  background: rgba(184,115,51,0.06);
+  margin-bottom: 0.5rem;
+}
+
+.trt-planner-inline-edit .entry-submit-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.trt-planner-inline-edit .inline-edit-save,
+.trt-planner-inline-edit .inline-edit-cancel {
+  width: 100%;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.trt-planner-inline-edit .inline-edit-cancel {
+  border: 1.5px solid rgba(124,92,191,0.25);
+  background: rgba(255,255,255,0.5);
+}
+
+.trt-planner-edit-btn,
 .trt-planner-delete-btn {
   padding: 0.25rem 0.5rem !important;
   min-width: 0 !important;
