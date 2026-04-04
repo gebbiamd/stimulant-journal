@@ -32,6 +32,7 @@ const els = {
   trtPlannerMlInput: document.querySelector("#trtPlannerMlInput"),
   trtPlannerFreqDays: document.querySelector("#trtPlannerFreqDays"),
   trtPlannerMaxDoses: document.querySelector("#trtPlannerMaxDoses"),
+  trtPlannerDelayDays: document.querySelector("#trtPlannerDelayDays"),
   trtPlannerScheduleList: document.querySelector("#trtPlannerScheduleList"),
 };
 
@@ -315,7 +316,8 @@ function generateFuturePlannerDoses(startMs, endMs) {
     const mg = sched.ml * mgPerMl;
     const freqMs = sched.frequencyDays * DAY_MS;
     const maxDoses = sched.maxDoses || 0;
-    let t = now;
+    const schedStart = sched.startTimestamp || now;
+    let t = schedStart + (sched.delayDays || 0) * DAY_MS;
     let count = 0;
     while (t <= endMs) {
       if (maxDoses > 0 && count >= maxDoses) break;
@@ -555,7 +557,7 @@ function renderPlannerScheduleList() {
     return `<div class="trt-planner-schedule-row" data-id="${sched.id}">
       <div class="trt-planner-schedule-info">
         <strong>${name}</strong>
-        <span>${sched.ml} mL (${mg} mg) every ${sched.frequencyDays} day${sched.frequencyDays === 1 ? "" : "s"}${sched.maxDoses ? ` × ${sched.maxDoses} dose${sched.maxDoses === 1 ? "" : "s"}` : ""}</span>
+        <span>${sched.ml} mL (${mg} mg) every ${sched.frequencyDays} day${sched.frequencyDays === 1 ? "" : "s"}${sched.maxDoses ? ` × ${sched.maxDoses} dose${sched.maxDoses === 1 ? "" : "s"}` : ""}${sched.delayDays ? ` (${sched.delayDays}d delay)` : ""}</span>
       </div>
       <button class="ghost-button trt-planner-delete-btn" type="button" aria-label="Remove schedule">✕</button>
     </div>`;
@@ -702,6 +704,7 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
   const comp = (state.settings.trtCompounds || []).find((c) => c.id === opt.value);
   const maxDosesRaw = els.trtPlannerMaxDoses?.value?.trim();
   const repeatVal = maxDosesRaw === "" ? null : Math.max(0, Math.floor(Number(maxDosesRaw)));
+  const delayDays = Number(els.trtPlannerDelayDays?.value) || 0;
   const schedule = {
     id: crypto.randomUUID(),
     compoundId: opt.value,
@@ -712,6 +715,7 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
     absorptionHalfLifeHours: comp ? (comp.absorptionHalfLifeHours || 0) : 0,
     frequencyDays: freqDays,
     maxDoses: repeatVal !== null ? repeatVal + 1 : 0,
+    delayDays,
     startTimestamp: Date.now(),
   };
   if (!state.settings.trtPlannerSchedules) state.settings.trtPlannerSchedules = [];
@@ -721,9 +725,10 @@ els.trtPlannerForm?.addEventListener("submit", (event) => {
 
   if (els.trtPlannerMlInput) els.trtPlannerMlInput.value = "";
   if (els.trtPlannerMaxDoses) els.trtPlannerMaxDoses.value = "";
+  if (els.trtPlannerDelayDays) els.trtPlannerDelayDays.value = "";
   renderPlannerChart();
   renderPlannerScheduleList();
-  showToast(`Added: ${comp ? comp.name : "Compound"} ${ml} mL every ${freqDays}d${repeatVal !== null ? ` (${repeatVal === 0 ? "once" : repeatVal + 1 + " doses"})` : ""}`, "success");
+  showToast(`Added: ${comp ? comp.name : "Compound"} ${ml} mL every ${freqDays}d${repeatVal !== null ? ` (${repeatVal === 0 ? "once" : repeatVal + 1 + " doses"})` : ""}${delayDays ? ` starting in ${delayDays}d` : ""}`, "success");
 });
 
 // Planner schedule delete (event delegation)
