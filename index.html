@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest?v=72" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=92" />
+    <link rel="stylesheet" href="./styles.css?v=93" />
     <title>Stimulant Journal</title>
   </head>
   <body data-page="home">
@@ -194,11 +194,11 @@
           <div id="doseQuantityFields" class="dose-qty-section">
             <span id="doseAmountLabel" class="dose-qty-heading">Tablets taken</span>
             <!-- Slider UI — dose type only -->
-            <div id="doseSliderWrap" class="dose-slider-wrap">
-              <div class="dose-slider-readout">
+            <div id="doseSliderWrap" class="dose-pill-picker">
+              <div id="dosePillTrack" class="dose-pill-track"></div>
+              <div class="dose-pill-readout">
                 <strong id="doseSliderDisplay">0</strong><span class="dose-slider-unit"> tabs</span>
               </div>
-              <input id="doseSlider" type="range" min="0" max="6" step="0.5" value="0" />
             </div>
             <!-- Compact number input — refill / adjustment -->
             <div id="doseNumberWrap" class="dose-number-wrap hidden">
@@ -367,6 +367,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./journal-core.js?v=95"></script>
-    <script src="./home.js?v=92"></script>
+    <script src="./home.js?v=94"></script>
   </body>
 </html>

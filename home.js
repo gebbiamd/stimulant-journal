@@ -66,7 +66,7 @@ const els = {
   doseQuantityFields: document.querySelector("#doseQuantityFields"),
   doseAmountLabel: document.querySelector("#doseAmountLabel"),
   doseSliderWrap: document.querySelector("#doseSliderWrap"),
-  doseSlider: document.querySelector("#doseSlider"),
+  dosePillTrack: document.querySelector("#dosePillTrack"),
   doseSliderDisplay: document.querySelector("#doseSliderDisplay"),
   doseNumberWrap: document.querySelector("#doseNumberWrap"),
 };
@@ -495,12 +495,68 @@ function getEntryTimestamp() {
   return els.useCurrentTime?.checked ? new Date().toISOString() : (els.doseTime?.value || new Date().toISOString());
 }
 
-function updateSliderDisplay() {
-  const v = parseFloat(els.doseSlider?.value ?? 0);
-  if (els.doseSliderDisplay) els.doseSliderDisplay.textContent = v % 1 === 0 ? String(v) : v.toFixed(1);
-  // keep hidden doseAmount in sync so form submit reads correctly
-  if (els.doseAmount) els.doseAmount.value = v > 0 ? String(v) : "";
+// ── Pill picker (replaces slider) ────────────────────────────────────
+const PILL_COUNT = 3; // max tablets
+let pillPickerValue = 0;
+
+function renderPillPicker() {
+  const track = els.dosePillTrack;
+  if (!track) return;
+  track.innerHTML = "";
+  for (let i = 0; i < PILL_COUNT; i++) {
+    const rem = pillPickerValue - i;
+    const fill = rem >= 1 ? 1 : rem >= 0.5 ? 0.5 : 0;
+    const div = document.createElement("div");
+    div.style.display = "flex";
+    div.dataset.index = String(i);
+    div.innerHTML = drawTabletSVG(fill, false);
+    track.appendChild(div);
+  }
+  if (els.doseSliderDisplay) els.doseSliderDisplay.textContent = pillPickerValue % 1 === 0 ? String(pillPickerValue) : pillPickerValue.toFixed(1);
+  if (els.doseAmount) els.doseAmount.value = pillPickerValue > 0 ? String(pillPickerValue) : "";
 }
+
+function pillValueFromTouch(track, clientX) {
+  const pills = track.children;
+  for (let i = pills.length - 1; i >= 0; i--) {
+    const rect = pills[i].getBoundingClientRect();
+    if (clientX >= rect.left) {
+      const pct = (clientX - rect.left) / rect.width;
+      return pct < 0.5 ? i + 0.5 : i + 1;
+    }
+  }
+  return 0;
+}
+
+function setPillValue(v) {
+  pillPickerValue = Math.max(0, Math.min(PILL_COUNT, v));
+  renderPillPicker();
+}
+
+(function initPillPicker() {
+  const track = els.dosePillTrack;
+  if (!track) return;
+
+  track.addEventListener("click", (e) => {
+    const v = pillValueFromTouch(track, e.clientX);
+    setPillValue(v === pillPickerValue ? 0 : v);
+  });
+
+  let dragging = false;
+  track.addEventListener("pointerdown", (e) => {
+    dragging = true;
+    track.setPointerCapture(e.pointerId);
+    setPillValue(pillValueFromTouch(track, e.clientX));
+  });
+  track.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    setPillValue(pillValueFromTouch(track, e.clientX));
+  });
+  track.addEventListener("pointerup", () => { dragging = false; });
+  track.addEventListener("pointercancel", () => { dragging = false; });
+
+  renderPillPicker();
+})();
 
 function updateAdjustmentLabel() {
   if (els.doseAmountLabel && currentEntryType === "adjustment") {
@@ -917,8 +973,7 @@ function render() {
   renderPaceGauge();
 }
 
-// Dose slider
-els.doseSlider?.addEventListener("input", updateSliderDisplay);
+// Pill picker already initialised above via IIFE
 
 // Use current time checkbox
 els.useCurrentTime?.addEventListener("change", () => {
@@ -1041,7 +1096,7 @@ els.doseForm.addEventListener("submit", (event) => {
 
   els.doseForm.reset();
   // Reset slider and checkbox
-  if (els.doseSlider) { els.doseSlider.value = "0"; updateSliderDisplay(); }
+  setPillValue(0);
   if (els.useCurrentTime) els.useCurrentTime.checked = true;
   if (els.dateTimeField) els.dateTimeField.classList.add("hidden");
   updateEntryTypeUi();
